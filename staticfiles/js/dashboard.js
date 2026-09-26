@@ -61,6 +61,21 @@
         sourcePill: document.getElementById('sourcePill'),
         gpsSourceText: document.getElementById('gpsSourceText'),
         hotspotBanner: document.getElementById('hotspotBanner'),
+        hotspotBannerIcon: document.getElementById('hotspotBannerIcon'),
+        bannerTitle: document.getElementById('bannerTitle'),
+        bannerSub: document.getElementById('bannerSub'),
+        bannerHelpText: document.getElementById('bannerHelpText'),
+        bannerCodeUrl: document.getElementById('bannerCodeUrl'),
+        btnShowQrModal: document.getElementById('btnShowQrModal'),
+        btnCopyMobileUrl: document.getElementById('btnCopyMobileUrl'),
+        copyBtnText: document.getElementById('copyBtnText'),
+        btnOpenMobileLink: document.getElementById('btnOpenMobileLink'),
+        qrModalBackdrop: document.getElementById('qrModalBackdrop'),
+        qrCodeImage: document.getElementById('qrCodeImage'),
+        qrModalUrlText: document.getElementById('qrModalUrlText'),
+        btnCloseQrModal: document.getElementById('btnCloseQrModal'),
+        btnModalCopyLink: document.getElementById('btnModalCopyLink'),
+        btnModalClose: document.getElementById('btnModalClose'),
         connectionStatusPill: document.getElementById('connectionStatusPill'),
         statusDot: document.getElementById('statusDot'),
         statusLabel: document.getElementById('statusLabel'),
@@ -551,6 +566,11 @@
                 elements.statusConnDot.className = 'dot-indicator dot-green';
                 elements.statusConnText.textContent = '🟢 Phone Connected';
                 elements.statusConnHint.textContent = `Live GPS packets active (${secText})`;
+
+                // Update Banner for Connected state
+                if (elements.hotspotBanner) elements.hotspotBanner.classList.add('is-connected');
+                if (elements.bannerTitle) elements.bannerTitle.textContent = `🟢 Phone GPS Streaming Live (${targetPhoneDeviceId})`;
+                if (elements.bannerHelpText) elements.bannerHelpText.textContent = `Streaming to tactical map (${secText}):`;
             } else {
                 // 🔴 Phone Disconnected
                 elements.connectionStatusPill.className = 'connection-status disconnected';
@@ -561,6 +581,11 @@
                 elements.statusConnDot.className = 'dot-indicator dot-red';
                 elements.statusConnText.textContent = '🔴 Phone Disconnected';
                 elements.statusConnHint.textContent = `No GPS updates (${secText}). Check /mobile/`;
+
+                // Update Banner for Disconnected state
+                if (elements.hotspotBanner) elements.hotspotBanner.classList.remove('is-connected');
+                if (elements.bannerTitle) elements.bannerTitle.textContent = '📱 Phone GPS Test Mode — Connect Your Smartphone';
+                if (elements.bannerHelpText) elements.bannerHelpText.textContent = 'Open on phone or scan QR code:';
             }
         } else {
             // Drone Mode
@@ -859,6 +884,67 @@
                     elements.testerFeedback.className = 'tester-feedback error';
                     elements.testerFeedback.textContent = `Transmission failed: ${err.message}`;
                 }
+            });
+        }
+
+        // Dynamic Mobile Connection & QR Code Logic
+        const mobilePortalUrl = window.location.origin + '/mobile/';
+        if (elements.bannerCodeUrl) elements.bannerCodeUrl.textContent = mobilePortalUrl;
+        if (elements.btnOpenMobileLink) elements.btnOpenMobileLink.href = mobilePortalUrl;
+        if (elements.qrModalUrlText) elements.qrModalUrlText.textContent = mobilePortalUrl;
+        if (elements.qrCodeImage) {
+            elements.qrCodeImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(mobilePortalUrl);
+        }
+
+        // QR Code Modal
+        if (elements.btnShowQrModal) {
+            elements.btnShowQrModal.addEventListener('click', () => {
+                if (elements.qrModalBackdrop) elements.qrModalBackdrop.style.display = 'flex';
+            });
+        }
+        if (elements.btnCloseQrModal) {
+            elements.btnCloseQrModal.addEventListener('click', () => {
+                if (elements.qrModalBackdrop) elements.qrModalBackdrop.style.display = 'none';
+            });
+        }
+        if (elements.btnModalClose) {
+            elements.btnModalClose.addEventListener('click', () => {
+                if (elements.qrModalBackdrop) elements.qrModalBackdrop.style.display = 'none';
+            });
+        }
+        if (elements.qrModalBackdrop) {
+            elements.qrModalBackdrop.addEventListener('click', (e) => {
+                if (e.target === elements.qrModalBackdrop) {
+                    elements.qrModalBackdrop.style.display = 'none';
+                }
+            });
+        }
+
+        // Copy Link to Clipboard
+        function copyMobileLink(btnEl, textSpan) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(mobilePortalUrl).then(() => {
+                    const originalText = textSpan ? textSpan.textContent : 'Copy Link';
+                    if (textSpan) textSpan.textContent = '✅ Copied!';
+                    setTimeout(() => {
+                        if (textSpan) textSpan.textContent = originalText;
+                    }, 2200);
+                }).catch(() => {
+                    prompt('Copy this link:', mobilePortalUrl);
+                });
+            } else {
+                prompt('Copy this link:', mobilePortalUrl);
+            }
+        }
+
+        if (elements.btnCopyMobileUrl) {
+            elements.btnCopyMobileUrl.addEventListener('click', () => {
+                copyMobileLink(elements.btnCopyMobileUrl, elements.copyBtnText);
+            });
+        }
+        if (elements.btnModalCopyLink) {
+            elements.btnModalCopyLink.addEventListener('click', () => {
+                copyMobileLink(elements.btnModalCopyLink, elements.btnModalCopyLink);
             });
         }
     }

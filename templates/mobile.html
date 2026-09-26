@@ -307,7 +307,7 @@
             color: var(--text-main);
         }
 
-        /* SECURITY WARNING BANNER */
+        /* SECURITY WARNING / SECURE BANNER */
         .security-banner {
             display: none;
             background: #fffbeb;
@@ -318,6 +318,13 @@
             font-size: 0.8rem;
             color: #92400e;
             line-height: 1.4;
+        }
+
+        .security-banner.secure {
+            display: block;
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+            color: #065f46;
         }
 
         .security-banner strong {
@@ -446,6 +453,14 @@
             <span class="diag-val" id="diagDeviceId">{{ device_id }}</span>
         </div>
         <div class="diag-row">
+            <span class="diag-label">Server Host:</span>
+            <span class="diag-val" id="diagHost">{{ server_host|default:'Render Cloud' }}</span>
+        </div>
+        <div class="diag-row">
+            <span class="diag-label">Screen Wake Lock:</span>
+            <span class="diag-val" id="diagWakeLock" style="color: var(--text-muted);">Inactive</span>
+        </div>
+        <div class="diag-row">
             <span class="diag-label">Packets Transmitted:</span>
             <span class="diag-val" id="diagPacketsSent">0</span>
         </div>
@@ -459,10 +474,10 @@
         </div>
     </section>
 
-    <!-- SECURITY CONTEXT BANNER (Shown if Android Chrome blocks plain HTTP geolocation) -->
+    <!-- SECURITY CONTEXT BANNER -->
     <div class="security-banner" id="securityBanner">
-        <strong>⚠️ Android Browser Geolocation Note</strong>
-        <span>Modern Chrome may require HTTPS for location on non-localhost IP addresses. If location fails, access this page via HTTPS or configure a secure context.</span>
+        <strong id="securityBannerTitle">🔒 Secure HTTPS Context</strong>
+        <span id="securityBannerDesc">Device location services ready.</span>
     </div>
 
     <!-- FOOTER -->

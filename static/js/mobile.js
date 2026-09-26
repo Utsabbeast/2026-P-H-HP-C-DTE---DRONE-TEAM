@@ -13,6 +13,10 @@
     let watchId = null;
     let packetsSentCount = 0;
     let isTracking = false;
+    let wakeLock = null;
+    let latestCoords = null;
+    let lastTransmitTime = 0;
+    let heartbeatTimer = null;
 
     // DOM Elements
     const btnStart = document.getElementById('btnStart');
@@ -34,7 +38,10 @@
     // Diagnostics
     const diagPacketsSent = document.getElementById('diagPacketsSent');
     const diagServerStatus = document.getElementById('diagServerStatus');
+    const diagWakeLock = document.getElementById('diagWakeLock');
     const securityBanner = document.getElementById('securityBanner');
+    const securityBannerTitle = document.getElementById('securityBannerTitle');
+    const securityBannerDesc = document.getElementById('securityBannerDesc');
 
     // Configuration from body attributes
     const deviceId = document.body.dataset.deviceId || 'phone_test_01';
@@ -42,14 +49,60 @@
     const INGEST_API_URL = '/api/phone-location/';
 
     // -------------------------------------------------------------------------
+    // Screen Wake Lock API (Keeps phone screen on while streaming)
+    // -------------------------------------------------------------------------
+    async function requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+                if (diagWakeLock) {
+                    diagWakeLock.textContent = 'Active (Screen On)';
+                    diagWakeLock.style.color = '#10b981';
+                }
+                wakeLock.addEventListener('release', () => {
+                    if (isTracking) {
+                        // Re-acquire if released due to app switcher
+                        requestWakeLock();
+                    }
+                });
+            } else {
+                if (diagWakeLock) diagWakeLock.textContent = 'Not supported';
+            }
+        } catch (err) {
+            console.warn('[UTM Mobile] Wake Lock error:', err);
+            if (diagWakeLock) diagWakeLock.textContent = 'Unavailable';
+        }
+    }
+
+    function releaseWakeLock() {
+        if (wakeLock !== null) {
+            wakeLock.release().catch(() => {});
+            wakeLock = null;
+            if (diagWakeLock) {
+                diagWakeLock.textContent = 'Inactive';
+                diagWakeLock.style.color = 'var(--text-muted)';
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Initialization & Secure Context Detection
     // -------------------------------------------------------------------------
     function init() {
-        // Detect if running in an insecure context on local IP (Android Chrome restriction)
+        // Detect context (Android Chrome requires HTTPS for Geolocation on external domains)
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        if (window.isSecureContext === false && !isLocalhost && securityBanner) {
-            securityBanner.style.display = 'block';
-            console.warn('[UTM Mobile] Warning: Browser reports insecure context (HTTP on IP). Android Chrome may require HTTPS for Geolocation.');
+        if (securityBanner) {
+            if (window.isSecureContext || window.location.protocol === 'https:' || isLocalhost) {
+                securityBanner.classList.add('secure');
+                if (securityBannerTitle) securityBannerTitle.textContent = '🔒 Secure HTTPS Context Active';
+                if (securityBannerDesc) securityBannerDesc.textContent = 'High-accuracy GPS sensor permission is enabled for cloud streaming.';
+                securityBanner.style.display = 'block';
+            } else {
+                securityBanner.classList.remove('secure');
+                if (securityBannerTitle) securityBannerTitle.textContent = '⚠️ Insecure HTTP Context';
+                if (securityBannerDesc) securityBannerDesc.textContent = 'Android Chrome requires HTTPS to allow GPS access. Access this site over HTTPS.';
+                securityBanner.style.display = 'block';
+            }
         }
 
         // Attach event listeners
@@ -97,6 +150,14 @@
             return;
         }
 
+        // Haptic feedback if supported
+        if ('vibrate' in navigator) {
+            try { navigator.vibrate(50); } catch (e) {}
+        }
+
+        // Request Screen Wake Lock so phone doesn't sleep in hand
+        requestWakeLock();
+
         // Update UI state to starting
         isTracking = true;
         btnStart.disabled = true;
@@ -105,7 +166,7 @@
 
         const geoOptions = {
             enableHighAccuracy: true, // Always request real high-accuracy GPS hardware
-            timeout: 15000,           // 15 seconds acquisition timeout
+            timeout: 20000,           // 20 seconds acquisition timeout
             maximumAge: 0             // Do not use cached GPS fixes
         };
 
@@ -116,6 +177,14 @@
                 geoOptions
             );
             console.log(`[UTM Mobile] Geolocation watch initialized with ID: ${watchId}`);
+
+            // Heartbeat fallback: keeps live connection alive even when stationary
+            heartbeatTimer = setInterval(() => {
+                if (isTracking && latestCoords && (Date.now() - lastTransmitTime >= 2500)) {
+                    transmitHeartbeat();
+                }
+            }, 1000);
+
         } catch (err) {
             console.error('[UTM Mobile] Failed to start watchPosition:', err);
             handleGeneralError('Failed to initialize GPS watcher: ' + err.message);
@@ -131,6 +200,14 @@
             console.log(`[UTM Mobile] Cleared geolocation watch ID: ${watchId}`);
             watchId = null;
         }
+
+        if (heartbeatTimer !== null) {
+            clearInterval(heartbeatTimer);
+            heartbeatTimer = null;
+        }
+
+        releaseWakeLock();
+        latestCoords = null;
 
         isTracking = false;
         btnStart.disabled = false;
@@ -153,6 +230,8 @@
         }
 
         const coords = position.coords;
+        latestCoords = coords;
+        lastTransmitTime = Date.now();
         const now = new Date(position.timestamp || Date.now());
 
         // Extract values strictly without inventing fake fallbacks
@@ -176,7 +255,7 @@
         if (valSpeed) valSpeed.innerHTML = speed !== null ? `${speed} <span class="card-unit">m/s</span>` : 'N/A';
         if (valTimestamp) valTimestamp.textContent = displayTime;
 
-        // Build Payload according to Section 5 specifications
+        // Build Payload
         const payload = {
             device_id: deviceId,
             latitude: Number(lat.toFixed(6)),
@@ -189,7 +268,34 @@
             source: 'phone_test'
         };
 
-        // Dispatch immediately to Django over Wi-Fi
+        // Dispatch immediately to Django backend
+        sendTelemetryToDjango(payload);
+    }
+
+    // Transmit heartbeat when stationary to maintain continuous dashboard connection
+    function transmitHeartbeat() {
+        if (!isTracking || !latestCoords) return;
+        lastTransmitTime = Date.now();
+
+        const lat = latestCoords.latitude;
+        const lon = latestCoords.longitude;
+        const alt = (latestCoords.altitude !== null && !isNaN(latestCoords.altitude)) ? Number(latestCoords.altitude.toFixed(1)) : null;
+        const heading = (latestCoords.heading !== null && !isNaN(latestCoords.heading)) ? Number(latestCoords.heading.toFixed(1)) : null;
+        const accuracy = (latestCoords.accuracy !== null && !isNaN(latestCoords.accuracy)) ? Number(latestCoords.accuracy.toFixed(1)) : null;
+        const speed = (latestCoords.speed !== null && !isNaN(latestCoords.speed)) ? Number(latestCoords.speed.toFixed(1)) : null;
+
+        const payload = {
+            device_id: deviceId,
+            latitude: Number(lat.toFixed(6)),
+            longitude: Number(lon.toFixed(6)),
+            altitude: alt,
+            heading: heading,
+            accuracy: accuracy,
+            speed: speed,
+            timestamp: new Date().toISOString(),
+            source: 'phone_test'
+        };
+
         sendTelemetryToDjango(payload);
     }
 

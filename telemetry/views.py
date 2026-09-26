@@ -38,26 +38,36 @@ class DashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        host = self.request.get_host()
         context['simulation_mode'] = getattr(settings, 'SIMULATION_MODE', True)
         context['drone_id'] = getattr(settings, 'DEFAULT_DRONE_ID', 'drone01')
         context['device_id'] = getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
         context['timeout_seconds'] = getattr(settings, 'TELEMETRY_TIMEOUT_SECONDS', 5)
         context['phone_timeout'] = getattr(settings, 'PHONE_TIMEOUT_SECONDS', 10)
         context['local_ip'] = get_local_ip()
+        context['mobile_url'] = self.request.build_absolute_uri('/mobile/')
+        context['is_hosted'] = not (host.startswith('localhost') or host.startswith('127.0.0.1'))
+        context['server_host'] = host
         return context
 
 
 class MobilePageView(TemplateView):
     """
     Renders the dedicated Phone GPS Test Mode page (/mobile/)
-    designed for Android mobile browsers connected to the hotspot.
+    designed for mobile browsers (cloud HTTPS or local Wi-Fi).
     """
     template_name = 'mobile.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        host = self.request.get_host()
         context['device_id'] = getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
         context['local_ip'] = get_local_ip()
+        context['mobile_url'] = self.request.build_absolute_uri('/mobile/')
+        context['dashboard_url'] = self.request.build_absolute_uri('/dashboard/')
+        context['server_host'] = host
+        context['is_secure'] = self.request.is_secure()
+        context['is_hosted'] = not (host.startswith('localhost') or host.startswith('127.0.0.1'))
         return context
 
 
