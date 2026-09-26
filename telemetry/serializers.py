@@ -1,0 +1,177 @@
+from rest_framework import serializers
+from .models import DroneTelemetry, PhoneTelemetry
+
+
+class DroneTelemetrySerializer(serializers.ModelSerializer):
+    """
+    Serializer for ingesting and presenting drone telemetry packets.
+    Used by the ESP32 POST API and the frontend dashboard polling API.
+    """
+    drone_id = serializers.CharField(
+        max_length=64,
+        default='drone01',
+        trim_whitespace=True
+    )
+    latitude = serializers.FloatField(
+        min_value=-90.0,
+        max_value=90.0,
+        help_text="GPS Latitude (-90.0 to 90.0)"
+    )
+    longitude = serializers.FloatField(
+        min_value=-180.0,
+        max_value=180.0,
+        help_text="GPS Longitude (-180.0 to 180.0)"
+    )
+    altitude = serializers.FloatField(
+        min_value=-500.0,
+        max_value=50000.0,
+        help_text="Altitude in meters"
+    )
+    heading = serializers.FloatField(
+        min_value=0.0,
+        max_value=360.0,
+        help_text="Heading in degrees (0.0 to 360.0)"
+    )
+    timestamp = serializers.DateTimeField(
+        help_text="ISO 8601 timestamp (e.g. 2026-09-26T12:45:32Z)"
+    )
+    is_simulated = serializers.BooleanField(default=False)
+    received_at = serializers.DateTimeField(read_only=True)
+    seconds_since_received = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = DroneTelemetry
+        fields = [
+            'id',
+            'drone_id',
+            'latitude',
+            'longitude',
+            'altitude',
+            'heading',
+            'timestamp',
+            'received_at',
+            'seconds_since_received',
+            'is_simulated',
+        ]
+        read_only_fields = ['id', 'received_at', 'seconds_since_received']
+
+    def validate_drone_id(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("drone_id cannot be blank.")
+        return value.strip()
+
+
+class DroneStatusSerializer(serializers.Serializer):
+    """
+    Provides a high-level operational status summary for a drone.
+    Differentiates between physical hardware connectivity (ESP32) and
+    simulation test mode.
+    """
+    drone_id = serializers.CharField()
+    is_connected = serializers.BooleanField()
+    status_label = serializers.CharField()
+    hardware_connected = serializers.BooleanField()
+    hardware_status_label = serializers.CharField()
+    gps_fix = serializers.BooleanField()
+    is_simulated = serializers.BooleanField()
+    active_route_name = serializers.CharField(allow_null=True, required=False)
+    last_telemetry = DroneTelemetrySerializer(allow_null=True)
+    seconds_since_last_packet = serializers.FloatField(allow_null=True)
+    seconds_since_last_hardware_packet = serializers.FloatField(allow_null=True)
+    simulation_mode = serializers.BooleanField()
+    total_packets_received = serializers.IntegerField()
+    total_hardware_packets = serializers.IntegerField()
+
+
+class PhoneTelemetrySerializer(serializers.ModelSerializer):
+    """
+    Serializer for ingesting and presenting phone GPS telemetry.
+    Used by POST /api/phone-location/ and dashboard live polling.
+    Accepts nulls for altitude, heading, accuracy, speed if browser doesn't supply them.
+    """
+    device_id = serializers.CharField(
+        max_length=64,
+        default='phone_test_01',
+        trim_whitespace=True,
+        required=False
+    )
+    latitude = serializers.FloatField(
+        min_value=-90.0,
+        max_value=90.0,
+        help_text="Phone GPS Latitude (-90.0 to 90.0)"
+    )
+    longitude = serializers.FloatField(
+        min_value=-180.0,
+        max_value=180.0,
+        help_text="Phone GPS Longitude (-180.0 to 180.0)"
+    )
+    altitude = serializers.FloatField(
+        allow_null=True,
+        required=False,
+        help_text="Altitude in meters (null if unavailable)"
+    )
+    heading = serializers.FloatField(
+        allow_null=True,
+        required=False,
+        min_value=0.0,
+        max_value=360.0,
+        help_text="Heading in degrees (0.0 to 360.0; null if unavailable)"
+    )
+    accuracy = serializers.FloatField(
+        allow_null=True,
+        required=False,
+        min_value=0.0,
+        help_text="Accuracy in meters (null if unavailable)"
+    )
+    speed = serializers.FloatField(
+        allow_null=True,
+        required=False,
+        min_value=0.0,
+        help_text="Speed in m/s (null if unavailable)"
+    )
+    timestamp = serializers.DateTimeField(
+        help_text="ISO 8601 timestamp"
+    )
+    source = serializers.CharField(
+        default='phone_test',
+        required=False
+    )
+    received_at = serializers.DateTimeField(read_only=True)
+    seconds_since_received = serializers.FloatField(read_only=True)
+
+    class Meta:
+        model = PhoneTelemetry
+        fields = [
+            'id',
+            'device_id',
+            'latitude',
+            'longitude',
+            'altitude',
+            'heading',
+            'accuracy',
+            'speed',
+            'timestamp',
+            'source',
+            'received_at',
+            'seconds_since_received',
+        ]
+        read_only_fields = ['id', 'received_at', 'seconds_since_received']
+
+    def validate_device_id(self, value):
+        if not value or not value.strip():
+            return 'phone_test_01'
+        return value.strip()
+
+
+class PhoneStatusSerializer(serializers.Serializer):
+    """
+    Status summary for Phone GPS Test Mode.
+    """
+    device_id = serializers.CharField()
+    is_connected = serializers.BooleanField()
+    status_label = serializers.CharField()
+    seconds_since_last_packet = serializers.FloatField(allow_null=True)
+    total_packets_received = serializers.IntegerField()
+    source = serializers.CharField(default='phone_test')
+    last_telemetry = PhoneTelemetrySerializer(allow_null=True)
+

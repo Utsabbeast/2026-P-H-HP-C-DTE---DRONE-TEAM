@@ -1,0 +1,534 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTM — Unified Telemetry Monitor</title>
+    <meta name="description" content="Professional real-time drone and phone GPS telemetry monitoring dashboard with interactive Leaflet mapping, heading orientation, and ESP32 hardware integration readiness.">
+    
+    <!-- Google Fonts for Modern Aviation Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS (Local vendored bundle) -->
+    <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
+    
+    <!-- UTM Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body data-simulation="{{ simulation_mode|yesno:'true,false' }}" 
+      data-drone-id="{{ drone_id }}" 
+      data-timeout="{{ timeout_seconds }}"
+      data-phone-device-id="{{ device_id }}"
+      data-phone-timeout="{{ phone_timeout }}"
+      data-local-ip="{{ local_ip }}">
+    
+    <!-- TOP NAVIGATION BAR -->
+    <header class="navbar" role="banner">
+        <div class="nav-container">
+            <!-- Brand & Subtitle -->
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/>
+                        <circle cx="12" cy="12" r="3" fill="#0284c7" stroke="none"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-title">UTM</div>
+                    <div class="brand-subtitle">Unified Telemetry Monitor</div>
+                </div>
+            </div>
+
+            <!-- Mode Switcher & Mode Indicator -->
+            <div class="nav-center" style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
+                <!-- Mode Switcher Tabs -->
+                <div class="mode-switcher-container" role="tablist">
+                    <button class="mode-tab active phone-tab" id="tabPhoneMode" role="tab" aria-selected="true" title="Switch to Phone GPS Test Mode">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                            <line x1="12" y1="18" x2="12.01" y2="18"/>
+                        </svg>
+                        <span>Phone GPS Test</span>
+                    </button>
+                    <button class="mode-tab" id="tabDroneMode" role="tab" aria-selected="false" title="Switch to Drone Hardware / Simulation Mode">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                            <path d="M12 2L4 7v10l8 5 8-5V7l-8-5zm0 2.2L18.2 8 12 11.8 5.8 8 12 4.2z"/>
+                        </svg>
+                        <span>Drone (ESP32)</span>
+                    </button>
+                </div>
+
+                <!-- Test Mode Indicator -->
+                <div class="test-mode-badge" id="testModeBadge">
+                    <span class="test-pulse"></span>
+                    <span class="test-text" id="modeBadgeText">🟢 TEST MODE — PHONE GPS</span>
+                </div>
+
+                <!-- GPS Source Indicator -->
+                <div class="drone-pill" id="sourcePill" style="background: #e0f2fe; border: 1px solid #bae6fd; color: #0369a1;">
+                    <span id="gpsSourceText" style="font-weight: 600; font-size: 0.8125rem;">GPS Source: Android Phone</span>
+                </div>
+            </div>
+
+            <!-- Connection Status & Tools -->
+            <div class="nav-status">
+                <div class="connection-status disconnected" id="connectionStatusPill">
+                    <span class="status-indicator-dot dot-red" id="statusDot"></span>
+                    <span class="status-label" id="statusLabel">🔴 Phone Disconnected</span>
+                </div>
+
+                <!-- Hardware Testing Button -->
+                <button class="btn btn-outline btn-sm" id="btnToggleTester" title="Open ESP32 API Test Panel">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                    <span>API Tools</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="dashboard-layout">
+        
+        <!-- HOTSPOT QUICK INSTRUCTION BANNER (Visible in Phone Test Mode) -->
+        <div class="hotspot-info-card" id="hotspotBanner">
+            <div class="hotspot-info-left">
+                <div class="hotspot-icon">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                        <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                        <line x1="12" y1="20" x2="12.01" y2="20"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="hotspot-text-title">Android Phone GPS Test Mode Active</div>
+                    <div class="hotspot-text-sub">
+                        Connect phone to laptop hotspot and open on mobile browser: 
+                        <code>http://{{ local_ip }}:8000/mobile/</code>
+                    </div>
+                </div>
+            </div>
+            <a href="/mobile/" target="_blank" class="btn-open-mobile" title="Open Mobile Tracking Portal">
+                <span>Open /mobile/</span>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+            </a>
+        </div>
+
+        <!-- MAP SECTION (LARGEST SECTION) -->
+        <section class="map-section" aria-label="Interactive Map">
+            <div class="map-header">
+                <div class="map-title-area">
+                    <div class="map-title-row">
+                        <h1 class="section-title" id="mapMainTitle">Live Tactical Map (Phone GPS)</h1>
+                        <span class="route-badge" id="mapRouteHud" style="background: #ecfdf5; border-color: #a7f3d0; color: #047857;">Source: Android Phone</span>
+                    </div>
+                    <span class="map-subtitle" id="mapCoordinatesHud">Coordinates: 30.901000°, 75.857300°</span>
+                </div>
+
+                <!-- Map Action Controls -->
+                <div class="map-controls-bar">
+                    <!-- Center Phone Button -->
+                    <button class="btn btn-primary btn-sm" id="btnCenterDrone" title="Center map on current position">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+                            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                        </svg>
+                        <span id="centerButtonText">Center Phone</span>
+                    </button>
+
+                    <!-- Clear Trail Button -->
+                    <button class="btn btn-secondary btn-sm" id="btnClearTrail" title="Clear displayed movement trail (does not delete database records)">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        <span>Clear Trail</span>
+                    </button>
+
+                    <!-- Toggle Trail Button -->
+                    <button class="btn btn-secondary btn-sm" id="btnToggleTrail" title="Toggle flight/movement path visibility">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12h3l3-9 6 18 3-9h3"/>
+                        </svg>
+                        <span id="trailButtonText">Hide Trail</span>
+                    </button>
+
+                    <!-- Reset View Button -->
+                    <button class="btn btn-secondary btn-sm" id="btnResetView" title="Reset map zoom & bounding box">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                        </svg>
+                        <span>Reset View</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="map-wrapper">
+                <div id="droneMap" class="drone-map" role="application"></div>
+                
+                <!-- Floating Map HUD Overlay -->
+                <div class="map-floating-hud">
+                    <div class="hud-item">
+                        <span class="hud-label">ALT</span>
+                        <span class="hud-value" id="hudAlt">--</span>
+                    </div>
+                    <div class="hud-divider"></div>
+                    <div class="hud-item">
+                        <span class="hud-label">HDG</span>
+                        <span class="hud-value" id="hudHdg">--</span>
+                    </div>
+                    <div class="hud-divider"></div>
+                    <div class="hud-item">
+                        <span class="hud-label">SPD</span>
+                        <span class="hud-value" id="hudSpeed">--</span>
+                    </div>
+                    <div class="hud-divider"></div>
+                    <div class="hud-item">
+                        <span class="hud-label">ACC</span>
+                        <span class="hud-value" id="hudAccuracy">--</span>
+                    </div>
+                </div>
+
+                <!-- Simulation Control Floating Bar (Shown only in Drone Simulation Mode) -->
+                <div class="sim-floating-controls" id="simFloatingBar" style="display: none;">
+                    <span class="sim-tag">SIM CONTROL</span>
+                    <button class="btn-chip btn-chip-highlight" id="btnNewRandomRoute" title="Procedurally generate a new randomized flight route">🎲 New Random Route</button>
+                    <button class="btn-chip" id="btnPauseSim" title="Pause / Resume simulated route">⏸ Pause</button>
+                    <button class="btn-chip" id="btnResetSim" title="Reset route to start">↺ Reset</button>
+                    <button class="btn-chip" id="btnToggleMode" title="Toggle between Simulation & Live ESP32 Mode">
+                        {% if simulation_mode %}Switch to Live{% else %}Switch to Sim{% endif %}
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TELEMETRY CARDS ROW (7 REQUIRED CARDS FOR PHONE TEST MODE) -->
+        <section class="telemetry-grid" aria-label="Live Telemetry Metrics">
+            
+            <!-- 1. Latitude Card -->
+            <div class="telemetry-card" id="cardLatitude">
+                <div class="card-header">
+                    <span class="card-label">Latitude</span>
+                    <div class="card-icon blue">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                            <path d="M2 12h20"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value" id="valLatitude">--</div>
+                    <div class="card-subtext" id="subLatitude">Awaiting GPS fix...</div>
+                </div>
+            </div>
+
+            <!-- 2. Longitude Card -->
+            <div class="telemetry-card" id="cardLongitude">
+                <div class="card-header">
+                    <span class="card-label">Longitude</span>
+                    <div class="card-icon blue">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <ellipse cx="12" cy="12" rx="5" ry="10"/>
+                            <path d="M2 12h20"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value" id="valLongitude">--</div>
+                    <div class="card-subtext" id="subLongitude">Awaiting GPS fix...</div>
+                </div>
+            </div>
+
+            <!-- 3. Altitude Card -->
+            <div class="telemetry-card" id="cardAltitude">
+                <div class="card-header">
+                    <span class="card-label">Altitude</span>
+                    <div class="card-icon green">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 19V5M5 12l7-7 7 7"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value" id="valAltitude">--</div>
+                    <div class="card-subtext" id="subAltitude">GPS Altitude</div>
+                </div>
+            </div>
+
+            <!-- 4. Heading Card -->
+            <div class="telemetry-card" id="cardHeading">
+                <div class="card-header">
+                    <span class="card-label">Heading</span>
+                    <div class="card-icon purple">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 19 21 12 17 5 21 12 2"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body heading-body">
+                    <div class="heading-data">
+                        <div class="card-value" id="valHeading">--</div>
+                        <div class="card-subtext" id="subHeading">Direction</div>
+                    </div>
+                    <!-- Mini Dynamic Compass Needle -->
+                    <div class="compass-dial" title="Current Heading Direction">
+                        <div class="compass-ring">
+                            <span class="comp-cardinal comp-n">N</span>
+                            <span class="comp-cardinal comp-e">E</span>
+                            <span class="comp-cardinal comp-s">S</span>
+                            <span class="comp-cardinal comp-w">W</span>
+                            <div class="compass-needle" id="compassNeedle" style="transform: rotate(0deg);">
+                                <div class="needle-north"></div>
+                                <div class="needle-south"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Speed Card (NEW) -->
+            <div class="telemetry-card" id="cardSpeed">
+                <div class="card-header">
+                    <span class="card-label">Speed</span>
+                    <div class="card-icon blue">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 15 15"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value" id="valSpeed">--</div>
+                    <div class="card-subtext" id="subSpeed">Movement speed (m/s)</div>
+                </div>
+            </div>
+
+            <!-- 6. Accuracy Card (NEW) -->
+            <div class="telemetry-card" id="cardAccuracy">
+                <div class="card-header">
+                    <span class="card-label">Accuracy</span>
+                    <div class="card-icon green">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="9"/>
+                            <circle cx="12" cy="12" r="4"/>
+                            <circle cx="12" cy="12" r="1" fill="currentColor"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value" id="valAccuracy">--</div>
+                    <div class="card-subtext" id="subAccuracy">Horizontal GPS accuracy</div>
+                </div>
+            </div>
+
+            <!-- 7. Last Update Card -->
+            <div class="telemetry-card" id="cardLastUpdate">
+                <div class="card-header">
+                    <span class="card-label">Last Update</span>
+                    <div class="card-icon amber">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value" id="valLastUpdate">--:--:--</div>
+                    <div class="card-subtext" id="subLastUpdate">Last update: never</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SYSTEM & TELEMETRY STATUS OVERVIEW ROW -->
+        <section class="status-section" aria-label="System and Telemetry Status">
+            
+            <!-- Hardware Offline Warning Banner (shown when drone hardware mode has no stream) -->
+            <div class="hardware-offline-alert" id="hardwareOfflineAlert" style="display: none;">
+                <div class="alert-icon">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title" id="alertTitle">Hardware Offline — Showing Simulated Flight Data</div>
+                    <div class="alert-desc" id="alertDesc">
+                        The ESP32 microcontroller is not connected to the Flight Controller or laptop. The system is operating in <strong>Simulation Test Mode</strong> with randomized flight paths. When real telemetry arrives at <code>POST /api/telemetry/</code>, the dashboard will automatically switch to Live Hardware Stream.
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="status-card-header">
+                    <div class="status-card-title">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                        <span id="overviewHeaderTitle">Phone GPS Telemetry Overview</span>
+                    </div>
+                    <span class="status-meta" id="statusMetaPkt">Packets Received: 0</span>
+                </div>
+
+                <div class="status-items-grid">
+                    <!-- Connection Item -->
+                    <div class="status-item">
+                        <span class="item-label">Telemetry Connection</span>
+                        <div class="item-value-pill pill-amber" id="statusConnBadge">
+                            <span class="dot-indicator dot-red" id="statusConnDot"></span>
+                            <span id="statusConnText">🔴 Phone Disconnected</span>
+                        </div>
+                        <span class="item-sub-hint" id="statusConnHint">Awaiting GPS from /mobile/</span>
+                    </div>
+
+                    <!-- Telemetry Source Item -->
+                    <div class="status-item">
+                        <span class="item-label">Telemetry Feed Source</span>
+                        <div class="item-value-pill pill-green" id="statusFeedBadge" style="background-color: #ecfdf5; border-color: #bbf7d0; color: #065f46;">
+                            <span class="dot-indicator dot-green" id="statusFeedDot"></span>
+                            <span id="statusFeedText">Android Phone</span>
+                        </div>
+                        <span class="item-sub-hint" id="statusFeedHint">Temporary test replacement</span>
+                    </div>
+
+                    <!-- Mode / Target Item -->
+                    <div class="status-item">
+                        <span class="item-label">Target Architecture</span>
+                        <div class="item-value-text" id="statusRouteText">
+                            <strong id="statusRouteName">Cube Orange+ → ESP32 → Wi-Fi</strong>
+                        </div>
+                        <span class="item-sub-hint" id="statusRouteHint">Currently tested via Phone GPS</span>
+                    </div>
+
+                    <!-- Heartbeat Age Item -->
+                    <div class="status-item">
+                        <span class="item-label">Heartbeat Age</span>
+                        <div class="item-value-text" id="statusHeartbeatText">
+                            Last packet: <strong id="statusHeartbeatSec">--</strong>s ago
+                        </div>
+                        <span class="item-sub-hint" id="statusHwPacketsHint">Device: {{ device_id }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ESP32 HARDWARE INTEGRATION & INJECTOR MODAL / PANEL (HIDDEN BY DEFAULT) -->
+        <section class="tester-panel" id="testerPanel" style="display: none;" aria-label="ESP32 API Test Panel">
+            <div class="tester-header">
+                <div class="tester-title">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="4" y="4" width="16" height="16" rx="2"/>
+                        <rect x="9" y="9" width="6" height="6"/>
+                        <line x1="9" y1="1" x2="9" y2="4"/>
+                        <line x1="15" y1="1" x2="15" y2="4"/>
+                        <line x1="9" y1="20" x2="9" y2="23"/>
+                        <line x1="15" y1="20" x2="15" y2="23"/>
+                        <line x1="20" y1="9" x2="23" y2="9"/>
+                        <line x1="20" y1="14" x2="23" y2="14"/>
+                        <line x1="1" y1="9" x2="4" y2="9"/>
+                        <line x1="1" y1="14" x2="4" y2="14"/>
+                    </svg>
+                    <span>API Test Tools (Phone & ESP32 Telemetry Ingest)</span>
+                </div>
+                <button class="btn-close" id="btnCloseTester" title="Close Panel">✕</button>
+            </div>
+            
+            <div class="tester-content">
+                <p class="tester-desc">
+                    Send simulated test packets to verify backend ingest routes without physical hardware.
+                </p>
+
+                <div class="tester-grid">
+                    <!-- Form input to inject custom coordinate -->
+                    <form id="testerForm" class="tester-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="inputDroneId">Device / Drone ID</label>
+                                <input type="text" id="inputDroneId" value="phone_test_01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputLat">Latitude</label>
+                                <input type="number" step="0.000001" id="inputLat" value="30.901000" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputLon">Longitude</label>
+                                <input type="number" step="0.000001" id="inputLon" value="75.857300" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="inputAlt">Altitude (m)</label>
+                                <input type="number" step="0.1" id="inputAlt" value="125.4" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputHdg">Heading (°)</label>
+                                <input type="number" step="1" id="inputHdg" value="142" min="0" max="360" required>
+                            </div>
+                            <div class="form-group btn-col">
+                                <button type="submit" class="btn btn-primary" id="btnSendPacket">Transmit Test Packet</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Code snippet for Phone vs ESP32 developers -->
+                    <div class="tester-code-box">
+                        <div class="code-title">Phone GPS Ingest (POST /api/phone-location/)</div>
+                        <pre><code>curl -X POST http://{{ local_ip }}:8000/api/phone-location/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "phone_test_01",
+    "latitude": 30.9010,
+    "longitude": 75.8573,
+    "altitude": 125.4,
+    "heading": 142,
+    "accuracy": 8.5,
+    "speed": 4.2,
+    "timestamp": "2026-09-26T12:45:32Z",
+    "source": "phone_test"
+  }'</code></pre>
+                    </div>
+                </div>
+
+                <div id="testerFeedback" class="tester-feedback" style="display: none;"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="dashboard-footer">
+        <div class="footer-container">
+            <span>UTM v1.1.0 — Phone GPS Test Mode</span>
+            <span class="footer-divider">•</span>
+            <span>Temporary GPS Source: Android Phone (/mobile/)</span>
+            <span class="footer-divider">•</span>
+            <span>Future Architecture: Cube Orange+ (TELEM) → ESP32 → Wi-Fi → Django</span>
+            <span class="footer-divider">•</span>
+            <a href="/mobile/" target="_blank" class="footer-link">Mobile Portal</a>
+            <span class="footer-divider">•</span>
+            <a href="/admin/" target="_blank" class="footer-link">Django Admin</a>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS (Local Vendored bundle) -->
+    <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
+    
+    <!-- UTM Dashboard Core JavaScript -->
+    <script src="{% static 'js/dashboard.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# Python & Django
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+db.sqlite3
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.env
+
+# Static & Media uploads (if generated)
+staticfiles/
+media/
+
+# SSL Certificates & Logs
+ssl/
+*.log
+
+# OS & Editor Files
+.DS_Store
+.vscode/
+.idea/
+
+# Temporary Binaries
+cloudflared*
+ngrok*

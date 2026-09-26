@@ -1,0 +1,479 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UTM — Phone GPS Test Mode</title>
+    <meta name="description" content="Phone GPS streaming portal for UTM drone tracking test mode. Broadcasts real device coordinates over local Wi-Fi hotspot to Django.">
+
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border-subtle: #e2e8f0;
+            --border-accent: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-label: #475569;
+            --primary-blue: #0284c7;
+            --primary-blue-hover: #0369a1;
+            --emerald: #10b981;
+            --emerald-bg: #ecfdf5;
+            --rose: #ef4444;
+            --rose-bg: #fef2f2;
+            --amber: #f59e0b;
+            --amber-bg: #fffbeb;
+            --mono-font: 'JetBrains Mono', monospace;
+            --sans-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--sans-font);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        .mobile-header {
+            text-align: center;
+            padding: 16px 8px 12px;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .mobile-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .mobile-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* STATUS BANNER */
+        .status-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 20px 16px;
+            text-align: center;
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-subtle);
+            margin-top: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-stopped .status-dot {
+            background-color: var(--rose);
+            box-shadow: 0 0 0 4px var(--rose-bg);
+        }
+
+        .status-stopped .status-text {
+            color: #b91c1c;
+        }
+
+        .status-active .status-dot {
+            background-color: var(--emerald);
+            box-shadow: 0 0 0 4px var(--emerald-bg);
+            animation: pulse-emerald 1.8s infinite;
+        }
+
+        .status-active .status-text {
+            color: #047857;
+        }
+
+        .status-warning .status-dot {
+            background-color: var(--amber);
+            box-shadow: 0 0 0 4px var(--amber-bg);
+        }
+
+        .status-warning .status-text {
+            color: #b45309;
+        }
+
+        @keyframes pulse-emerald {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .status-detail {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            min-height: 20px;
+        }
+
+        /* CONTROLS */
+        .controls-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: var(--radius-md);
+            font-size: 1.05rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+        }
+
+        .btn-start:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+        }
+
+        .btn-stop {
+            background: #ffffff;
+            color: #b91c1c;
+            border: 1.5px solid #fecaca;
+        }
+
+        .btn-stop:hover {
+            background: #fef2f2;
+        }
+
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* TELEMETRY CARDS GRID */
+        .telemetry-section {
+            margin-top: 18px;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-label);
+            margin-bottom: 8px;
+            padding-left: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .telemetry-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-full {
+            grid-column: span 2;
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .card-value {
+            font-family: var(--mono-font);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-main);
+            word-break: break-all;
+        }
+
+        .card-unit {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-left: 2px;
+        }
+
+        /* DIAGNOSTICS BAR */
+        .diagnostics-card {
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            border: 1px solid var(--border-subtle);
+            margin-top: 14px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .diag-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .diag-label {
+            font-weight: 500;
+        }
+
+        .diag-val {
+            font-family: var(--mono-font);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* SECURITY WARNING BANNER */
+        .security-banner {
+            display: none;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            margin-top: 14px;
+            font-size: 0.8rem;
+            color: #92400e;
+            line-height: 1.4;
+        }
+
+        .security-banner strong {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        /* FOOTER */
+        .mobile-footer {
+            margin-top: auto;
+            padding: 20px 4px 8px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .mobile-footer a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .mobile-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body data-device-id="{{ device_id }}" data-local-ip="{{ local_ip }}">
+
+    <!-- HEADER -->
+    <header class="mobile-header">
+        <div class="brand-badge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+            <span>UTM Mobile Tracking</span>
+        </div>
+        <h1 class="mobile-title">Phone GPS Test Mode</h1>
+        <p class="mobile-subtitle">Broadcasts real-time device GPS to UTM Dashboard</p>
+    </header>
+
+    <!-- STATUS CARD -->
+    <section class="status-card" id="statusCard">
+        <div class="status-indicator status-stopped" id="statusIndicator">
+            <span class="status-dot"></span>
+            <span class="status-text" id="statusText">🔴 GPS Not Sharing</span>
+        </div>
+        <div class="status-detail" id="statusDetail">Press "Start GPS Tracking" to begin sharing location.</div>
+    </section>
+
+    <!-- ACTION BUTTONS -->
+    <div class="controls-container">
+        <button id="btnStart" class="btn btn-start" type="button">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <span>Start GPS Tracking</span>
+        </button>
+
+        <button id="btnStop" class="btn btn-stop" type="button" disabled>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12"/>
+            </svg>
+            <span>Stop GPS Tracking</span>
+        </button>
+    </div>
+
+    <!-- LIVE TELEMETRY CARDS -->
+    <section class="telemetry-section">
+        <div class="section-title">
+            <span>Live GPS Parameters</span>
+            <span id="rateIndicator" style="font-family: var(--mono-font); font-size: 0.75rem; text-transform: none; color: var(--primary-blue);">Direct GPS Events</span>
+        </div>
+
+        <div class="cards-grid">
+            <!-- Latitude -->
+            <div class="telemetry-card">
+                <div class="card-label">Latitude</div>
+                <div class="card-value" id="valLat">--</div>
+            </div>
+
+            <!-- Longitude -->
+            <div class="telemetry-card">
+                <div class="card-label">Longitude</div>
+                <div class="card-value" id="valLon">--</div>
+            </div>
+
+            <!-- Altitude -->
+            <div class="telemetry-card">
+                <div class="card-label">Altitude</div>
+                <div class="card-value" id="valAlt">--</div>
+            </div>
+
+            <!-- Heading -->
+            <div class="telemetry-card">
+                <div class="card-label">Heading</div>
+                <div class="card-value" id="valHeading">--</div>
+            </div>
+
+            <!-- Accuracy -->
+            <div class="telemetry-card">
+                <div class="card-label">Accuracy</div>
+                <div class="card-value" id="valAccuracy">--</div>
+            </div>
+
+            <!-- Speed -->
+            <div class="telemetry-card">
+                <div class="card-label">Speed</div>
+                <div class="card-value" id="valSpeed">--</div>
+            </div>
+
+            <!-- Last Update -->
+            <div class="telemetry-card card-full">
+                <div class="card-label">Last GPS Update</div>
+                <div class="card-value" id="valTimestamp" style="font-size: 1rem;">--</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- DIAGNOSTICS -->
+    <section class="diagnostics-card">
+        <div class="diag-row">
+            <span class="diag-label">Device ID:</span>
+            <span class="diag-val" id="diagDeviceId">{{ device_id }}</span>
+        </div>
+        <div class="diag-row">
+            <span class="diag-label">Packets Transmitted:</span>
+            <span class="diag-val" id="diagPacketsSent">0</span>
+        </div>
+        <div class="diag-row">
+            <span class="diag-label">Backend Delivery:</span>
+            <span class="diag-val" id="diagServerStatus">Idle</span>
+        </div>
+        <div class="diag-row">
+            <span class="diag-label">Destination API:</span>
+            <span class="diag-val" style="font-size: 0.75rem;">/api/phone-location/</span>
+        </div>
+    </section>
+
+    <!-- SECURITY CONTEXT BANNER (Shown if Android Chrome blocks plain HTTP geolocation) -->
+    <div class="security-banner" id="securityBanner">
+        <strong>⚠️ Android Browser Geolocation Note</strong>
+        <span>Modern Chrome may require HTTPS for location on non-localhost IP addresses. If location fails, access this page via HTTPS or configure a secure context.</span>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="mobile-footer">
+        <div>Unified Telemetry Monitor &bull; Phone GPS Source Mode</div>
+        <div style="margin-top: 4px;">
+            <a href="/dashboard/" target="_blank">Open Main Dashboard &rarr;</a>
+        </div>
+    </footer>
+
+    <!-- JavaScript Client -->
+    <script src="{% static 'js/mobile.js' %}"></script>
+</body>
+</html>
