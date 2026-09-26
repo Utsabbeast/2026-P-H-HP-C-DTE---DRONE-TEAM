@@ -13,8 +13,8 @@ ENV/
 .env
 
 # Static & Media uploads (if generated)
-staticfiles/
 media/
+
 
 # SSL Certificates & Logs
 ssl/
@@ -26,5 +26,7 @@ ssl/
 .idea/
 
 # Temporary Binaries
+gh
 cloudflared*
 ngrok*
+
