@@ -66,6 +66,8 @@
         bannerSub: document.getElementById('bannerSub'),
         bannerHelpText: document.getElementById('bannerHelpText'),
         bannerCodeUrl: document.getElementById('bannerCodeUrl'),
+        btnTrackThisDevice: document.getElementById('btnTrackThisDevice'),
+        btnTrackThisDeviceText: document.getElementById('btnTrackThisDeviceText'),
         btnShowQrModal: document.getElementById('btnShowQrModal'),
         btnCopyMobileUrl: document.getElementById('btnCopyMobileUrl'),
         copyBtnText: document.getElementById('copyBtnText'),
@@ -763,9 +765,154 @@
     }
 
     // -------------------------------------------------------------------------
+    // Direct Browser Device GPS Tracking (No phone/QR required)
+    // -------------------------------------------------------------------------
+    let localWatchId = null;
+    let isLocalTracking = false;
+
+    function toggleLocalDeviceTracking() {
+        if (isLocalTracking) {
+            stopLocalDeviceTracking();
+        } else {
+            startLocalDeviceTracking();
+        }
+    }
+
+    function startLocalDeviceTracking() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser.');
+            return;
+        }
+
+        // Switch to Phone/Device GPS Mode if not already active
+        if (activeMode !== 'phone') {
+            setDashboardMode('phone');
+        }
+
+        if (elements.btnTrackThisDevice) {
+            elements.btnTrackThisDevice.classList.add('is-active');
+            if (elements.btnTrackThisDeviceText) {
+                elements.btnTrackThisDeviceText.textContent = '⏹️ Stop Live Tracking';
+            }
+        }
+
+        isLocalTracking = true;
+        if (elements.bannerTitle) elements.bannerTitle.textContent = '📍 Acquiring Device GPS...';
+        if (elements.bannerHelpText) elements.bannerHelpText.textContent = 'Please click "Allow" on the browser location prompt to track live.';
+
+        localWatchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                const coords = pos.coords;
+                const lat = coords.latitude;
+                const lon = coords.longitude;
+                const rawAlt = coords.altitude;
+                const rawHdg = coords.heading;
+                const rawAcc = coords.accuracy;
+                const rawSpd = coords.speed;
+
+                const alt = (rawAlt !== null && !isNaN(rawAlt)) ? Number(rawAlt.toFixed(1)) : null;
+                const heading = (rawHdg !== null && !isNaN(rawHdg) && rawHdg >= 0) ? Number((rawHdg % 360).toFixed(1)) : null;
+                const accuracy = (rawAcc !== null && !isNaN(rawAcc) && rawAcc >= 0) ? Number(rawAcc.toFixed(1)) : null;
+                const speed = (rawSpd !== null && !isNaN(rawSpd) && rawSpd >= 0) ? Number(rawSpd.toFixed(1)) : null;
+
+                const telemetryObj = {
+                    latitude: lat,
+                    longitude: lon,
+                    altitude: alt,
+                    heading: heading,
+                    accuracy: accuracy,
+                    speed: speed,
+                    timestamp: new Date(pos.timestamp || Date.now()).toISOString(),
+                    received_at: new Date().toISOString(),
+                    source: 'browser_gps'
+                };
+
+                const apiState = {
+                    is_connected: true,
+                    status_label: 'Device Connected',
+                    seconds_since_update: 0.1,
+                    total_packets_received: totalPacketCount + 1
+                };
+
+                lastReceivedTimestamp = Date.now();
+                totalPacketCount++;
+                updatePhoneUI(telemetryObj, apiState);
+
+                if (elements.bannerTitle) {
+                    elements.bannerTitle.textContent = `🟢 Device GPS Live (Accurate to ${accuracy !== null ? accuracy + 'm' : 'GPS fix'})`;
+                }
+                if (elements.bannerHelpText) {
+                    elements.bannerHelpText.textContent = `Streaming location directly to tactical map:`;
+                }
+
+                // Also persist packet to backend database so history is preserved
+                fetch('/api/phone-location/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        device_id: targetPhoneDeviceId,
+                        latitude: Number(lat.toFixed(6)),
+                        longitude: Number(lon.toFixed(6)),
+                        altitude: alt,
+                        heading: heading,
+                        accuracy: accuracy,
+                        speed: speed,
+                        timestamp: telemetryObj.timestamp,
+                        source: 'browser_gps'
+                    })
+                }).catch(() => {});
+            },
+            (err) => {
+                console.warn('[UTM] Browser geolocation error:', err);
+                if (err.code === err.TIMEOUT && lastKnownLat) {
+                    return; // Ignore intermittent timeout
+                }
+                let msg = 'Failed to acquire device location.';
+                if (err.code === err.PERMISSION_DENIED) {
+                    msg = 'Location permission was denied. Please allow location access in your browser address bar/site settings to track this device.';
+                } else if (err.code === err.POSITION_UNAVAILABLE) {
+                    msg = 'Location signal currently unavailable. Check that Location Services are enabled on this computer.';
+                }
+                alert(msg);
+                stopLocalDeviceTracking();
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 5000
+            }
+        );
+    }
+
+    function stopLocalDeviceTracking() {
+        if (localWatchId !== null) {
+            navigator.geolocation.clearWatch(localWatchId);
+            localWatchId = null;
+        }
+        isLocalTracking = false;
+        if (elements.btnTrackThisDevice) {
+            elements.btnTrackThisDevice.classList.remove('is-active');
+            if (elements.btnTrackThisDeviceText) {
+                elements.btnTrackThisDeviceText.textContent = 'Track My Location Live';
+            }
+        }
+        if (elements.bannerTitle) {
+            elements.bannerTitle.textContent = '📱 Live GPS Mode — Track Direct or Connect Phone';
+        }
+        if (elements.bannerHelpText) {
+            elements.bannerHelpText.textContent = 'Click below to track this device live, or scan QR code on smartphone:';
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Event Listeners & Startup
     // -------------------------------------------------------------------------
     function bindEvents() {
+        // Direct Device GPS Tracking
+        if (elements.btnTrackThisDevice) {
+            elements.btnTrackThisDevice.addEventListener('click', toggleLocalDeviceTracking);
+        }
+
         // Mode Switcher Tabs
         if (elements.tabPhoneMode) {
             elements.tabPhoneMode.addEventListener('click', () => setDashboardMode('phone'));

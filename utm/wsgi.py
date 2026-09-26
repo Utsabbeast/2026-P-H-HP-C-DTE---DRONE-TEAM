@@ -14,3 +14,10 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'utm.settings')
 
 application = get_wsgi_application()
+
+# Ensure database tables exist automatically in ephemeral environments (e.g. Render)
+try:
+    from django.core.management import call_command
+    call_command('migrate', interactive=False)
+except Exception as _mig_err:
+    print(f"[UTM WSGI] Automatic migration notice: {_mig_err}")

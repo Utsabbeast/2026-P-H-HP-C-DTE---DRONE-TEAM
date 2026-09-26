@@ -165,9 +165,9 @@
         updateStatus('warning', '🟡 Acquiring GPS Fix...', 'Requesting high-accuracy GPS coordinates from device hardware...');
 
         const geoOptions = {
-            enableHighAccuracy: true, // Always request real high-accuracy GPS hardware
-            timeout: 20000,           // 20 seconds acquisition timeout
-            maximumAge: 0             // Do not use cached GPS fixes
+            enableHighAccuracy: true, // Request real high-accuracy GPS hardware
+            timeout: 15000,           // 15 seconds acquisition timeout
+            maximumAge: 5000          // Accept 5-second fresh fix to prevent indoor fluctuation
         };
 
         try {
@@ -314,7 +314,14 @@
     // Geolocation Error Callback
     // -------------------------------------------------------------------------
     function onLocationError(error) {
-        console.error('[UTM Mobile] Geolocation error:', error);
+        console.warn('[UTM Mobile] Geolocation event:', error);
+
+        // If we already have an active fix, do not flash red on intermittent satellite timeouts
+        if (error.code === error.TIMEOUT && latestCoords) {
+            console.log('[UTM Mobile] Intermittent GPS timeout; retaining active fix.');
+            return;
+        }
+
         let headline = '🔴 GPS Error';
         let detail = 'An unknown GPS error occurred.';
 
@@ -336,11 +343,13 @@
                 break;
         }
 
-        updateStatus('error', headline, detail);
+        if (!latestCoords) {
+            updateStatus('error', headline, detail);
 
-        if (diagServerStatus) {
-            diagServerStatus.textContent = 'GPS Unavailable';
-            diagServerStatus.style.color = '#ef4444';
+            if (diagServerStatus) {
+                diagServerStatus.textContent = 'GPS Unavailable';
+                diagServerStatus.style.color = '#ef4444';
+            }
         }
     }
 

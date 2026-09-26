@@ -104,17 +104,30 @@
                     </svg>
                 </div>
                 <div>
-                    <div class="hotspot-text-title" id="bannerTitle">📱 Phone GPS Test Mode — Connect Your Smartphone</div>
+                    <div class="hotspot-text-title" id="bannerTitle">📱 Live GPS Mode — Track Direct or Connect Phone</div>
                     <div class="hotspot-text-sub" id="bannerSub">
-                        <span id="bannerHelpText">Open on phone or scan QR code:</span> 
+                        <span id="bannerHelpText">Click below to track this device live, or scan QR code on smartphone:</span> 
                         <code id="bannerCodeUrl">{{ mobile_url|default:'/mobile/' }}</code>
                     </div>
                 </div>
             </div>
             
             <div class="connection-banner-actions">
+                <!-- 1. Direct Browser GPS Tracking Button (No Phone or QR needed) -->
+                <button type="button" class="btn-track-device" id="btnTrackThisDevice" title="Track your current laptop/device location directly on this map without scanning QR code">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="8"/>
+                        <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                        <line x1="12" y1="2" x2="12" y2="5"/>
+                        <line x1="12" y1="19" x2="12" y2="22"/>
+                        <line x1="2" y1="12" x2="5" y2="12"/>
+                        <line x1="19" y1="12" x2="22" y2="12"/>
+                    </svg>
+                    <span id="btnTrackThisDeviceText">Track My Location Live</span>
+                </button>
+
                 <!-- QR Code Modal Trigger -->
-                <button type="button" class="btn-banner-action btn-banner-qr" id="btnShowQrModal" title="Display QR Code for instant phone camera scanning">
+                <button type="button" class="btn-banner-action btn-banner-qr" id="btnShowQrModal" title="Display QR Code for phone camera scanning">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"/>
                         <rect x="14" y="3" width="7" height="7"/>
@@ -122,7 +135,7 @@
                         <rect x="14" y="14" width="3" height="3"/>
                         <line x1="17" y1="17" x2="21" y2="21"/>
                     </svg>
-                    <span>Scan QR</span>
+                    <span>Scan QR (Phone)</span>
                 </button>
 
                 <!-- Copy Link Button -->

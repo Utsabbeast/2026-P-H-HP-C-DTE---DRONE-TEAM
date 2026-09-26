@@ -325,95 +325,118 @@ class SimulationResetView(APIView):
 class PhoneLocationIngestView(APIView):
     """
     POST /api/phone-location/
-    Endpoint designed specifically for Android phone GPS ingestion.
-    Accepts real GPS coordinates from navigator.geolocation.watchPosition() on /mobile/.
+    Endpoint designed specifically for phone / browser GPS ingestion.
+    Accepts real GPS coordinates from navigator.geolocation.watchPosition().
     """
     authentication_classes = []
     permission_classes = []
 
     def post(self, request, *args, **kwargs):
-        serializer = PhoneTelemetrySerializer(data=request.data)
-        if serializer.is_valid():
-            record = serializer.save()
+        try:
+            serializer = PhoneTelemetrySerializer(data=request.data)
+            if serializer.is_valid():
+                record = serializer.save()
+                rx_time = record.received_at.isoformat() if record.received_at else timezone.now().isoformat()
+                return Response(
+                    {
+                        "status": "success",
+                        "id": record.id,
+                        "device_id": record.device_id,
+                        "received_at": rx_time,
+                    },
+                    status=status.HTTP_201_CREATED
+                )
             return Response(
                 {
-                    "status": "success",
-                    "id": record.id,
-                    "device_id": record.device_id,
-                    "received_at": record.received_at.isoformat(),
+                    "status": "error",
+                    "message": "Invalid phone telemetry payload",
+                    "errors": serializer.errors
                 },
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_400_BAD_REQUEST
             )
-        return Response(
-            {
-                "status": "error",
-                "message": "Invalid phone telemetry payload",
-                "errors": serializer.errors
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).exception("Phone ingest error: %s", exc)
+            return Response(
+                {
+                    "status": "error",
+                    "message": f"Server error ingesting phone telemetry: {str(exc)}"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class PhoneLocationLatestView(APIView):
     """
     GET /api/phone-location/latest/
-    Returns the most recent GPS location transmitted by the Android phone.
+    Returns the most recent GPS location transmitted by the phone or browser.
     Polled by the dashboard in Phone GPS Test Mode.
     """
     authentication_classes = []
     permission_classes = []
 
     def get(self, request, *args, **kwargs):
-        raw_device_id = request.query_params.get(
-            'device_id',
-            getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
-        )
-        device_id = raw_device_id.strip() if raw_device_id else getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
-        timeout = getattr(settings, 'PHONE_TIMEOUT_SECONDS', 15)
+        try:
+            raw_device_id = request.query_params.get(
+                'device_id',
+                getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
+            )
+            device_id = raw_device_id.strip() if raw_device_id else getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
+            timeout = getattr(settings, 'PHONE_TIMEOUT_SECONDS', 15)
 
-        latest = PhoneTelemetry.objects.filter(device_id=device_id).first()
-        total_packets = PhoneTelemetry.objects.filter(device_id=device_id).count()
+            latest = PhoneTelemetry.objects.filter(device_id=device_id).first()
+            total_packets = PhoneTelemetry.objects.filter(device_id=device_id).count()
 
-        # Resilient fallback: If no record matches device_id, use any recent phone record
-        if not latest:
-            latest = PhoneTelemetry.objects.first()
-            if latest:
-                device_id = latest.device_id
-                total_packets = PhoneTelemetry.objects.filter(device_id=device_id).count()
+            # Resilient fallback: If no record matches device_id, use any recent phone record
+            if not latest:
+                latest = PhoneTelemetry.objects.first()
+                if latest:
+                    device_id = latest.device_id
+                    total_packets = PhoneTelemetry.objects.filter(device_id=device_id).count()
 
-        if not latest:
+            if not latest:
+                return Response(
+                    {
+                        "status": "waiting",
+                        "device_id": device_id,
+                        "is_connected": False,
+                        "status_label": "Device Disconnected",
+                        "seconds_since_update": None,
+                        "total_packets_received": 0,
+                        "source": "phone_test",
+                        "message": "No phone GPS updates received yet. Open /mobile/ on Android or click Track My Location Live.",
+                        "telemetry": None,
+                    },
+                    status=status.HTTP_200_OK
+                )
+
+            seconds_ago = latest.seconds_since_received
+            is_conn = seconds_ago <= timeout
+
+            serializer = PhoneTelemetrySerializer(latest)
             return Response(
                 {
-                    "status": "waiting",
+                    "status": "success",
                     "device_id": device_id,
-                    "is_connected": False,
-                    "status_label": "Phone Disconnected",
-                    "seconds_since_update": None,
-                    "total_packets_received": 0,
-                    "source": "phone_test",
-                    "message": "No phone GPS updates received yet. Open /mobile/ on Android and press Start GPS Tracking.",
-                    "telemetry": None,
+                    "is_connected": is_conn,
+                    "status_label": "Phone Connected" if is_conn else "Phone Disconnected",
+                    "seconds_since_update": round(seconds_ago, 1),
+                    "total_packets_received": total_packets,
+                    "source": latest.source or "phone_test",
+                    "telemetry": serializer.data
                 },
                 status=status.HTTP_200_OK
             )
-
-        seconds_ago = latest.seconds_since_received
-        is_conn = seconds_ago <= timeout
-
-        serializer = PhoneTelemetrySerializer(latest)
-        return Response(
-            {
-                "status": "success",
-                "device_id": device_id,
-                "is_connected": is_conn,
-                "status_label": "Phone Connected" if is_conn else "Phone Disconnected",
-                "seconds_since_update": round(seconds_ago, 1),
-                "total_packets_received": total_packets,
-                "source": "phone_test",
-                "telemetry": serializer.data
-            },
-            status=status.HTTP_200_OK
-        )
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).exception("Phone latest view error: %s", exc)
+            return Response(
+                {
+                    "status": "error",
+                    "message": f"Server error: {str(exc)}"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class PhoneLocationHistoryView(APIView):
@@ -425,36 +448,47 @@ class PhoneLocationHistoryView(APIView):
     permission_classes = []
 
     def get(self, request, *args, **kwargs):
-        raw_device_id = request.query_params.get(
-            'device_id',
-            getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
-        )
-        device_id = raw_device_id.strip() if raw_device_id else getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
-        limit = min(int(request.query_params.get('limit', 100)), 500)
+        try:
+            raw_device_id = request.query_params.get(
+                'device_id',
+                getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
+            )
+            device_id = raw_device_id.strip() if raw_device_id else getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
+            limit = min(int(request.query_params.get('limit', 100)), 500)
 
-        records = list(
-            PhoneTelemetry.objects.filter(device_id=device_id)
-            .order_by('-received_at')[:limit]
-        )
-        if not records:
-            latest = PhoneTelemetry.objects.first()
-            if latest:
-                records = list(
-                    PhoneTelemetry.objects.filter(device_id=latest.device_id)
-                    .order_by('-received_at')[:limit]
-                )
+            records = list(
+                PhoneTelemetry.objects.filter(device_id=device_id)
+                .order_by('-received_at')[:limit]
+            )
+            if not records:
+                latest = PhoneTelemetry.objects.first()
+                if latest:
+                    records = list(
+                        PhoneTelemetry.objects.filter(device_id=latest.device_id)
+                        .order_by('-received_at')[:limit]
+                    )
 
-        records.reverse()  # Chronological order for polyline drawing
+            records.reverse()  # Chronological order for polyline drawing
 
-        serializer = PhoneTelemetrySerializer(records, many=True)
-        return Response(
-            {
-                "status": "success",
-                "device_id": device_id,
-                "source": "phone_test",
-                "count": len(records),
-                "results": serializer.data
-            },
-            status=status.HTTP_200_OK
-        )
+            serializer = PhoneTelemetrySerializer(records, many=True)
+            return Response(
+                {
+                    "status": "success",
+                    "device_id": device_id,
+                    "source": "phone_test",
+                    "count": len(records),
+                    "results": serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).exception("Phone history view error: %s", exc)
+            return Response(
+                {
+                    "status": "error",
+                    "message": f"Server error: {str(exc)}"
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 

@@ -3,7 +3,7 @@ services:
     name: utm-telemetry
     runtime: python
     buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --no-input
-    startCommand: gunicorn utm.wsgi:application
+    startCommand: python manage.py migrate && gunicorn utm.wsgi:application
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.6
