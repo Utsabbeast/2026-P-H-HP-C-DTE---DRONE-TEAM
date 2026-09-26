@@ -237,15 +237,21 @@
         // Extract values strictly without inventing fake fallbacks
         const lat = coords.latitude;
         const lon = coords.longitude;
-        const alt = (coords.altitude !== null && !isNaN(coords.altitude)) ? Number(coords.altitude.toFixed(1)) : null;
-        const heading = (coords.heading !== null && !isNaN(coords.heading)) ? Number(coords.heading.toFixed(1)) : null;
-        const accuracy = (coords.accuracy !== null && !isNaN(coords.accuracy)) ? Number(coords.accuracy.toFixed(1)) : null;
-        const speed = (coords.speed !== null && !isNaN(coords.speed)) ? Number(coords.speed.toFixed(1)) : null;
+        const rawAlt = coords.altitude;
+        const rawHdg = coords.heading;
+        const rawAcc = coords.accuracy;
+        const rawSpd = coords.speed;
+
+        const alt = (rawAlt !== null && !isNaN(rawAlt)) ? Number(rawAlt.toFixed(1)) : null;
+        // On Android, negative values (< 0) are sentinel values representing unknown heading/speed
+        const heading = (rawHdg !== null && !isNaN(rawHdg) && rawHdg >= 0) ? Number((rawHdg % 360).toFixed(1)) : null;
+        const accuracy = (rawAcc !== null && !isNaN(rawAcc) && rawAcc >= 0) ? Number(rawAcc.toFixed(1)) : null;
+        const speed = (rawSpd !== null && !isNaN(rawSpd) && rawSpd >= 0) ? Number(rawSpd.toFixed(1)) : null;
         const isoTimestamp = now.toISOString();
         const displayTime = now.toTimeString().split(' ')[0]; // HH:MM:SS
 
         // Update Phone UI elements immediately
-        updateStatus('active', '🟢 GPS Tracking Active', `Accurate within ${accuracy !== null ? accuracy + 'm' : 'unknown precision'}. Streaming to UTM.`);
+        updateStatus('active', '🟢 GPS Tracking Active', `Accurate within ${accuracy !== null ? accuracy + 'm' : 'unknown precision'}. Transmitting to UTM...`);
 
         if (valLat) valLat.textContent = lat.toFixed(6) + '°';
         if (valLon) valLon.textContent = lon.toFixed(6) + '°';
@@ -279,10 +285,15 @@
 
         const lat = latestCoords.latitude;
         const lon = latestCoords.longitude;
-        const alt = (latestCoords.altitude !== null && !isNaN(latestCoords.altitude)) ? Number(latestCoords.altitude.toFixed(1)) : null;
-        const heading = (latestCoords.heading !== null && !isNaN(latestCoords.heading)) ? Number(latestCoords.heading.toFixed(1)) : null;
-        const accuracy = (latestCoords.accuracy !== null && !isNaN(latestCoords.accuracy)) ? Number(latestCoords.accuracy.toFixed(1)) : null;
-        const speed = (latestCoords.speed !== null && !isNaN(latestCoords.speed)) ? Number(latestCoords.speed.toFixed(1)) : null;
+        const rawAlt = latestCoords.altitude;
+        const rawHdg = latestCoords.heading;
+        const rawAcc = latestCoords.accuracy;
+        const rawSpd = latestCoords.speed;
+
+        const alt = (rawAlt !== null && !isNaN(rawAlt)) ? Number(rawAlt.toFixed(1)) : null;
+        const heading = (rawHdg !== null && !isNaN(rawHdg) && rawHdg >= 0) ? Number((rawHdg % 360).toFixed(1)) : null;
+        const accuracy = (rawAcc !== null && !isNaN(rawAcc) && rawAcc >= 0) ? Number(rawAcc.toFixed(1)) : null;
+        const speed = (rawSpd !== null && !isNaN(rawSpd) && rawSpd >= 0) ? Number(rawSpd.toFixed(1)) : null;
 
         const payload = {
             device_id: deviceId,
@@ -356,23 +367,27 @@
                 packetsSentCount++;
                 if (diagPacketsSent) diagPacketsSent.textContent = packetsSentCount;
                 if (diagServerStatus) {
-                    diagServerStatus.textContent = `Sent (${response.status} OK)`;
+                    diagServerStatus.textContent = `Streaming Active (HTTP ${response.status} OK)`;
                     diagServerStatus.style.color = '#10b981';
                 }
+                updateStatus('active', '🟢 GPS Streaming Live', `Packet #${packetsSentCount} sent to website. Accuracy: ${payload.accuracy !== null ? payload.accuracy + 'm' : 'N/A'}`);
             } else {
                 const errData = await response.json().catch(() => ({}));
                 console.error('[UTM Mobile] Server error response:', response.status, errData);
+                const detailMsg = errData.message || (errData.errors ? JSON.stringify(errData.errors) : `HTTP ${response.status}`);
                 if (diagServerStatus) {
-                    diagServerStatus.textContent = `Server Error (${response.status})`;
+                    diagServerStatus.textContent = `Server Error (${response.status}): ${detailMsg}`;
                     diagServerStatus.style.color = '#ef4444';
                 }
+                updateStatus('warning', '⚠️ Server Rejected Packet', `Server HTTP ${response.status}: ${detailMsg}`);
             }
         } catch (netErr) {
             console.error('[UTM Mobile] Network transmission failure:', netErr);
             if (diagServerStatus) {
-                diagServerStatus.textContent = 'Network Offline';
+                diagServerStatus.textContent = `Network Offline: ${netErr.message}`;
                 diagServerStatus.style.color = '#ef4444';
             }
+            updateStatus('warning', '⚠️ Network Offline', 'Unable to reach server. Check internet connection.');
         }
     }
 

@@ -163,3 +163,7 @@ TELEMETRY_TIMEOUT_SECONDS = 5
 
 # Default identifier for the primary tracked drone
 DEFAULT_DRONE_ID = 'drone01'
+
+# Phone GPS Test Mode settings
+DEFAULT_PHONE_DEVICE_ID = 'phone_test_01'
+PHONE_TIMEOUT_SECONDS = 15

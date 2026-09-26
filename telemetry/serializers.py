@@ -1,3 +1,4 @@
+import math
 from rest_framework import serializers
 from .models import DroneTelemetry, PhoneTelemetry
 
@@ -113,20 +114,16 @@ class PhoneTelemetrySerializer(serializers.ModelSerializer):
     heading = serializers.FloatField(
         allow_null=True,
         required=False,
-        min_value=0.0,
-        max_value=360.0,
         help_text="Heading in degrees (0.0 to 360.0; null if unavailable)"
     )
     accuracy = serializers.FloatField(
         allow_null=True,
         required=False,
-        min_value=0.0,
         help_text="Accuracy in meters (null if unavailable)"
     )
     speed = serializers.FloatField(
         allow_null=True,
         required=False,
-        min_value=0.0,
         help_text="Speed in m/s (null if unavailable)"
     )
     timestamp = serializers.DateTimeField(
@@ -156,6 +153,83 @@ class PhoneTelemetrySerializer(serializers.ModelSerializer):
             'seconds_since_received',
         ]
         read_only_fields = ['id', 'received_at', 'seconds_since_received']
+
+    def to_internal_value(self, data):
+        """
+        Sanitize incoming phone GPS data to handle Android hardware sentinels.
+        Android Location API and mobile browsers often provide:
+          - heading = -1.0 or NaN when stationary or compass unavailable.
+          - speed = -1.0 or NaN when speed is unavailable.
+          - accuracy = -1.0 or NaN when unknown.
+          - altitude = NaN when altimeter unavailable.
+        We convert sentinel/invalid values to None rather than rejecting the packet.
+        """
+        if hasattr(data, 'copy'):
+            data = data.copy()
+        elif isinstance(data, dict):
+            data = dict(data)
+
+        # Sanitize heading (-1.0 sentinel on Android)
+        if 'heading' in data:
+            val = data.get('heading')
+            if val is not None and val != '':
+                try:
+                    num = float(val)
+                    if math.isnan(num) or num < 0:
+                        data['heading'] = None
+                    else:
+                        data['heading'] = round(num % 360, 2)
+                except (ValueError, TypeError):
+                    data['heading'] = None
+            else:
+                data['heading'] = None
+
+        # Sanitize speed (-1.0 sentinel on Android)
+        if 'speed' in data:
+            val = data.get('speed')
+            if val is not None and val != '':
+                try:
+                    num = float(val)
+                    if math.isnan(num) or num < 0:
+                        data['speed'] = None
+                    else:
+                        data['speed'] = round(num, 2)
+                except (ValueError, TypeError):
+                    data['speed'] = None
+            else:
+                data['speed'] = None
+
+        # Sanitize accuracy (-1.0 sentinel on Android)
+        if 'accuracy' in data:
+            val = data.get('accuracy')
+            if val is not None and val != '':
+                try:
+                    num = float(val)
+                    if math.isnan(num) or num < 0:
+                        data['accuracy'] = None
+                    else:
+                        data['accuracy'] = round(num, 2)
+                except (ValueError, TypeError):
+                    data['accuracy'] = None
+            else:
+                data['accuracy'] = None
+
+        # Sanitize altitude (NaN sentinel)
+        if 'altitude' in data:
+            val = data.get('altitude')
+            if val is not None and val != '':
+                try:
+                    num = float(val)
+                    if math.isnan(num):
+                        data['altitude'] = None
+                    else:
+                        data['altitude'] = round(num, 2)
+                except (ValueError, TypeError):
+                    data['altitude'] = None
+            else:
+                data['altitude'] = None
+
+        return super().to_internal_value(data)
 
     def validate_device_id(self, value):
         if not value or not value.strip():

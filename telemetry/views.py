@@ -328,6 +328,9 @@ class PhoneLocationIngestView(APIView):
     Endpoint designed specifically for Android phone GPS ingestion.
     Accepts real GPS coordinates from navigator.geolocation.watchPosition() on /mobile/.
     """
+    authentication_classes = []
+    permission_classes = []
+
     def post(self, request, *args, **kwargs):
         serializer = PhoneTelemetrySerializer(data=request.data)
         if serializer.is_valid():
@@ -337,6 +340,7 @@ class PhoneLocationIngestView(APIView):
                     "status": "success",
                     "id": record.id,
                     "device_id": record.device_id,
+                    "received_at": record.received_at.isoformat(),
                 },
                 status=status.HTTP_201_CREATED
             )
@@ -356,15 +360,26 @@ class PhoneLocationLatestView(APIView):
     Returns the most recent GPS location transmitted by the Android phone.
     Polled by the dashboard in Phone GPS Test Mode.
     """
+    authentication_classes = []
+    permission_classes = []
+
     def get(self, request, *args, **kwargs):
-        device_id = request.query_params.get(
+        raw_device_id = request.query_params.get(
             'device_id',
             getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
         )
-        timeout = getattr(settings, 'PHONE_TIMEOUT_SECONDS', 10)
+        device_id = raw_device_id.strip() if raw_device_id else getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
+        timeout = getattr(settings, 'PHONE_TIMEOUT_SECONDS', 15)
 
         latest = PhoneTelemetry.objects.filter(device_id=device_id).first()
         total_packets = PhoneTelemetry.objects.filter(device_id=device_id).count()
+
+        # Resilient fallback: If no record matches device_id, use any recent phone record
+        if not latest:
+            latest = PhoneTelemetry.objects.first()
+            if latest:
+                device_id = latest.device_id
+                total_packets = PhoneTelemetry.objects.filter(device_id=device_id).count()
 
         if not latest:
             return Response(
@@ -406,17 +421,29 @@ class PhoneLocationHistoryView(APIView):
     GET /api/phone-location/history/
     Returns recent phone GPS records to draw the phone movement trail on Leaflet.
     """
+    authentication_classes = []
+    permission_classes = []
+
     def get(self, request, *args, **kwargs):
-        device_id = request.query_params.get(
+        raw_device_id = request.query_params.get(
             'device_id',
             getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
         )
+        device_id = raw_device_id.strip() if raw_device_id else getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
         limit = min(int(request.query_params.get('limit', 100)), 500)
 
         records = list(
             PhoneTelemetry.objects.filter(device_id=device_id)
             .order_by('-received_at')[:limit]
         )
+        if not records:
+            latest = PhoneTelemetry.objects.first()
+            if latest:
+                records = list(
+                    PhoneTelemetry.objects.filter(device_id=latest.device_id)
+                    .order_by('-received_at')[:limit]
+                )
+
         records.reverse()  # Chronological order for polyline drawing
 
         serializer = PhoneTelemetrySerializer(records, many=True)

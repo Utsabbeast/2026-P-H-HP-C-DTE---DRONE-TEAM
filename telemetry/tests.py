@@ -286,6 +286,33 @@ class PhoneTelemetryAPITest(TestCase):
         self.assertEqual(response.json()['status'], 'success')
         self.assertEqual(PhoneTelemetry.objects.count(), 1)
 
+    def test_phone_location_ingest_android_sentinels(self):
+        """Verifies that Android negative sentinel values (-1.0 for heading, speed, accuracy) are accepted and converted to None."""
+        payload = {
+            "device_id": "phone_test_01",
+            "latitude": 28.6139,
+            "longitude": 77.2090,
+            "altitude": 210.5,
+            "heading": -1.0,
+            "accuracy": -1.0,
+            "speed": -1.0,
+            "timestamp": "2026-09-26T18:00:00Z",
+            "source": "phone_test"
+        }
+        response = self.client.post(
+            '/api/phone-location/',
+            data=payload,
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.json()['status'], 'success')
+        record = PhoneTelemetry.objects.get(device_id='phone_test_01')
+        self.assertAlmostEqual(record.latitude, 28.6139)
+        self.assertAlmostEqual(record.longitude, 77.2090)
+        self.assertIsNone(record.heading)
+        self.assertIsNone(record.speed)
+        self.assertIsNone(record.accuracy)
+
     def test_phone_location_invalid_payload(self):
         payload = {
             "device_id": "phone_test_01",

@@ -640,7 +640,8 @@
             if (data.status === 'success' && data.telemetry) {
                 totalPacketCount++;
                 if (elements.statusMetaPkt) elements.statusMetaPkt.textContent = `Packets Received: ${data.total_packets_received || totalPacketCount}`;
-                lastReceivedTimestamp = Date.now();
+                const secAgo = (typeof data.seconds_since_update === 'number') ? data.seconds_since_update : 0;
+                lastReceivedTimestamp = Date.now() - (secAgo * 1000);
                 updatePhoneUI(data.telemetry, data);
             } else if (data.status === 'waiting') {
                 updateConnectionStatus(false, null);
