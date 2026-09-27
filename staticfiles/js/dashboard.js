@@ -47,6 +47,7 @@
     let lastKnownLon = 75.8573;
     let lastKnownHeading = 142.0;
     let hasReceivedFirstPhoneFix = false;
+    let hasReceivedFirstDroneFix = false;
 
     // DOM Elements Cache
     const elements = {
@@ -372,6 +373,14 @@
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
         }
 
+        try {
+            localStorage.setItem('utm_active_mode', newMode);
+        } catch (e) {}
+
+        if (newMode === 'drone' && !esp32WebSocket && location.protocol !== 'https:') {
+            setTimeout(connectEsp32WebSocket, 250);
+        }
+
         // Reset connection status until first poll of the new mode returns
         updateConnectionStatus(false, null);
         loadHistoryForCurrentMode();
@@ -542,6 +551,12 @@
         lastKnownLon = lon;
         lastKnownHeading = hdg;
 
+        // Auto-center map on first valid drone GPS fix
+        if (!hasReceivedFirstDroneFix && map && lat !== 0 && lon !== 0) {
+            map.setView([lat, lon], 17, { animate: true });
+            hasReceivedFirstDroneFix = true;
+        }
+
         // Update Drone Marker Position & Rotator
         if (droneMarker) {
             droneMarker.setLatLng([lat, lon]);
@@ -549,6 +564,16 @@
             if (rotatorEl) {
                 rotatorEl.style.transform = `rotate(${hdg}deg)`;
             }
+
+            droneMarker.setPopupContent(`
+                <div style="font-family: inherit; font-size: 13px; line-height: 1.5; min-width: 170px;">
+                    <strong style="color: #0284c7;">🛰️ Drone (${telemetryData.drone_id || telemetryData.id || 'DRONE-ALPHA'})</strong><br>
+                    <span>Lat: <strong>${lat.toFixed(6)}°</strong></span><br>
+                    <span>Lon: <strong>${lon.toFixed(6)}°</strong></span><br>
+                    <span>Alt: <strong>${alt.toFixed(1)} m</strong></span><br>
+                    <span>Heading: <strong>${Math.round(hdg)}° (${headingToCardinal(hdg)})</strong></span>
+                </div>
+            `);
 
             if (movementTrail && isTrailVisible) {
                 trailCoordinates.push([lat, lon]);
@@ -715,6 +740,10 @@
                 if (elements.statusMetaPkt) elements.statusMetaPkt.textContent = `Packets Received: ${totalPacketCount}`;
                 lastReceivedTimestamp = Date.now();
                 updateDroneUI(data.telemetry, data);
+            } else if (data.status === 'waiting') {
+                if (!esp32WebSocket || esp32WebSocket.readyState !== WebSocket.OPEN) {
+                    updateConnectionStatus(false, null, data.status_label);
+                }
             }
         } catch (err) {
             console.warn('[UTM] Drone telemetry fetch error:', err.message);
@@ -965,6 +994,15 @@
             return;
         }
 
+        if (location.protocol === 'https:' && wsUrl.startsWith('ws://')) {
+            console.warn('[UTM] Browser security blocks insecure ws:// from an https:// origin.');
+            alert('Notice: Modern browsers block direct unencrypted ws:// connections when viewing from HTTPS (such as Render).\n\nTo view real-time WebSocket telemetry, please open this dashboard via http://localhost:8000/dashboard/ or http://<laptop-ip>:8000/dashboard/ on your Wi-Fi.');
+        }
+
+        try {
+            localStorage.setItem('utm_esp32_ws_url', wsUrl);
+        } catch (e) {}
+
         if (esp32WebSocket) {
             try { esp32WebSocket.close(); } catch (e) {}
             esp32WebSocket = null;
@@ -994,6 +1032,11 @@
                     const droneId = data.id || data.drone_id || 'DRONE-ALPHA';
 
                     if (isNaN(lat) || isNaN(lon)) return;
+
+                    // Automatically switch to Drone mode if currently in Phone mode
+                    if (activeMode !== 'drone') {
+                        setDashboardMode('drone');
+                    }
 
                     totalPacketCount++;
                     if (elements.statusMetaPkt) elements.statusMetaPkt.textContent = `Packets Received: ${totalPacketCount}`;
@@ -1248,6 +1291,24 @@
         initMap();
         bindEvents();
         startHeartbeatCounter();
+
+        // Restore saved ESP32 WebSocket URL from previous session
+        try {
+            const savedWsUrl = localStorage.getItem('utm_esp32_ws_url');
+            if (savedWsUrl && elements.esp32WsInput) {
+                elements.esp32WsInput.value = savedWsUrl;
+            }
+        } catch (e) {}
+
+        // Check if mode was explicitly saved or passed in URL (?mode=drone)
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedMode = urlParams.get('mode') || (function() {
+            try { return localStorage.getItem('utm_active_mode'); } catch (e) { return null; }
+        })();
+
+        if (requestedMode === 'drone') {
+            setDashboardMode('drone');
+        }
 
         // Start polling active telemetry every 1000ms
         pollTimer = setInterval(fetchActiveTelemetry, 1000);

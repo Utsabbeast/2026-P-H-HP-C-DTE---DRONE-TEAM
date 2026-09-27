@@ -20,10 +20,17 @@
 #include <WiFi.h>
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
+#include <HTTPClient.h>
 
-
+// Wi-Fi Access Point / Hotspot Credentials
 const char* ssid = "Galaxy A27 5G CB9A";
 const char* password = "nitin6789";
+
+// Optional: HTTP POST telemetry to your web server (e.g. Render or local IP)
+// Leave empty "" to broadcast over local WebSocket only.
+// Example: const char* utmServerUrl = "https://utm-drone.onrender.com/api/telemetry/";
+// Example: const char* utmServerUrl = "http://192.168.43.100:8000/api/telemetry/";
+const char* utmServerUrl = "";
 
 // Hardware Serial2: RX = GPIO 16, TX = GPIO 17
 HardwareSerial MavSerial(2);
@@ -126,8 +133,20 @@ void parseMavlinkByte(uint8_t c) {
           char jsonBuffer[256];
           serializeJson(doc, jsonBuffer);
 
-          // 3. Broadcast over Wi-Fi
+          // 3. Broadcast over Wi-Fi WebSocket (sub-10ms latency)
           webSocket.broadcastTXT(jsonBuffer);
+
+          // 4. (Optional) Forward via HTTP POST to cloud / server
+          static unsigned long lastHttpSend = 0;
+          if (strlen(utmServerUrl) > 0 && (millis() - lastHttpSend >= 1000) && WiFi.status() == WL_CONNECTED) {
+            lastHttpSend = millis();
+            HTTPClient http;
+            http.begin(utmServerUrl);
+            http.addHeader("Content-Type", "application/json");
+            http.setTimeout(800);
+            http.POST(jsonBuffer);
+            http.end();
+          }
 
           // ================= PRINT TO SERIAL MONITOR (USB) =================
           Serial.println("---------- TELEMETRY PACKET ----------");
@@ -167,9 +186,15 @@ void setup() {
     Serial.print(".");
   }
 
-  Serial.println("\n--- CONNECTED ---");
-  Serial.print("ESP32 IP Address: ");
-  Serial.println(WiFi.localIP()); // <-- Copy this IP address for your HTML dashboard
+  Serial.println("\n\n========================================");
+  Serial.println("  ESP32 TELEMETRY BRIDGE CONNECTED!     ");
+  Serial.println("========================================");
+  Serial.print("ESP32 IP Address:        ");
+  Serial.println(WiFi.localIP());
+  Serial.print("Dashboard WebSocket URL: ws://");
+  Serial.print(WiFi.localIP());
+  Serial.println(":81");
+  Serial.println("========================================\n");
 
   webSocket.begin();
   webSocket.onEvent(webSocketEvent);
