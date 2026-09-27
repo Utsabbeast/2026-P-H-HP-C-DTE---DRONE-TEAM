@@ -104,7 +104,7 @@
                     </svg>
                 </div>
                 <div>
-                    <div class="hotspot-text-title" id="bannerTitle">📱 Live GPS Mode — Track Direct or Connect Phone</div>
+                    <div class="hotspot-text-title" id="bannerTitle">📱 Live GPS Mode — Track Direct or Connect Phone <span class="hotspot-badge" style="background: rgba(37,99,235,0.25); color: #93c5fd; border: 1px solid rgba(147,197,253,0.35); font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 6px; letter-spacing: 0.5px;">TEST MODE — PHONE GPS</span></div>
                     <div class="hotspot-text-sub" id="bannerSub">
                         <span id="bannerHelpText">Click below to track this device live, or scan QR code on smartphone:</span> 
                         <code id="bannerCodeUrl">{{ mobile_url|default:'/mobile/' }}</code>
@@ -156,6 +156,33 @@
                         <line x1="10" y1="14" x2="21" y2="3"/>
                     </svg>
                 </a>
+            </div>
+        </div>
+
+        <!-- ESP32 DRONE HARDWARE WEBSOCKET BRIDGE BANNER (Visible in Drone Mode) -->
+        <div class="hotspot-info-card esp32-hardware-banner" id="esp32Banner" style="display: none; background: #f0fdf4; border-color: #bbf7d0;">
+            <div class="hotspot-info-left">
+                <div class="hotspot-icon" style="background: #dcfce7; color: #15803d;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L4 7v10l8 5 8-5V7l-8-5zm0 2.2L18.2 8 12 11.8 5.8 8 12 4.2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="hotspot-text-title" id="esp32BannerTitle" style="color: #166534;">🛰️ ESP32 Hardware Bridge (Cube Orange+ &bull; Port 81)</div>
+                    <div class="hotspot-text-sub" id="esp32BannerSub" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span>Direct WebSocket:</span> 
+                        <input type="text" id="esp32WsInput" value="ws://192.168.43.150:81" placeholder="ws://<esp32-ip>:81" style="font-family: var(--mono-font); font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; border: 1.5px solid #86efac; outline: none; width: 195px; color: #0f172a; background: #ffffff;">
+                        <button type="button" class="btn btn-sm" id="btnConnectEspWs" style="padding: 4px 12px; font-size: 0.8rem; border-radius: 6px; background: #16a34a; border: none; color: white; cursor: pointer; font-weight: 600;">⚡ Connect ESP32</button>
+                        <button type="button" class="btn btn-sm" id="btnDisconnectEspWs" style="display: none; padding: 4px 12px; font-size: 0.8rem; border-radius: 6px; background: #ffffff; border: 1.5px solid #fecaca; color: #b91c1c; cursor: pointer; font-weight: 600;">Disconnect</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="connection-banner-actions">
+                <div id="esp32WsStatusBadge" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">
+                    <span class="status-indicator-dot dot-red" id="esp32WsDot"></span>
+                    <span id="esp32WsStatusText">ESP32 Offline</span>
+                </div>
             </div>
         </div>
 

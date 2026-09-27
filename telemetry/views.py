@@ -114,6 +114,12 @@ class TelemetryLatestView(APIView):
 
         # Check if real hardware telemetry has arrived recently from an ESP32
         latest_hw = DroneTelemetry.objects.filter(drone_id=drone_id, is_simulated=False).first()
+        if not latest_hw:
+            # Resilient fallback: auto-detect any active hardware drone record (e.g., DRONE-ALPHA from ESP32)
+            latest_hw = DroneTelemetry.objects.filter(is_simulated=False).first()
+            if latest_hw:
+                drone_id = latest_hw.drone_id
+
         hw_connected = bool(latest_hw and latest_hw.seconds_since_received <= timeout)
 
         sim = SimulationEngine.get_instance(drone_id=drone_id)
@@ -160,6 +166,7 @@ class TelemetryLatestView(APIView):
         return Response(
             {
                 "status": "success",
+                "drone_id": drone_id,
                 "simulation_mode": sim_mode,
                 "is_simulated": latest.is_simulated,
                 "is_connected": is_conn,
@@ -192,6 +199,12 @@ class TelemetryHistoryView(APIView):
             qs = qs.filter(is_simulated=True)
         else:
             qs = qs.filter(is_simulated=False)
+            if not qs.exists():
+                # Fallback to any hardware drone stream (e.g. DRONE-ALPHA)
+                qs = DroneTelemetry.objects.filter(is_simulated=False)
+                first_hw = qs.first()
+                if first_hw:
+                    drone_id = first_hw.drone_id
 
         records = list(qs.order_by('-received_at')[:limit])
         records.reverse()  # Chronological order
@@ -221,6 +234,11 @@ class DroneStatusView(APIView):
 
         latest_all = DroneTelemetry.objects.filter(drone_id=drone_id).first()
         latest_hw = DroneTelemetry.objects.filter(drone_id=drone_id, is_simulated=False).first()
+        if not latest_hw:
+            latest_hw = DroneTelemetry.objects.filter(is_simulated=False).first()
+            if latest_hw:
+                drone_id = latest_hw.drone_id
+                latest_all = latest_hw
         total_count = DroneTelemetry.objects.filter(drone_id=drone_id).count()
         total_hw_count = DroneTelemetry.objects.filter(drone_id=drone_id, is_simulated=False).count()
 

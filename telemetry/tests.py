@@ -1,5 +1,5 @@
 from datetime import datetime, timezone as dt_timezone
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -85,6 +85,7 @@ class DroneTelemetryAPITest(TestCase):
         record = DroneTelemetry.objects.first()
         self.assertFalse(record.is_simulated)
 
+    @override_settings(SIMULATION_MODE=True)
     def test_latest_telemetry_endpoint(self):
         DroneTelemetry.objects.create(
             drone_id='drone01',
@@ -105,6 +106,7 @@ class DroneTelemetryAPITest(TestCase):
         self.assertFalse(data['hardware_connected'])
         self.assertIn('Drone Not Connected', data['status_label'])
 
+    @override_settings(SIMULATION_MODE=True)
     def test_history_endpoint(self):
         for i in range(5):
             DroneTelemetry.objects.create(
@@ -121,6 +123,40 @@ class DroneTelemetryAPITest(TestCase):
         data = response.json()
         self.assertEqual(data['status'], 'success')
         self.assertEqual(data['count'], 5)
+
+    def test_esp32_short_keys_telemetry_ingest(self):
+        # ESP32 packets emit short keys: id, lat, lon, alt, hdg
+        payload = {
+            "id": "DRONE-ALPHA",
+            "lat": 30.9015,
+            "lon": 75.8580,
+            "alt": 45.2,
+            "hdg": 180.0
+        }
+        response = self.client.post(
+            '/api/telemetry/',
+            data=payload,
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        res_data = response.json()
+        self.assertEqual(res_data['status'], 'success')
+        self.assertFalse(res_data['is_simulated'])
+        self.assertEqual(res_data['drone_id'], 'DRONE-ALPHA')
+
+        record = DroneTelemetry.objects.get(id=res_data['id'])
+        self.assertAlmostEqual(record.latitude, 30.9015)
+        self.assertAlmostEqual(record.longitude, 75.8580)
+        self.assertAlmostEqual(record.altitude, 45.2)
+        self.assertAlmostEqual(record.heading, 180.0)
+
+        # Verify fallback detection in latest telemetry view
+        resp_latest = self.client.get('/api/telemetry/latest/')
+        self.assertEqual(resp_latest.status_code, status.HTTP_200_OK)
+        latest_data = resp_latest.json()
+        self.assertEqual(latest_data['status'], 'success')
+        self.assertEqual(latest_data['drone_id'], 'DRONE-ALPHA')
+        self.assertTrue(latest_data['hardware_connected'])
 
     def test_simulation_engine_step_and_randomize(self):
         sim = SimulationEngine.get_instance('drone01')

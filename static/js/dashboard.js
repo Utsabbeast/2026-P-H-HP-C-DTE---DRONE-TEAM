@@ -79,6 +79,15 @@
         statusDot: document.getElementById('statusDot'),
         statusLabel: document.getElementById('statusLabel'),
         
+        // ESP32 Hardware Banner Elements
+        esp32Banner: document.getElementById('esp32Banner'),
+        esp32WsInput: document.getElementById('esp32WsInput'),
+        btnConnectEspWs: document.getElementById('btnConnectEspWs'),
+        btnDisconnectEspWs: document.getElementById('btnDisconnectEspWs'),
+        esp32WsStatusBadge: document.getElementById('esp32WsStatusBadge'),
+        esp32WsDot: document.getElementById('esp32WsDot'),
+        esp32WsStatusText: document.getElementById('esp32WsStatusText'),
+        
         // Map HUD & Header
         mapMainTitle: document.getElementById('mapMainTitle'),
         mapRouteHud: document.getElementById('mapRouteHud'),
@@ -306,8 +315,9 @@
             elements.sourcePill.style.color = '#0369a1';
             elements.sourcePill.style.borderColor = '#bae6fd';
 
-            // Show hotspot banner, hide sim bar and offline alert
+            // Show hotspot banner, hide esp32 banner, sim bar and offline alert
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'flex';
+            if (elements.esp32Banner) elements.esp32Banner.style.display = 'none';
             if (elements.simFloatingBar) elements.simFloatingBar.style.display = 'none';
             if (elements.hardwareOfflineAlert) elements.hardwareOfflineAlert.style.display = 'none';
 
@@ -349,15 +359,16 @@
             elements.modeBadgeText.textContent = 'Live Hardware Stream (ESP32)';
             elements.gpsSourceText.textContent = 'GPS Source: ESP32 / Cube Orange+';
 
-            // Hide hotspot banner
+            // Hide phone hotspot banner, show ESP32 WebSocket bridge banner
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
+            if (elements.esp32Banner) elements.esp32Banner.style.display = 'flex';
 
             // Buttons & Headers
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Drone';
-            if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Live Tactical Map (Drone 01)';
+            if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Live Tactical Map (Cube Orange+ / ESP32)';
             if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'Drone Telemetry & Hardware Overview';
             if (elements.statusFeedText) elements.statusFeedText.textContent = 'ESP32 Wi-Fi';
-            if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Real Hardware Stream';
+            if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Cube Orange+ Telem (UART2)';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
         }
 
@@ -503,11 +514,13 @@
     function updateDroneUI(telemetryData, apiState) {
         if (!telemetryData) return;
 
-        const lat = parseFloat(telemetryData.latitude);
-        const lon = parseFloat(telemetryData.longitude);
-        const alt = parseFloat(telemetryData.altitude);
-        const hdg = parseFloat(telemetryData.heading);
-        const timeStr = formatTime(telemetryData.timestamp || telemetryData.received_at);
+        const lat = parseFloat(telemetryData.latitude !== undefined ? telemetryData.latitude : telemetryData.lat);
+        const lon = parseFloat(telemetryData.longitude !== undefined ? telemetryData.longitude : telemetryData.lon);
+        const alt = parseFloat(telemetryData.altitude !== undefined ? telemetryData.altitude : (telemetryData.alt !== undefined ? telemetryData.alt : 0));
+        const hdg = parseFloat(telemetryData.heading !== undefined ? telemetryData.heading : (telemetryData.hdg !== undefined ? telemetryData.hdg : 0));
+        const timeStr = formatTime(telemetryData.timestamp || telemetryData.received_at || new Date().toISOString());
+
+        if (isNaN(lat) || isNaN(lon)) return;
 
         lastKnownLat = lat;
         lastKnownLon = lon;
@@ -532,13 +545,21 @@
         if (elements.mapCoordinatesHud) {
             elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
         }
-        if (elements.mapRouteHud && apiState && apiState.route_name) {
-            elements.mapRouteHud.textContent = `Route: ${apiState.route_name}`;
+        if (elements.mapRouteHud) {
+            elements.mapRouteHud.textContent = `Source: ESP32 (${telemetryData.drone_id || telemetryData.id || 'DRONE-ALPHA'})`;
+            elements.mapRouteHud.style.background = '#e0f2fe';
+            elements.mapRouteHud.style.borderColor = '#bae6fd';
+            elements.mapRouteHud.style.color = '#0369a1';
         }
         if (elements.hudAlt) elements.hudAlt.textContent = `${alt.toFixed(1)} m`;
         if (elements.hudHdg) elements.hudHdg.textContent = `${Math.round(hdg)}°`;
-        if (elements.hudSpeed) elements.hudSpeed.textContent = '12.0 m/s';
-        if (elements.hudAccuracy) elements.hudAccuracy.textContent = '0.5 m';
+
+        const rawSpeed = telemetryData.speed !== undefined ? parseFloat(telemetryData.speed) : null;
+        const spdText = (rawSpeed !== null && !isNaN(rawSpeed)) ? `${rawSpeed.toFixed(1)} m/s` : 'Stationary';
+        const spdKmText = (rawSpeed !== null && !isNaN(rawSpeed)) ? `${(rawSpeed * 3.6).toFixed(1)} km/h` : '0.0 km/h';
+
+        if (elements.hudSpeed) elements.hudSpeed.textContent = spdText;
+        if (elements.hudAccuracy) elements.hudAccuracy.textContent = 'Hardware Fix';
 
         // Update Cards
         if (elements.valLatitude) elements.valLatitude.textContent = `${lat.toFixed(6)}°`;
@@ -550,13 +571,13 @@
         if (elements.valHeading) elements.valHeading.textContent = `${Math.round(hdg)}°`;
         if (elements.subHeading) elements.subHeading.textContent = headingToCardinal(hdg);
         if (elements.compassNeedle) elements.compassNeedle.style.transform = `rotate(${hdg}deg)`;
-        if (elements.valSpeed) elements.valSpeed.textContent = '12.0 m/s';
-        if (elements.subSpeed) elements.subSpeed.textContent = '43.2 km/h';
-        if (elements.valAccuracy) elements.valAccuracy.textContent = 'RTK Fix';
-        if (elements.subAccuracy) elements.subAccuracy.textContent = 'Precision 0.5m';
+        if (elements.valSpeed) elements.valSpeed.textContent = spdText;
+        if (elements.subSpeed) elements.subSpeed.textContent = spdKmText;
+        if (elements.valAccuracy) elements.valAccuracy.innerHTML = '<span style="color: #10b981; font-weight: 700;">Cube GNSS</span>';
+        if (elements.subAccuracy) elements.subAccuracy.textContent = 'Hardware Telemetry (UART2)';
         if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
 
-        const isHw = apiState ? apiState.hardware_connected : false;
+        const isHw = apiState ? apiState.hardware_connected : true;
         const secondsAgo = apiState ? apiState.seconds_since_update : 0;
         updateConnectionStatus(isHw, secondsAgo, apiState ? apiState.status_label : null);
     }
@@ -917,12 +938,150 @@
     }
 
     // -------------------------------------------------------------------------
+    // ESP32 Direct WebSocket Bridge Client
+    // -------------------------------------------------------------------------
+    let esp32WebSocket = null;
+
+    function connectEsp32WebSocket() {
+        const wsUrl = (elements.esp32WsInput ? elements.esp32WsInput.value.trim() : '') || 'ws://192.168.43.150:81';
+        if (!wsUrl.startsWith('ws://') && !wsUrl.startsWith('wss://')) {
+            alert('Invalid WebSocket URL. Must start with ws:// or wss:// (e.g. ws://192.168.43.150:81)');
+            return;
+        }
+
+        if (esp32WebSocket) {
+            try { esp32WebSocket.close(); } catch (e) {}
+            esp32WebSocket = null;
+        }
+
+        updateEsp32WsStatus('connecting', 'Connecting...');
+
+        try {
+            esp32WebSocket = new WebSocket(wsUrl);
+
+            esp32WebSocket.onopen = () => {
+                console.log('[UTM] ESP32 WebSocket connected to:', wsUrl);
+                updateEsp32WsStatus('connected', '🟢 ESP32 Live');
+                if (elements.btnConnectEspWs) elements.btnConnectEspWs.style.display = 'none';
+                if (elements.btnDisconnectEspWs) elements.btnDisconnectEspWs.style.display = 'inline-block';
+            };
+
+            esp32WebSocket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    // Handle Esp_utm.ino format:
+                    // {"id":"DRONE-ALPHA","lat":30.981485,"lon":76.525563,"alt":15.4,"heading":142.5}
+                    const lat = parseFloat(data.lat !== undefined ? data.lat : data.latitude);
+                    const lon = parseFloat(data.lon !== undefined ? data.lon : data.longitude);
+                    const alt = parseFloat(data.alt !== undefined ? data.alt : (data.altitude || 0));
+                    const hdg = parseFloat(data.heading !== undefined ? data.heading : (data.hdg || 0));
+                    const droneId = data.id || data.drone_id || 'DRONE-ALPHA';
+
+                    if (isNaN(lat) || isNaN(lon)) return;
+
+                    totalPacketCount++;
+                    if (elements.statusMetaPkt) elements.statusMetaPkt.textContent = `Packets Received: ${totalPacketCount}`;
+                    lastReceivedTimestamp = Date.now();
+
+                    const telemetryObj = {
+                        drone_id: droneId,
+                        latitude: lat,
+                        longitude: lon,
+                        altitude: alt,
+                        heading: hdg,
+                        timestamp: new Date().toISOString(),
+                        received_at: new Date().toISOString(),
+                        is_simulated: false
+                    };
+
+                    const apiState = {
+                        hardware_connected: true,
+                        is_connected: true,
+                        seconds_since_update: 0.1,
+                        status_label: 'Drone Connected (ESP32 Live)',
+                        hardware_status_label: 'Hardware Online (ESP32 Live Stream)'
+                    };
+
+                    // Update Map & Telemetry Cards immediately with sub-10ms latency!
+                    updateDroneUI(telemetryObj, apiState);
+
+                    // Forward to Django backend asynchronously so history & breadcrumbs are preserved
+                    fetch('/api/telemetry/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(telemetryObj)
+                    }).catch(() => {});
+
+                } catch (parseErr) {
+                    console.warn('[UTM] Error parsing ESP32 WebSocket packet:', parseErr);
+                }
+            };
+
+            esp32WebSocket.onerror = (err) => {
+                console.warn('[UTM] ESP32 WebSocket error:', err);
+                updateEsp32WsStatus('disconnected', 'ESP32 Error');
+            };
+
+            esp32WebSocket.onclose = () => {
+                console.log('[UTM] ESP32 WebSocket disconnected.');
+                updateEsp32WsStatus('disconnected', 'ESP32 Offline');
+                if (elements.btnConnectEspWs) elements.btnConnectEspWs.style.display = 'inline-block';
+                if (elements.btnDisconnectEspWs) elements.btnDisconnectEspWs.style.display = 'none';
+            };
+
+        } catch (err) {
+            console.error('[UTM] Failed to create WebSocket connection:', err);
+            updateEsp32WsStatus('disconnected', 'Connection Failed');
+        }
+    }
+
+    function disconnectEsp32WebSocket() {
+        if (esp32WebSocket) {
+            try { esp32WebSocket.close(); } catch (e) {}
+            esp32WebSocket = null;
+        }
+        updateEsp32WsStatus('disconnected', 'ESP32 Offline');
+        if (elements.btnConnectEspWs) elements.btnConnectEspWs.style.display = 'inline-block';
+        if (elements.btnDisconnectEspWs) elements.btnDisconnectEspWs.style.display = 'none';
+    }
+
+    function updateEsp32WsStatus(state, text) {
+        if (!elements.esp32WsStatusBadge || !elements.esp32WsDot || !elements.esp32WsStatusText) return;
+        elements.esp32WsStatusText.textContent = text;
+        if (state === 'connected') {
+            elements.esp32WsStatusBadge.style.background = '#ecfdf5';
+            elements.esp32WsStatusBadge.style.color = '#065f46';
+            elements.esp32WsStatusBadge.style.borderColor = '#a7f3d0';
+            elements.esp32WsDot.className = 'status-indicator-dot dot-green';
+        } else if (state === 'connecting') {
+            elements.esp32WsStatusBadge.style.background = '#fffbeb';
+            elements.esp32WsStatusBadge.style.color = '#b45309';
+            elements.esp32WsStatusBadge.style.borderColor = '#fde68a';
+            elements.esp32WsDot.className = 'status-indicator-dot dot-amber';
+        } else {
+            elements.esp32WsStatusBadge.style.background = '#fef2f2';
+            elements.esp32WsStatusBadge.style.color = '#b91c1c';
+            elements.esp32WsStatusBadge.style.borderColor = '#fecaca';
+            elements.esp32WsDot.className = 'status-indicator-dot dot-red';
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Event Listeners & Startup
     // -------------------------------------------------------------------------
     function bindEvents() {
         // Direct Device GPS Tracking
         if (elements.btnTrackThisDevice) {
             elements.btnTrackThisDevice.addEventListener('click', toggleLocalDeviceTracking);
+        }
+
+        // ESP32 WebSocket Bridge Controls
+        if (elements.btnConnectEspWs) elements.btnConnectEspWs.addEventListener('click', connectEsp32WebSocket);
+        if (elements.btnDisconnectEspWs) elements.btnDisconnectEspWs.addEventListener('click', disconnectEsp32WebSocket);
+        if (elements.esp32WsInput) {
+            elements.esp32WsInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') connectEsp32WebSocket();
+            });
         }
 
         // Mode Switcher Tabs

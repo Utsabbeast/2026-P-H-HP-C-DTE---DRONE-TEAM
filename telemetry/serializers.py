@@ -1,4 +1,5 @@
 import math
+from django.utils import timezone
 from rest_framework import serializers
 from .models import DroneTelemetry, PhoneTelemetry
 
@@ -34,6 +35,8 @@ class DroneTelemetrySerializer(serializers.ModelSerializer):
         help_text="Heading in degrees (0.0 to 360.0)"
     )
     timestamp = serializers.DateTimeField(
+        required=False,
+        default=timezone.now,
         help_text="ISO 8601 timestamp (e.g. 2026-09-26T12:45:32Z)"
     )
     is_simulated = serializers.BooleanField(default=False)
@@ -56,10 +59,28 @@ class DroneTelemetrySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'received_at', 'seconds_since_received']
 
+    def to_internal_value(self, data):
+        mutable_data = data.copy() if hasattr(data, 'copy') else dict(data)
+        # Map ESP32 short keys (from Esp_utm.ino) to model fields
+        if 'id' in mutable_data and 'drone_id' not in mutable_data:
+            mutable_data['drone_id'] = mutable_data['id']
+        if 'lat' in mutable_data and 'latitude' not in mutable_data:
+            mutable_data['latitude'] = mutable_data['lat']
+        if 'lon' in mutable_data and 'longitude' not in mutable_data:
+            mutable_data['longitude'] = mutable_data['lon']
+        if 'alt' in mutable_data and 'altitude' not in mutable_data:
+            mutable_data['altitude'] = mutable_data['alt']
+        if 'hdg' in mutable_data and 'heading' not in mutable_data:
+            mutable_data['heading'] = mutable_data['hdg']
+        if 'timestamp' not in mutable_data or not mutable_data['timestamp']:
+            from django.utils import timezone
+            mutable_data['timestamp'] = timezone.now().isoformat()
+        return super().to_internal_value(mutable_data)
+
     def validate_drone_id(self, value):
-        if not value or not value.strip():
-            raise serializers.ValidationError("drone_id cannot be blank.")
-        return value.strip()
+        if not value or not str(value).strip():
+            return 'DRONE-ALPHA'
+        return str(value).strip()
 
 
 class DroneStatusSerializer(serializers.Serializer):
