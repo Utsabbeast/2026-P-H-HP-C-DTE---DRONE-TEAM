@@ -72,6 +72,13 @@ class DroneTelemetrySerializer(serializers.ModelSerializer):
             mutable_data['altitude'] = mutable_data['alt']
         if 'hdg' in mutable_data and 'heading' not in mutable_data:
             mutable_data['heading'] = mutable_data['hdg']
+        if 'heading' in mutable_data:
+            try:
+                hdg_val = float(mutable_data['heading'])
+                if hdg_val > 360.0 or hdg_val < 0.0:
+                    mutable_data['heading'] = 0.0
+            except (ValueError, TypeError):
+                mutable_data['heading'] = 0.0
         if 'timestamp' not in mutable_data or not mutable_data['timestamp']:
             from django.utils import timezone
             mutable_data['timestamp'] = timezone.now().isoformat()

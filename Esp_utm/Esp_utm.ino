@@ -41,34 +41,75 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
 
 void parseMavlinkByte(uint8_t c) {
   static uint8_t state = 0;
+  static uint8_t proto_ver = 2; // 1 = MAVLink v1 (0xFE), 2 = MAVLink v2 (0xFD)
   static uint8_t length = 0;
-  static uint8_t msgid = 0;
-  static uint8_t payload[64];
+  static uint32_t msgid = 0;
+  static uint8_t msgid_0 = 0;
+  static uint8_t msgid_1 = 0;
+  static uint8_t payload[256];
   static uint8_t idx = 0;
 
   switch (state) {
-    case 0: if (c == 0xFD) state = 1; break; // MAVLink v2 packet start
-    case 1: length = c; state = 2; break;
-    case 2: state = 3; break;
-    case 3: state = 4; break;
-    case 4: state = 5; break;
-    case 5: state = 6; break;
-    case 6: state = 7; break;
-    case 7: msgid = c; idx = 0; state = (length > 0) ? 8 : 0; break;
-    case 8:
+    case 0: // Sync byte detection
+      if (c == 0xFD) { proto_ver = 2; state = 1; }      // MAVLink v2 start byte
+      else if (c == 0xFE) { proto_ver = 1; state = 1; } // MAVLink v1 start byte
+      break;
+
+    case 1: // Payload length
+      length = c;
+      idx = 0;
+      if (proto_ver == 2) {
+        state = 2; // MAVLink 2 has incompatibility/compatibility flags next
+      } else {
+        state = 4; // MAVLink 1 jumps straight to sequence number
+      }
+      break;
+
+    case 2: state = 3; break; // MAVLink 2: Incompatibility flags
+    case 3: state = 4; break; // MAVLink 2: Compatibility flags
+    case 4: state = 5; break; // Packet sequence number
+    case 5: state = 6; break; // System ID
+    case 6: state = 7; break; // Component ID
+
+    case 7: // Message ID byte 0 (Bits 0-7)
+      if (proto_ver == 2) {
+        msgid_0 = c;
+        state = 8;
+      } else {
+        // MAVLink 1 Message ID is 1 byte only
+        msgid = c;
+        idx = 0;
+        state = (length > 0) ? 10 : 0;
+      }
+      break;
+
+    case 8: // MAVLink 2: Message ID byte 1 (Bits 8-15)
+      msgid_1 = c;
+      state = 9;
+      break;
+
+    case 9: // MAVLink 2: Message ID byte 2 (Bits 16-23)
+      msgid = (uint32_t)msgid_0 | ((uint32_t)msgid_1 << 8) | ((uint32_t)c << 16);
+      idx = 0;
+      state = (length > 0) ? 10 : 0;
+      break;
+
+    case 10: // Payload data bytes
       payload[idx++] = c;
       if (idx >= length) {
+        state = 0; // Payload complete, ready for next packet
         if (msgid == 33 && length >= 28) { // GLOBAL_POSITION_INT (#33)
           int32_t lat = *(int32_t*)&payload[4];
           int32_t lon = *(int32_t*)&payload[8];
           int32_t relative_alt = *(int32_t*)&payload[16]; // AGL in mm
-          uint16_t hdg = *(uint16_t*)&payload[26];        // cdeg (0..35999)
+          uint16_t hdg = *(uint16_t*)&payload[26];        // cdeg (0..35999, 65535 if unknown)
 
           // 1. Convert to human-readable units
           float latitude = lat / 1e7;
           float longitude = lon / 1e7;
           float altitude_m = relative_alt / 1000.0;
-          float heading_deg = hdg / 100.0;
+          // ArduPilot sends 65535 (UINT16_MAX) if compass heading is unknown/uncalibrated
+          float heading_deg = (hdg == 65535 || hdg > 36000) ? 0.0 : (hdg / 100.0);
 
           // 2. Format as JSON for Wi-Fi transmission (supports both short & full keys)
           StaticJsonDocument<256> doc;
@@ -88,22 +129,30 @@ void parseMavlinkByte(uint8_t c) {
           // 3. Broadcast over Wi-Fi
           webSocket.broadcastTXT(jsonBuffer);
 
-          // ================= MODIFICATION START =================
-          // Print formatted telemetry to the Arduino Serial Monitor (USB)
+          // ================= PRINT TO SERIAL MONITOR (USB) =================
           Serial.println("---------- TELEMETRY PACKET ----------");
-          Serial.print("ID:       DRONE-ALPHA\n");
-          Serial.printf("Lat/Lon:  %.7f, %.7f\n", latitude, longitude);
+          Serial.println("ID:       DRONE-ALPHA");
+          if (lat == 0 && lon == 0) {
+            Serial.println("GPS:      NO SATELLITE LOCK YET (lat=0, lon=0 - test near window/outdoors)");
+          } else {
+            Serial.printf("Lat/Lon:  %.7f, %.7f\n", latitude, longitude);
+          }
           Serial.printf("Alt(AGL): %.2f m\n", altitude_m);
-          Serial.printf("Heading:  %.1f deg\n", heading_deg);
+          if (hdg == 65535 || hdg > 36000) {
+            Serial.println("Heading:  Compass Calibrating / Waiting for Lock");
+          } else {
+            Serial.printf("Heading:  %.1f deg\n", heading_deg);
+          }
           Serial.print("Payload:  ");
           Serial.println(jsonBuffer);
           Serial.println("--------------------------------------\n");
-          // ================== MODIFICATION END ==================
         }
-        state = 0;
       }
       break;
-    default: state = 0; break;
+
+    default:
+      state = 0;
+      break;
   }
 }
 

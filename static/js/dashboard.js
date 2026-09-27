@@ -517,10 +517,26 @@
         const lat = parseFloat(telemetryData.latitude !== undefined ? telemetryData.latitude : telemetryData.lat);
         const lon = parseFloat(telemetryData.longitude !== undefined ? telemetryData.longitude : telemetryData.lon);
         const alt = parseFloat(telemetryData.altitude !== undefined ? telemetryData.altitude : (telemetryData.alt !== undefined ? telemetryData.alt : 0));
-        const hdg = parseFloat(telemetryData.heading !== undefined ? telemetryData.heading : (telemetryData.hdg !== undefined ? telemetryData.hdg : 0));
+        const rawHdg = parseFloat(telemetryData.heading !== undefined ? telemetryData.heading : (telemetryData.hdg !== undefined ? telemetryData.hdg : 0));
+        const hdg = (isNaN(rawHdg) || rawHdg > 360 || rawHdg < 0) ? 0 : rawHdg;
         const timeStr = formatTime(telemetryData.timestamp || telemetryData.received_at || new Date().toISOString());
 
-        if (isNaN(lat) || isNaN(lon)) return;
+        if (isNaN(lat) || isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+            console.warn('[UTM] Out-of-bounds or NaN coordinates received:', lat, lon);
+            return;
+        }
+
+        // If GPS has not acquired 3D lock yet (Cube sends 0, 0)
+        if (lat === 0 && lon === 0) {
+            if (elements.mapCoordinatesHud) {
+                elements.mapCoordinatesHud.textContent = 'GPS: Waiting for 3D satellite lock (lat: 0, lon: 0)';
+            }
+            if (elements.hudAccuracy) elements.hudAccuracy.textContent = 'No Lock';
+            if (elements.valAccuracy) elements.valAccuracy.innerHTML = '<span style="color: #f59e0b; font-weight: 700;">Acquiring Sats</span>';
+            if (elements.subAccuracy) elements.subAccuracy.textContent = 'Hardware Connected (Indoor / Searching)';
+            if (elements.valAltitude) elements.valAltitude.textContent = `${alt.toFixed(1)} m`;
+            return;
+        }
 
         lastKnownLat = lat;
         lastKnownLon = lon;
