@@ -214,6 +214,83 @@
             transform: none !important;
         }
 
+        .btn-refresh {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1.5px solid var(--border-subtle);
+            font-size: 0.92rem;
+            padding: 10px 16px;
+        }
+
+        .btn-refresh:hover:not(:disabled) {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        /* ACCURACY GUIDE CARD */
+        .accuracy-guide-card {
+            background: #fffbeb;
+            border: 1.5px solid #fde68a;
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-top: 14px;
+            font-size: 0.85rem;
+            color: #92400e;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .accuracy-guide-card.success {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+            color: #065f46;
+        }
+
+        .guide-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            margin-bottom: 8px;
+        }
+
+        .guide-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            line-height: 1.4;
+        }
+
+        .guide-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background: #f59e0b;
+            color: #ffffff;
+            border-radius: 50%;
+            font-size: 0.72rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .accuracy-guide-card.success .step-num {
+            background: #10b981;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* TELEMETRY CARDS GRID */
         .telemetry-section {
             margin-top: 18px;
@@ -392,7 +469,37 @@
             </svg>
             <span>Stop GPS Tracking</span>
         </button>
+
+        <button id="btnForceRefresh" class="btn btn-refresh" type="button" disabled title="Forces Android to request fresh satellite fix immediately">
+            <span>🔄 Force Fresh Satellite GPS Fix</span>
+        </button>
     </div>
+
+    <!-- ACCURACY & PRECISE LOCATION GUIDE (DYNAMIC) -->
+    <section class="accuracy-guide-card" id="accuracyGuideCard" style="display: none;">
+        <div class="guide-header">
+            <span class="guide-icon">🛰️</span>
+            <span id="accuracyGuideTitle">How to Get 3-Meter Satellite GPS</span>
+        </div>
+        <div class="guide-steps" id="accuracyGuideSteps">
+            <div class="guide-step">
+                <span class="step-num">1</span>
+                <span>In Chrome, tap the <strong>🔒 Lock icon</strong> (or tune icon) in the address bar.</span>
+            </div>
+            <div class="guide-step">
+                <span class="step-num">2</span>
+                <span>Tap <strong>Permissions</strong> &rarr; turn ON <strong>"Use precise location"</strong> (not Approximate).</span>
+            </div>
+            <div class="guide-step">
+                <span class="step-num">3</span>
+                <span>Ensure phone <strong>Location / GPS</strong> is set to <strong>High Accuracy</strong> in Android settings.</span>
+            </div>
+            <div class="guide-step">
+                <span class="step-num">4</span>
+                <span>Move near a window or outdoors so the phone has direct line of sight to GPS satellites.</span>
+            </div>
+        </div>
+    </section>
 
     <!-- LIVE TELEMETRY CARDS -->
     <section class="telemetry-section">

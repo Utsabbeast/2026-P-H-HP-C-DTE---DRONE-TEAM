@@ -458,8 +458,37 @@
         if (elements.valSpeed) elements.valSpeed.textContent = speed !== null ? `${speed.toFixed(1)} m/s` : 'N/A';
         if (elements.subSpeed) elements.subSpeed.textContent = speed !== null ? `${(speed * 3.6).toFixed(1)} km/h` : 'Stationary or unavailable';
 
-        if (elements.valAccuracy) elements.valAccuracy.textContent = accuracy !== null ? `${accuracy.toFixed(1)} m` : 'N/A';
-        if (elements.subAccuracy) elements.subAccuracy.textContent = accuracy !== null ? 'Horizontal GPS accuracy' : 'Unavailable';
+        if (elements.valAccuracy) {
+            if (accuracy !== null) {
+                if (accuracy > 100) {
+                    elements.valAccuracy.innerHTML = `<span style="color: #ef4444; font-weight: 700;">${accuracy.toFixed(0)} m ⚠️</span>`;
+                } else if (accuracy > 25) {
+                    elements.valAccuracy.innerHTML = `<span style="color: #f59e0b; font-weight: 700;">${accuracy.toFixed(1)} m</span>`;
+                } else {
+                    elements.valAccuracy.innerHTML = `<span style="color: #10b981; font-weight: 700;">${accuracy.toFixed(1)} m</span>`;
+                }
+            } else {
+                elements.valAccuracy.textContent = 'N/A';
+            }
+        }
+
+        if (elements.subAccuracy) {
+            if (accuracy !== null) {
+                if (accuracy > 100) {
+                    elements.subAccuracy.textContent = 'Coarse Cell Tower (~1.4km) — Enable Precise Location on Phone';
+                    elements.subAccuracy.style.color = '#ef4444';
+                } else if (accuracy > 25) {
+                    elements.subAccuracy.textContent = 'Moderate GPS accuracy (Acquiring satellites)';
+                    elements.subAccuracy.style.color = '#b45309';
+                } else {
+                    elements.subAccuracy.textContent = 'High-precision satellite lock';
+                    elements.subAccuracy.style.color = '#047857';
+                }
+            } else {
+                elements.subAccuracy.textContent = 'Unavailable';
+                elements.subAccuracy.style.color = 'var(--text-muted)';
+            }
+        }
 
         if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
 
@@ -542,7 +571,13 @@
             elements.statusHeartbeatSec.textContent = (secondsAgo !== null && secondsAgo !== undefined) ? secondsAgo.toFixed(1) : '--';
         }
         if (elements.subLastUpdate) {
-            elements.subLastUpdate.textContent = `Last update: ${secText}`;
+            if (activeMode === 'phone' && !isConnected && secondsAgo && secondsAgo > 10) {
+                elements.subLastUpdate.textContent = `Last update: ${secText} (disconnected / frozen)`;
+                elements.subLastUpdate.style.color = '#ef4444';
+            } else {
+                elements.subLastUpdate.textContent = `Last update: ${secText}`;
+                elements.subLastUpdate.style.color = 'var(--text-muted)';
+            }
         }
 
         if (activeMode === 'phone') {
@@ -570,7 +605,7 @@
                 elements.statusConnBadge.className = 'item-value-pill';
                 elements.statusConnDot.className = 'dot-indicator dot-red';
                 elements.statusConnText.textContent = '🔴 Phone Disconnected';
-                elements.statusConnHint.textContent = `No GPS updates (${secText}). Check /mobile/`;
+                elements.statusConnHint.textContent = `No GPS updates (${secText}). Coordinates frozen. Check /mobile/`;
 
                 // Update Banner for Disconnected state
                 if (elements.hotspotBanner) elements.hotspotBanner.classList.remove('is-connected');
@@ -855,8 +890,8 @@
             },
             {
                 enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 5000
+                timeout: 30000,
+                maximumAge: 0
             }
         );
     }

@@ -21,6 +21,9 @@
     // DOM Elements
     const btnStart = document.getElementById('btnStart');
     const btnStop = document.getElementById('btnStop');
+    const btnForceRefresh = document.getElementById('btnForceRefresh');
+    const accuracyGuideCard = document.getElementById('accuracyGuideCard');
+    const accuracyGuideTitle = document.getElementById('accuracyGuideTitle');
     const statusCard = document.getElementById('statusCard');
     const statusIndicator = document.getElementById('statusIndicator');
     const statusText = document.getElementById('statusText');
@@ -47,6 +50,39 @@
     const deviceId = document.body.dataset.deviceId || 'phone_test_01';
     const localIp = document.body.dataset.localIp || window.location.hostname;
     const INGEST_API_URL = '/api/phone-location/';
+
+    // Silent Audio Keep-Alive Context (Prevents Android Chrome from freezing background JS)
+    let audioKeepAliveCtx = null;
+    let audioKeepAliveOsc = null;
+
+    function startKeepAliveAudio() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            if (!audioKeepAliveCtx) {
+                audioKeepAliveCtx = new AudioContext();
+                audioKeepAliveOsc = audioKeepAliveCtx.createOscillator();
+                const gain = audioKeepAliveCtx.createGain();
+                gain.gain.value = 0.00001; // Virtually inaudible
+                audioKeepAliveOsc.connect(gain);
+                gain.connect(audioKeepAliveCtx.destination);
+                audioKeepAliveOsc.start();
+            }
+            if (audioKeepAliveCtx.state === 'suspended') {
+                audioKeepAliveCtx.resume();
+            }
+        } catch (e) {
+            console.log('[UTM Mobile] Audio keepalive note:', e);
+        }
+    }
+
+    function stopKeepAliveAudio() {
+        try {
+            if (audioKeepAliveCtx && audioKeepAliveCtx.state !== 'closed') {
+                audioKeepAliveCtx.suspend().catch(() => {});
+            }
+        } catch (e) {}
+    }
 
     // -------------------------------------------------------------------------
     // Screen Wake Lock API (Keeps phone screen on while streaming)
@@ -108,6 +144,19 @@
         // Attach event listeners
         if (btnStart) btnStart.addEventListener('click', startTracking);
         if (btnStop) btnStop.addEventListener('click', stopTracking);
+        if (btnForceRefresh) btnForceRefresh.addEventListener('click', forceFreshGpsSync);
+
+        // Resume WakeLock and GPS when returning to tab from background
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isTracking) {
+                requestWakeLock();
+                startKeepAliveAudio();
+                // If more than 4 seconds elapsed without fix, trigger immediate GPS poll
+                if (Date.now() - lastTransmitTime > 4000) {
+                    forceFreshGpsSync();
+                }
+            }
+        });
 
         // Check if Geolocation is supported
         if (!navigator.geolocation) {
@@ -158,16 +207,20 @@
         // Request Screen Wake Lock so phone doesn't sleep in hand
         requestWakeLock();
 
+        // Start inaudible audio keepalive so Android Chrome doesn't suspend background JS
+        startKeepAliveAudio();
+
         // Update UI state to starting
         isTracking = true;
         btnStart.disabled = true;
         btnStop.disabled = false;
-        updateStatus('warning', '🟡 Acquiring GPS Fix...', 'Requesting high-accuracy GPS coordinates from device hardware...');
+        if (btnForceRefresh) btnForceRefresh.disabled = false;
+        updateStatus('warning', '🟡 Acquiring GPS Satellite Lock...', 'Requesting high-accuracy GPS coordinates directly from GNSS hardware...');
 
         const geoOptions = {
-            enableHighAccuracy: true, // Request real high-accuracy GPS hardware
-            timeout: 15000,           // 15 seconds acquisition timeout
-            maximumAge: 5000          // Accept 5-second fresh fix to prevent indoor fluctuation
+            enableHighAccuracy: true, // Forces Android to power on raw GNSS satellite receiver
+            timeout: 30000,           // 30s timeout allows GNSS hardware time to lock 4+ satellites
+            maximumAge: 0             // Strictly 0: Do NOT accept cached cell-tower or network fixes
         };
 
         try {
@@ -207,11 +260,14 @@
         }
 
         releaseWakeLock();
+        stopKeepAliveAudio();
         latestCoords = null;
 
         isTracking = false;
         btnStart.disabled = false;
         btnStop.disabled = true;
+        if (btnForceRefresh) btnForceRefresh.disabled = true;
+        if (accuracyGuideCard) accuracyGuideCard.style.display = 'none';
 
         updateStatus('stopped', '🔴 GPS Tracking Stopped', 'Tracking halted. No location data is being transmitted.');
         if (diagServerStatus) {
@@ -223,6 +279,44 @@
     // -------------------------------------------------------------------------
     // Geolocation Success Callback (Triggered on every native GPS update)
     // -------------------------------------------------------------------------
+    function updateAccuracyUI(accuracy) {
+        if (!isTracking) return;
+
+        if (accuracy === null || isNaN(accuracy)) {
+            updateStatus('active', '🟢 GPS Tracking Active', 'Transmitting coordinates to UTM dashboard...');
+            if (accuracyGuideCard) accuracyGuideCard.style.display = 'none';
+            return;
+        }
+
+        if (accuracy > 100) {
+            // Coarse Cell Tower Triangulation (~1400m)
+            updateStatus('warning', `⚠️ Coarse Network Fix (±${accuracy.toFixed(0)}m)`, 'Using approximate cell-tower data. Enable "Precise location" in Chrome.');
+            if (accuracyGuideCard) {
+                accuracyGuideCard.style.display = 'block';
+                accuracyGuideCard.classList.remove('success');
+            }
+            if (accuracyGuideTitle) {
+                accuracyGuideTitle.textContent = `⚠️ Cell Tower Fix (±${accuracy.toFixed(0)}m) — Tap Lock Icon 🔒 & Enable "Precise Location"`;
+            }
+        } else if (accuracy > 25) {
+            // Moderate GPS (acquiring satellites)
+            updateStatus('warning', `🟡 Acquiring Satellites (±${accuracy.toFixed(1)}m)`, 'Satellite signal found. Move near a window or outdoors for ±3m precision.');
+            if (accuracyGuideCard) {
+                accuracyGuideCard.style.display = 'block';
+                accuracyGuideCard.classList.remove('success');
+            }
+            if (accuracyGuideTitle) {
+                accuracyGuideTitle.textContent = `🟡 Acquiring Full Satellite Lock (±${accuracy.toFixed(1)}m) — Move Outdoors for 3m`;
+            }
+        } else {
+            // High-precision Satellite GPS
+            updateStatus('active', `🟢 Real Satellite GPS Locked (±${accuracy.toFixed(1)}m)`, `High-precision GNSS satellite lock active (Packet #${packetsSentCount}).`);
+            if (accuracyGuideCard) {
+                accuracyGuideCard.style.display = 'none';
+            }
+        }
+    }
+
     function onLocationSuccess(position) {
         if (!isTracking) {
             // Guard against callbacks queued right before clearWatch
@@ -251,13 +345,27 @@
         const displayTime = now.toTimeString().split(' ')[0]; // HH:MM:SS
 
         // Update Phone UI elements immediately
-        updateStatus('active', '🟢 GPS Tracking Active', `Accurate within ${accuracy !== null ? accuracy + 'm' : 'unknown precision'}. Transmitting to UTM...`);
+        updateAccuracyUI(accuracy);
 
         if (valLat) valLat.textContent = lat.toFixed(6) + '°';
         if (valLon) valLon.textContent = lon.toFixed(6) + '°';
         if (valAlt) valAlt.innerHTML = alt !== null ? `${alt} <span class="card-unit">m</span>` : 'N/A';
         if (valHeading) valHeading.innerHTML = heading !== null ? `${heading} <span class="card-unit">°</span>` : 'N/A';
-        if (valAccuracy) valAccuracy.innerHTML = accuracy !== null ? `${accuracy} <span class="card-unit">m</span>` : 'N/A';
+        
+        if (valAccuracy) {
+            if (accuracy !== null) {
+                if (accuracy > 100) {
+                    valAccuracy.innerHTML = `<span style="color: #ef4444;">${accuracy.toFixed(0)} <span class="card-unit">m (Coarse)</span></span>`;
+                } else if (accuracy > 25) {
+                    valAccuracy.innerHTML = `<span style="color: #f59e0b;">${accuracy.toFixed(1)} <span class="card-unit">m</span></span>`;
+                } else {
+                    valAccuracy.innerHTML = `<span style="color: #10b981;">${accuracy.toFixed(1)} <span class="card-unit">m (High-Acc)</span></span>`;
+                }
+            } else {
+                valAccuracy.textContent = 'N/A';
+            }
+        }
+        
         if (valSpeed) valSpeed.innerHTML = speed !== null ? `${speed} <span class="card-unit">m/s</span>` : 'N/A';
         if (valTimestamp) valTimestamp.textContent = displayTime;
 
@@ -359,6 +467,41 @@
     }
 
     // -------------------------------------------------------------------------
+    // Force Fresh GPS Satellite Sync (Bypasses cache with maximumAge: 0)
+    // -------------------------------------------------------------------------
+    function forceFreshGpsSync() {
+        if (!navigator.geolocation) return;
+        updateStatus('warning', '🛰️ Polling GNSS Satellites...', 'Requesting fresh hardware satellite coordinates directly from phone GNSS chip...');
+        if (btnForceRefresh) {
+            btnForceRefresh.disabled = true;
+            btnForceRefresh.textContent = '🛰️ Polling Satellites...';
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                onLocationSuccess(pos);
+                if (btnForceRefresh) {
+                    btnForceRefresh.disabled = false;
+                    btnForceRefresh.textContent = '🔄 Force Fresh Satellite GPS Fix';
+                }
+            },
+            (err) => {
+                console.warn('[UTM Mobile] Fresh GPS sync warning:', err);
+                onLocationError(err);
+                if (btnForceRefresh) {
+                    btnForceRefresh.disabled = false;
+                    btnForceRefresh.textContent = '🔄 Force Fresh Satellite GPS Fix';
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 30000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    // -------------------------------------------------------------------------
     // HTTP POST to Django Backend
     // -------------------------------------------------------------------------
     async function sendTelemetryToDjango(payload) {
@@ -379,7 +522,15 @@
                     diagServerStatus.textContent = `Streaming Active (HTTP ${response.status} OK)`;
                     diagServerStatus.style.color = '#10b981';
                 }
-                updateStatus('active', '🟢 GPS Streaming Live', `Packet #${packetsSentCount} sent to website. Accuracy: ${payload.accuracy !== null ? payload.accuracy + 'm' : 'N/A'}`);
+                // Maintain accurate warning/active status without blindly stamping generic green text
+                const acc = payload.accuracy;
+                if (acc !== null && acc > 100) {
+                    updateStatus('warning', `⚠️ Coarse Network Fix (±${acc.toFixed(0)}m)`, `Packet #${packetsSentCount} sent. Follow guide below to enable "Precise location" in Chrome.`);
+                } else if (acc !== null && acc > 25) {
+                    updateStatus('warning', `🟡 Acquiring Satellites (±${acc.toFixed(1)}m)`, `Packet #${packetsSentCount} sent. Step outdoors for ±3m precision.`);
+                } else {
+                    updateStatus('active', `🟢 Real Satellite GPS Locked (±${acc !== null ? acc.toFixed(1) + 'm' : 'GNSS fix'})`, `Packet #${packetsSentCount} sent to website. Real-time streaming active.`);
+                }
             } else {
                 const errData = await response.json().catch(() => ({}));
                 console.error('[UTM Mobile] Server error response:', response.status, errData);
