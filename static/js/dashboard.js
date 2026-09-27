@@ -18,14 +18,13 @@
 
     // Application Configuration from Body Data Attributes
     const bodyEl = document.body;
-    const initialSimMode = bodyEl.getAttribute('data-simulation') === 'true';
     const targetDroneId = bodyEl.getAttribute('data-drone-id') || 'drone01';
     const targetPhoneDeviceId = bodyEl.getAttribute('data-phone-device-id') || 'phone_test_01';
     const droneTimeoutSeconds = parseFloat(bodyEl.getAttribute('data-timeout')) || 5.0;
     const phoneTimeoutSeconds = parseFloat(bodyEl.getAttribute('data-phone-timeout')) || 10.0;
     const localIp = bodyEl.getAttribute('data-local-ip') || window.location.hostname;
 
-    // Active Dashboard Mode: 'phone' (Phone GPS Test) or 'drone' (ESP32/Sim)
+    // Active Dashboard Mode: 'phone' (Phone GPS) or 'drone' (ESP32 Hardware)
     let activeMode = 'phone';
 
     // Leaflet State
@@ -42,8 +41,6 @@
     let totalPacketCount = 0;
     let pollTimer = null;
     let heartbeatTimer = null;
-    let isSimulationPaused = false;
-    let currentSimMode = initialSimMode;
 
     // Last known coordinates (fallback default: Ludhiana test site 30.9010°, 75.8573°)
     let lastKnownLat = 30.9010;
@@ -90,7 +87,6 @@
         hudHdg: document.getElementById('hudHdg'),
         hudSpeed: document.getElementById('hudSpeed'),
         hudAccuracy: document.getElementById('hudAccuracy'),
-        simFloatingBar: document.getElementById('simFloatingBar'),
         
         // Buttons
         btnCenterDrone: document.getElementById('btnCenterDrone'),
@@ -99,10 +95,6 @@
         btnToggleTrail: document.getElementById('btnToggleTrail'),
         trailButtonText: document.getElementById('trailButtonText'),
         btnResetView: document.getElementById('btnResetView'),
-        btnPauseSim: document.getElementById('btnPauseSim'),
-        btnResetSim: document.getElementById('btnResetSim'),
-        btnNewRandomRoute: document.getElementById('btnNewRandomRoute'),
-        btnToggleMode: document.getElementById('btnToggleMode'),
         btnToggleTester: document.getElementById('btnToggleTester'),
         btnCloseTester: document.getElementById('btnCloseTester'),
 
@@ -218,41 +210,16 @@
         map = L.map('droneMap', {
             zoomControl: true,
             attributionControl: true,
+            maxZoom: 22
         }).setView([lastKnownLat, lastKnownLon], 16);
 
-        // 100% Free Public Tile Layers (ZERO API Key required, NO Watermarks, NO 403 blocks)
-        const streetLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 19,
-            attribution: 'Tiles &copy; Esri &mdash; Street Map | UTM'
-        });
-
-        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 19,
-            attribution: 'Tiles &copy; Esri &mdash; Satellite Imagery | UTM'
-        });
-
-        const topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 19,
-            attribution: 'Tiles &copy; Esri &mdash; Topographic | UTM'
-        });
-
-        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            maxZoom: 20,
-            subdomains: 'abc',
-            attribution: '&copy; OpenStreetMap contributors | UTM'
-        });
-
-        // Add default base street layer (Clean, crisp, no API key watermark)
-        streetLayer.addTo(map);
-
-        // Add Base Layer Toggle Control
-        const baseMaps = {
-            "🗺️ Tactical Street": streetLayer,
-            "🛰️ Satellite Imagery": satelliteLayer,
-            "🏔️ Topographic Map": topoLayer,
-            "🌍 OpenStreetMap": osmLayer
-        };
-        L.control.layers(baseMaps, null, { position: 'topleft', collapsed: true }).addTo(map);
+        // Standard OpenStreetMap Tile Layer
+        // maxNativeZoom: 19 ensures tiles exist at all zoom levels; Leaflet auto-scales smoothly up to zoom 22
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxNativeZoom: 19,
+            maxZoom: 22,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | UTM'
+        }).addTo(map);
 
         // Movement trail polyline
         movementTrail = L.polyline([], {
@@ -361,7 +328,7 @@
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Device: ${targetPhoneDeviceId}`;
 
         } else {
-            // Drone Mode (ESP32 / Simulation)
+            // Drone Mode (ESP32 Live Hardware)
             elements.tabPhoneMode.className = 'mode-tab';
             elements.tabDroneMode.className = 'mode-tab active';
 
@@ -378,26 +345,19 @@
             }
 
             // Mode Badge
-            if (currentSimMode) {
-                elements.testModeBadge.style.display = 'inline-flex';
-                elements.modeBadgeText.textContent = 'Simulation Mode Active';
-                elements.gpsSourceText.textContent = 'GPS Source: Simulation Engine';
-            } else {
-                elements.testModeBadge.style.display = 'inline-flex';
-                elements.modeBadgeText.textContent = 'Live Hardware Stream (ESP32)';
-                elements.gpsSourceText.textContent = 'GPS Source: ESP32 / Cube Orange+';
-            }
+            elements.testModeBadge.style.display = 'inline-flex';
+            elements.modeBadgeText.textContent = 'Live Hardware Stream (ESP32)';
+            elements.gpsSourceText.textContent = 'GPS Source: ESP32 / Cube Orange+';
 
-            // Hide hotspot banner, show sim controls if in sim mode
+            // Hide hotspot banner
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
-            if (elements.simFloatingBar && currentSimMode) elements.simFloatingBar.style.display = 'flex';
 
             // Buttons & Headers
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Drone';
             if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Live Tactical Map (Drone 01)';
             if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'Drone Telemetry & Hardware Overview';
-            if (elements.statusFeedText) elements.statusFeedText.textContent = currentSimMode ? 'Simulation Engine' : 'ESP32 Wi-Fi';
-            if (elements.statusFeedHint) elements.statusFeedHint.textContent = currentSimMode ? 'Procedural flight test' : 'Real Hardware';
+            if (elements.statusFeedText) elements.statusFeedText.textContent = 'ESP32 Wi-Fi';
+            if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Real Hardware Stream';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
         }
 
@@ -618,17 +578,8 @@
                 if (elements.bannerHelpText) elements.bannerHelpText.textContent = 'Open on phone or scan QR code:';
             }
         } else {
-            // Drone Mode
-            if (currentSimMode) {
-                elements.connectionStatusPill.className = 'connection-status disconnected';
-                elements.statusDot.className = 'status-indicator-dot dot-amber';
-                elements.statusLabel.textContent = 'Drone Not Connected (Simulation Mode)';
-
-                elements.statusConnBadge.className = 'item-value-pill pill-amber';
-                elements.statusConnDot.className = 'dot-indicator dot-amber';
-                elements.statusConnText.textContent = 'Drone Not Connected';
-                elements.statusConnHint.textContent = 'ESP32 hardware offline';
-            } else if (isConnected) {
+            // Drone Mode (ESP32 Hardware)
+            if (isConnected) {
                 elements.connectionStatusPill.className = 'connection-status connected';
                 elements.statusDot.className = 'status-indicator-dot dot-green';
                 elements.statusLabel.textContent = 'Drone Connected (ESP32 Live)';
@@ -682,8 +633,6 @@
     }
 
     async function fetchDroneTelemetry() {
-        if (isSimulationPaused) return;
-
         try {
             const response = await fetch(`/api/telemetry/latest/?drone_id=${targetDroneId}`);
             if (!response.ok) return;
@@ -954,49 +903,6 @@
         if (elements.btnClearTrail) elements.btnClearTrail.addEventListener('click', clearMovementTrail);
         if (elements.btnToggleTrail) elements.btnToggleTrail.addEventListener('click', toggleTrailVisibility);
         if (elements.btnResetView) elements.btnResetView.addEventListener('click', resetMapView);
-
-        // Simulation Controls (Drone mode)
-        if (elements.btnPauseSim) {
-            elements.btnPauseSim.addEventListener('click', () => {
-                isSimulationPaused = !isSimulationPaused;
-                elements.btnPauseSim.textContent = isSimulationPaused ? '▶ Resume' : '⏸ Pause';
-            });
-        }
-        if (elements.btnResetSim) {
-            elements.btnResetSim.addEventListener('click', async () => {
-                await fetch('/api/simulation/reset/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ randomize: false })
-                });
-                clearMovementTrail();
-            });
-        }
-        if (elements.btnNewRandomRoute) {
-            elements.btnNewRandomRoute.addEventListener('click', async () => {
-                const res = await fetch('/api/simulation/reset/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ randomize: true })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (elements.mapRouteHud) elements.mapRouteHud.textContent = `Route: ${data.route_name}`;
-                    clearMovementTrail();
-                }
-            });
-        }
-        if (elements.btnToggleMode) {
-            elements.btnToggleMode.addEventListener('click', async () => {
-                const res = await fetch('/api/simulation/toggle/', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-                if (res.ok) {
-                    const data = await res.json();
-                    currentSimMode = data.simulation_mode;
-                    elements.btnToggleMode.textContent = currentSimMode ? 'Switch to Live' : 'Switch to Sim';
-                    clearMovementTrail();
-                }
-            });
-        }
 
         // Tester Panel
         if (elements.btnToggleTester) {

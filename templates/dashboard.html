@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
     
     <!-- UTM Dashboard CSS -->
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=3.0">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=4.0">
 </head>
 <body data-simulation="{{ simulation_mode|yesno:'true,false' }}" 
       data-drone-id="{{ drone_id }}" 
@@ -46,14 +46,14 @@
             <div class="nav-center" style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
                 <!-- Mode Switcher Tabs -->
                 <div class="mode-switcher-container" role="tablist">
-                    <button class="mode-tab active phone-tab" id="tabPhoneMode" role="tab" aria-selected="true" title="Switch to Phone GPS Test Mode">
+                    <button class="mode-tab active phone-tab" id="tabPhoneMode" role="tab" aria-selected="true" title="Switch to Phone GPS Mode">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
                             <line x1="12" y1="18" x2="12.01" y2="18"/>
                         </svg>
-                        <span>Phone GPS Test</span>
+                        <span>Phone GPS</span>
                     </button>
-                    <button class="mode-tab" id="tabDroneMode" role="tab" aria-selected="false" title="Switch to Drone Hardware / Simulation Mode">
+                    <button class="mode-tab" id="tabDroneMode" role="tab" aria-selected="false" title="Switch to Drone ESP32 Mode">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                             <path d="M12 2L4 7v10l8 5 8-5V7l-8-5zm0 2.2L18.2 8 12 11.8 5.8 8 12 4.2z"/>
                         </svg>
@@ -61,10 +61,10 @@
                     </button>
                 </div>
 
-                <!-- Test Mode Indicator -->
+                <!-- Live Mode Indicator -->
                 <div class="test-mode-badge" id="testModeBadge">
                     <span class="test-pulse"></span>
-                    <span class="test-text" id="modeBadgeText">🟢 TEST MODE — PHONE GPS</span>
+                    <span class="test-text" id="modeBadgeText">🟢 LIVE GPS TRACKING</span>
                 </div>
 
                 <!-- GPS Source Indicator -->
@@ -237,16 +237,6 @@
                     </div>
                 </div>
 
-                <!-- Simulation Control Floating Bar (Shown only in Drone Simulation Mode) -->
-                <div class="sim-floating-controls" id="simFloatingBar" style="display: none;">
-                    <span class="sim-tag">SIM CONTROL</span>
-                    <button class="btn-chip btn-chip-highlight" id="btnNewRandomRoute" title="Procedurally generate a new randomized flight route">🎲 New Random Route</button>
-                    <button class="btn-chip" id="btnPauseSim" title="Pause / Resume simulated route">⏸ Pause</button>
-                    <button class="btn-chip" id="btnResetSim" title="Reset route to start">↺ Reset</button>
-                    <button class="btn-chip" id="btnToggleMode" title="Toggle between Simulation & Live ESP32 Mode">
-                        {% if simulation_mode %}Switch to Live{% else %}Switch to Sim{% endif %}
-                    </button>
-                </div>
             </div>
         </section>
 
@@ -402,9 +392,9 @@
                     </svg>
                 </div>
                 <div class="alert-content">
-                    <div class="alert-title" id="alertTitle">Hardware Offline — Showing Simulated Flight Data</div>
+                    <div class="alert-title" id="alertTitle">Hardware Offline — Awaiting ESP32 Telemetry Feed</div>
                     <div class="alert-desc" id="alertDesc">
-                        The ESP32 microcontroller is not connected to the Flight Controller or laptop. The system is operating in <strong>Simulation Test Mode</strong> with randomized flight paths. When real telemetry arrives at <code>POST /api/telemetry/</code>, the dashboard will automatically switch to Live Hardware Stream.
+                        The ESP32 microcontroller is not currently broadcasting telemetry. When packets arrive at <code>POST /api/telemetry/</code>, the dashboard will immediately display live hardware tracking.
                     </div>
                 </div>
             </div>
@@ -593,7 +583,7 @@
     <!-- Leaflet JS (Local Vendored bundle) -->
     <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
     
-    <!-- UTM Dashboard Core JavaScript (v3.0 - Zero API key Esri & OSM tiles) -->
-    <script src="{% static 'js/dashboard.js' %}?v=3.0"></script>
+    <!-- UTM Dashboard Core JavaScript (v4.0 - OpenStreetMap Only with zoom interpolation up to 22) -->
+    <script src="{% static 'js/dashboard.js' %}?v=4.0"></script>
 </body>
 </html>

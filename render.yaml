@@ -10,4 +10,4 @@ services:
       - key: DJANGO_DEBUG
         value: "False"
       - key: UTM_SIMULATION_MODE
-        value: "True"
+        value: "False"

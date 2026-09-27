@@ -151,11 +151,9 @@ REST_FRAMEWORK = {
 # ==============================================================================
 # UTM Application Settings
 # ==============================================================================
-# When SIMULATION_MODE is True, the application generates realistic simulated
-# drone movements along a predefined flight route around Ludhiana coordinates.
 # When SIMULATION_MODE is False, the application relies exclusively on real
-# telemetry received through the API (e.g. from the ESP32 Wi-Fi module).
-SIMULATION_MODE = os.environ.get('UTM_SIMULATION_MODE', 'True').lower() in ('true', '1', 'yes')
+# live telemetry received through the API (Phone GPS or ESP32 Wi-Fi module).
+SIMULATION_MODE = os.environ.get('UTM_SIMULATION_MODE', 'False').lower() in ('true', '1', 'yes')
 
 # Telemetry timeout in seconds: if no telemetry is received within this duration,
 # the drone connection status is flagged as Disconnected.
