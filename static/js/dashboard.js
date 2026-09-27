@@ -220,39 +220,37 @@
             attributionControl: true,
         }).setView([lastKnownLat, lastKnownLon], 16);
 
-        // High-reliability Tile Layers (No 403 blocks, global CDN)
-        const streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            maxZoom: 20,
-            subdomains: 'abcd',
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> | UTM'
+        // 100% Free Public Tile Layers (ZERO API Key required, NO Watermarks, NO 403 blocks)
+        const streetLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Street Map | UTM'
         });
 
         const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, iPC, USGS, METI | UTM'
+            attribution: 'Tiles &copy; Esri &mdash; Satellite Imagery | UTM'
         });
 
-        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        const topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Topographic | UTM'
+        });
+
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
             maxZoom: 20,
-            subdomains: 'abcd',
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> | UTM'
+            subdomains: 'abc',
+            attribution: '&copy; OpenStreetMap contributors | UTM'
         });
 
-        const lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 20,
-            subdomains: 'abcd',
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> | UTM'
-        });
-
-        // Add default base street layer
+        // Add default base street layer (Clean, crisp, no API key watermark)
         streetLayer.addTo(map);
 
-        // Add Base Layer Toggle Control (Tactical Street, Satellite Imagery, Dark Mode)
+        // Add Base Layer Toggle Control
         const baseMaps = {
             "🗺️ Tactical Street": streetLayer,
             "🛰️ Satellite Imagery": satelliteLayer,
-            "🌙 Dark Mode": darkLayer,
-            "☀️ Clean Light": lightLayer
+            "🏔️ Topographic Map": topoLayer,
+            "🌍 OpenStreetMap": osmLayer
         };
         L.control.layers(baseMaps, null, { position: 'topleft', collapsed: true }).addTo(map);
 

@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="{% static 'vendor/leaflet/leaflet.css' %}">
     
     <!-- UTM Dashboard CSS -->
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=2.0">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=3.0">
 </head>
 <body data-simulation="{{ simulation_mode|yesno:'true,false' }}" 
       data-drone-id="{{ drone_id }}" 
@@ -593,7 +593,7 @@
     <!-- Leaflet JS (Local Vendored bundle) -->
     <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
     
-    <!-- UTM Dashboard Core JavaScript (v2.0 cache-buster for new map tiles) -->
-    <script src="{% static 'js/dashboard.js' %}?v=2.0"></script>
+    <!-- UTM Dashboard Core JavaScript (v3.0 - Zero API key Esri & OSM tiles) -->
+    <script src="{% static 'js/dashboard.js' %}?v=3.0"></script>
 </body>
 </html>
