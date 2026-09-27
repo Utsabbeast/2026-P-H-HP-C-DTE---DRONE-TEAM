@@ -175,6 +175,9 @@
                         <button type="button" class="btn btn-sm" id="btnConnectEspWs" style="padding: 4px 12px; font-size: 0.8rem; border-radius: 6px; background: #16a34a; border: none; color: white; cursor: pointer; font-weight: 600;">⚡ Connect ESP32</button>
                         <button type="button" class="btn btn-sm" id="btnDisconnectEspWs" style="display: none; padding: 4px 12px; font-size: 0.8rem; border-radius: 6px; background: #ffffff; border: 1.5px solid #fecaca; color: #b91c1c; cursor: pointer; font-weight: 600;">Disconnect</button>
                     </div>
+                    <div id="esp32HttpsTip" style="display: none; font-size: 0.76rem; color: #b45309; margin-top: 6px; background: #fef3c7; border: 1px solid #fde68a; padding: 4px 8px; border-radius: 6px;">
+                        💡 <strong>Render HTTPS Note:</strong> Browsers block direct unencrypted WebSockets (<code>ws://</code>) on HTTPS. For direct zero-latency streaming, open <a href="http://localhost:8000/dashboard/?mode=drone" target="_blank" style="color: #047857; text-decoration: underline; font-weight: 700;">http://localhost:8000/dashboard/</a> on your laptop, or enable Cloud Ingest in your ESP32 sketch.
+                    </div>
                 </div>
             </div>
             

@@ -88,6 +88,7 @@
         esp32WsStatusBadge: document.getElementById('esp32WsStatusBadge'),
         esp32WsDot: document.getElementById('esp32WsDot'),
         esp32WsStatusText: document.getElementById('esp32WsStatusText'),
+        esp32HttpsTip: document.getElementById('esp32HttpsTip'),
         
         // Map HUD & Header
         mapMainTitle: document.getElementById('mapMainTitle'),
@@ -363,6 +364,9 @@
             // Hide phone hotspot banner, show ESP32 WebSocket bridge banner
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'flex';
+            if (location.protocol === 'https:' && elements.esp32HttpsTip) {
+                elements.esp32HttpsTip.style.display = 'block';
+            }
 
             // Buttons & Headers
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Drone';
@@ -996,7 +1000,9 @@
 
         if (location.protocol === 'https:' && wsUrl.startsWith('ws://')) {
             console.warn('[UTM] Browser security blocks insecure ws:// from an https:// origin.');
-            alert('Notice: Modern browsers block direct unencrypted ws:// connections when viewing from HTTPS (such as Render).\n\nTo view real-time WebSocket telemetry, please open this dashboard via http://localhost:8000/dashboard/ or http://<laptop-ip>:8000/dashboard/ on your Wi-Fi.');
+            if (elements.esp32HttpsTip) elements.esp32HttpsTip.style.display = 'block';
+            updateEsp32WsStatus('disconnected', 'HTTPS Blocked ws://');
+            return;
         }
 
         try {

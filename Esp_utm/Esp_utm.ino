@@ -21,16 +21,16 @@
 #include <WebSocketsServer.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 
 // Wi-Fi Access Point / Hotspot Credentials
 const char* ssid = "Galaxy A27 5G CB9A";
 const char* password = "nitin6789";
 
-// Optional: HTTP POST telemetry to your web server (e.g. Render or local IP)
-// Leave empty "" to broadcast over local WebSocket only.
-// Example: const char* utmServerUrl = "https://utm-drone.onrender.com/api/telemetry/";
-// Example: const char* utmServerUrl = "http://192.168.43.100:8000/api/telemetry/";
-const char* utmServerUrl = "";
+// Optional: HTTP POST telemetry directly to your Render cloud server!
+// When set, telemetry is pushed to Render every 1s so https://drone-375d.onrender.com works live anywhere!
+// Leave empty "" if you only want local WebSocket (http://localhost:8000/dashboard/).
+const char* utmServerUrl = "https://drone-375d.onrender.com/api/telemetry/";
 
 // Hardware Serial2: RX = GPIO 16, TX = GPIO 17
 HardwareSerial MavSerial(2);
@@ -140,12 +140,33 @@ void parseMavlinkByte(uint8_t c) {
           static unsigned long lastHttpSend = 0;
           if (strlen(utmServerUrl) > 0 && (millis() - lastHttpSend >= 1000) && WiFi.status() == WL_CONNECTED) {
             lastHttpSend = millis();
-            HTTPClient http;
-            http.begin(utmServerUrl);
-            http.addHeader("Content-Type", "application/json");
-            http.setTimeout(800);
-            http.POST(jsonBuffer);
-            http.end();
+            if (strncmp(utmServerUrl, "https://", 8) == 0) {
+              WiFiClientSecure secureClient;
+              secureClient.setInsecure(); // Skip TLS certificate verification on ESP32
+              HTTPClient http;
+              if (http.begin(secureClient, utmServerUrl)) {
+                http.addHeader("Content-Type", "application/json");
+                http.setTimeout(1500);
+                int code = http.POST(jsonBuffer);
+                if (code > 0) {
+                  Serial.printf("[CLOUD] Pushed to Render: HTTP %d\n", code);
+                } else {
+                  Serial.printf("[CLOUD] Push error: %s\n", http.errorToString(code).c_str());
+                }
+                http.end();
+              }
+            } else {
+              HTTPClient http;
+              if (http.begin(utmServerUrl)) {
+                http.addHeader("Content-Type", "application/json");
+                http.setTimeout(1200);
+                int code = http.POST(jsonBuffer);
+                if (code > 0) {
+                  Serial.printf("[LOCAL API] Pushed: HTTP %d\n", code);
+                }
+                http.end();
+              }
+            }
           }
 
           // ================= PRINT TO SERIAL MONITOR (USB) =================
