@@ -403,6 +403,36 @@ body {
     z-index: 10;
 }
 
+/* Leaflet Layer Switcher Custom Styling */
+.leaflet-control-layers {
+    border-radius: var(--radius-md) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: var(--shadow-md) !important;
+    font-family: inherit !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+}
+
+.leaflet-control-layers-expanded {
+    padding: 0.5rem 0.85rem !important;
+}
+
+.leaflet-control-layers label {
+    margin-bottom: 0.35rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.leaflet-control-layers label:last-child {
+    margin-bottom: 0;
+}
+
 /* Floating HUD on Map */
 .map-floating-hud {
     position: absolute;

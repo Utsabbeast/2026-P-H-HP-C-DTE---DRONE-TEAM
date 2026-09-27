@@ -220,11 +220,41 @@
             attributionControl: true,
         }).setView([lastKnownLat, lastKnownLon], 16);
 
-        // Standard OpenStreetMap Tile Layer
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // High-reliability Tile Layers (No 403 blocks, global CDN)
+        const streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 20,
+            subdomains: 'abcd',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> | UTM'
+        });
+
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | UTM'
-        }).addTo(map);
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, iPC, USGS, METI | UTM'
+        });
+
+        const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 20,
+            subdomains: 'abcd',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> | UTM'
+        });
+
+        const lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 20,
+            subdomains: 'abcd',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a> | UTM'
+        });
+
+        // Add default base street layer
+        streetLayer.addTo(map);
+
+        // Add Base Layer Toggle Control (Tactical Street, Satellite Imagery, Dark Mode)
+        const baseMaps = {
+            "🗺️ Tactical Street": streetLayer,
+            "🛰️ Satellite Imagery": satelliteLayer,
+            "🌙 Dark Mode": darkLayer,
+            "☀️ Clean Light": lightLayer
+        };
+        L.control.layers(baseMaps, null, { position: 'topleft', collapsed: true }).addTo(map);
 
         // Movement trail polyline
         movementTrail = L.polyline([], {
