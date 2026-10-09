@@ -185,9 +185,6 @@ class UTMRegisterView(View):
         return render(request, 'register.html')
 
     def post(self, request):
-        context = {
-            'custom_message': 'We are not taking any registrations right now because the website is under development.',
-            'custom_title': 'Registration Unavailable'
-        }
-        return render(request, '404.html', context, status=403)
+        messages.error(request, 'We are not taking any registrations right now because the website is under development.')
+        return redirect('telemetry:register')
 

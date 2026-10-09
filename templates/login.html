@@ -187,7 +187,13 @@
 
                     <div id="register-section" class="mt-4 text-sm flex justify-between items-center container-mr">
                         <p class="mr-3 md:mr-0 text-[#002D74]/90 font-medium">If you don't have an account..</p>
-                        <a href="#" onclick="document.getElementById('inline-msg-box').textContent = 'Coming soon...'; document.getElementById('inline-msg-box').classList.remove('hidden'); return false;" class="register text-[#002D74] bg-white border border-gray-300 shadow-sm hover:shadow-md py-2 px-5 hover:bg-gray-50 font-bold duration-300 inline-block text-center text-sm" style="text-decoration:none;">Register</a>
+                        <a href="{% url 'telemetry:register' %}" class="register text-[#002D74] bg-white border border-gray-300 shadow-sm hover:shadow-md py-2 px-5 hover:bg-gray-50 font-bold duration-300 inline-block text-center text-sm" style="text-decoration:none; animation: bounce-slight 2s infinite;">Register</a>
+<style>
+@keyframes bounce-slight {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+</style>
                     </div>
                 </div>
             </div>
