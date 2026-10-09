@@ -10,6 +10,8 @@ from rest_framework.views import APIView
 from .models import DroneTelemetry, PhoneTelemetry, FlightPermissionRequest
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .serializers import (
     DroneTelemetrySerializer,
     DroneStatusSerializer,
@@ -113,6 +115,7 @@ class MobilePageView(TemplateView):
         return context
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class TelemetryIngestView(APIView):
     """
     API endpoint designed for the ESP32 Wi-Fi module (and future Cube Orange+ telemetry).
@@ -382,6 +385,7 @@ class SimulationResetView(APIView):
 # Phone GPS Test Mode API Views
 # ==============================================================================
 
+@method_decorator(csrf_exempt, name='dispatch')
 class PhoneLocationIngestView(APIView):
     """
     POST /api/phone-location/

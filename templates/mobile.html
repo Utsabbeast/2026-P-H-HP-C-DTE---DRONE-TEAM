@@ -4,160 +4,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UTM — Phone GPS Test Mode</title>
-    <meta name="description" content="Phone GPS streaming portal for UTM drone tracking test mode. Broadcasts real device coordinates over local Wi-Fi hotspot to Django.">
+    <title>Phone GPS Broadcast — UTM Airspace</title>
+    <meta name="description" content="Phone GPS streaming portal for UTM drone tracking test mode. Broadcasts real device coordinates over HTTPS to Django UTM tactical map.">
 
-    <!-- Modern Typography -->
+    <!-- Fonts: Outfit (Brand) & JetBrains Mono (Telemetry) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="{% static 'css/mobile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mobile.css' %}?v=5.0">
 </head>
 <body data-device-id="{{ device_id }}" data-local-ip="{{ local_ip }}">
 
-    <!-- PHONE LOCKSCREEN / FINGERPRINT UI -->
-    <div class="fingerprint-container">
-        <span class="top-border"></span>
-        <p class="time" id="fpTime">12:00</p>
-        <p class="date" id="fpDate">Fri, 20 December</p>
-        
-        <div class="fingerprint-btn" id="btnFingerprintStart">
-            <svg class="fingerprint" viewBox="0 0 0.488 0.488" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0.409 0.114a0.196 0.196 0 0 1 0.027 0.122v0.024c0 0.026 0.007 0.051 0.019 0.073M0.146 0.212c0 -0.026 0.01 -0.051 0.028 -0.069a0.096 0.096 0 0 1 0.068 -0.029c0.026 0 0.05 0.01 0.068 0.029s0.028 0.043 0.028 0.069v0.024c0 0.053 0.017 0.104 0.048 0.146m-0.145 -0.17v0.049A0.343 0.343 0 0 0 0.303 0.455M0.146 0.309A0.442 0.442 0 0 0 0.189 0.455m-0.118 -0.049c-0.016 -0.055 -0.024 -0.113 -0.022 -0.17V0.212a0.195 0.195 0 0 1 0.026 -0.098 0.194 0.194 0 0 1 0.071 -0.072 0.192 0.192 0 0 1 0.194 0" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="0.0325"></path>
-            </svg>
+    <!-- TOP AVIATION HEADER -->
+    <header class="mobile-navbar">
+        <div class="nav-container">
+            <a href="{% url 'telemetry:dashboard' %}" class="nav-back-link">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" />
+                        <circle cx="12" cy="12" r="3" fill="#ffffff" stroke="none" />
+                    </svg>
+                </div>
+                <div class="brand-text-wrap">
+                    <span class="brand-title">UTM TELEMETRY</span>
+                    <span class="brand-badge">PHONE GPS TEST</span>
+                </div>
+            </div>
+
+            <div class="nav-flag">
+                <img src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" alt="India" class="flag-icon">
+            </div>
         </div>
-        <p class="instruction" id="fpInstruction">Tap to Activate GPS</p>
+    </header>
+
+    <!-- SUB HEADER STRIP -->
+    <div class="top-strip">
+        <span>AIRSPACE MONITORING &bull; REAL-TIME GNSS CLIENT</span>
+        <span class="secure-tag" id="secureContextTag">🔒 HTTPS</span>
     </div>
 
-    <!-- ACTION BUTTONS (Hidden, kept for JS logic) -->
-    <div class="controls-container" style="display: none;">
-        <button id="btnStart" class="btn btn-start" type="button">Start</button>
-        <button id="btnStop" class="btn btn-stop" type="button" disabled>Stop</button>
-        <button id="btnForceRefresh" class="btn btn-refresh" type="button" disabled>Refresh</button>
-    </div>
+    <main class="mobile-main">
+        <!-- RADAR BROADCASTER HUB -->
+        <section class="radar-hub-card">
+            <div class="radar-container" id="radarContainer">
+                <div class="radar-wave wave-1"></div>
+                <div class="radar-wave wave-2"></div>
+                <div class="radar-wave wave-3"></div>
 
-    <!-- ACCURACY & PRECISE LOCATION GUIDE (DYNAMIC) -->
-    <section class="accuracy-guide-card" id="accuracyGuideCard" style="display: none;">
-        <div class="guide-header">
-            <span class="guide-icon">🛰️</span>
-            <span id="accuracyGuideTitle">How to Get 3-Meter Satellite GPS</span>
+                <!-- Main Interactive Activator Button -->
+                <button type="button" class="radar-activator-btn" id="btnMainBroadcast" aria-label="Toggle GPS Broadcast">
+                    <div class="activator-inner">
+                        <svg class="radar-icon icon-idle" id="iconIdle" viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                            <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+                        </svg>
+                        <svg class="radar-icon icon-active" id="iconActive" viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2.2" style="display: none;">
+                            <polygon points="12 2 19 21 12 17 5 21 12 2" fill="currentColor"/>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+
+            <div class="radar-content">
+                <h2 class="radar-title" id="radarTitle">Tap to Start GPS Broadcast</h2>
+                <p class="radar-sub" id="radarSub">Stream high-precision smartphone GPS to the UTM live map</p>
+
+                <!-- STATUS PILL -->
+                <div class="status-badge-wrap">
+                    <div class="status-badge status-idle" id="statusBadge">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span class="status-text" id="statusText">Standby (Offline)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRIMARY CONTROLS -->
+            <div class="hub-actions">
+                <button type="button" class="btn btn-action-start" id="btnStartTracking">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"></polygon>
+                    </svg>
+                    <span id="btnStartText">Start Live Broadcast</span>
+                </button>
+
+                <button type="button" class="btn btn-action-refresh" id="btnForceRefresh" disabled title="Force Immediate Satellite Fix">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    <span>Instant Satellite Sync</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ACCURACY & PRECISE LOCATION NOTICE (Expandable/Alert) -->
+        <section class="accuracy-banner" id="accuracyGuideCard" style="display: none;">
+            <div class="accuracy-header">
+                <span class="acc-icon">🛰️</span>
+                <strong id="accuracyGuideTitle">Acquiring High-Accuracy GNSS</strong>
+            </div>
+            <div class="accuracy-body" id="accuracyGuideDesc">
+                For best results (±3 meters), allow <strong>Precise Location</strong> in browser settings and keep clear sky view.
+            </div>
+        </section>
+
+        <!-- LIVE TELEMETRY TELEMETRY DATA CARDS -->
+        <section class="telemetry-section">
+            <div class="section-header">
+                <span class="section-title">Live Sensor Parameters</span>
+                <span class="pulse-indicator" id="rateIndicator">● Awaiting Stream</span>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Latitude -->
+                <div class="telemetry-card">
+                    <div class="card-head">
+                        <span class="card-label">Latitude</span>
+                        <span class="card-icon">🌐</span>
+                    </div>
+                    <div class="card-value" id="valLat">--</div>
+                    <div class="card-sub" id="subLat">Coordinate North/South</div>
+                </div>
+
+                <!-- Longitude -->
+                <div class="telemetry-card">
+                    <div class="card-head">
+                        <span class="card-label">Longitude</span>
+                        <span class="card-icon">🌐</span>
+                    </div>
+                    <div class="card-value" id="valLon">--</div>
+                    <div class="card-sub" id="subLon">Coordinate East/West</div>
+                </div>
+
+                <!-- Altitude -->
+                <div class="telemetry-card">
+                    <div class="card-head">
+                        <span class="card-label">Altitude</span>
+                        <span class="card-icon">⛰️</span>
+                    </div>
+                    <div class="card-value" id="valAlt">--</div>
+                    <div class="card-sub" id="subAlt">GPS MSL Altitude</div>
+                </div>
+
+                <!-- Heading -->
+                <div class="telemetry-card">
+                    <div class="card-head">
+                        <span class="card-label">Heading</span>
+                        <div class="compass-mini" id="compassMini">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 16 11 12 9 8 11 12 2" fill="#002D74" stroke="none" id="miniCompassNeedle"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="card-value" id="valHeading">--</div>
+                    <div class="card-sub" id="subHeading">Azimuth Cardinal</div>
+                </div>
+
+                <!-- Speed -->
+                <div class="telemetry-card">
+                    <div class="card-head">
+                        <span class="card-label">Speed</span>
+                        <span class="card-icon">⚡</span>
+                    </div>
+                    <div class="card-value" id="valSpeed">--</div>
+                    <div class="card-sub" id="subSpeed">0.0 km/h</div>
+                </div>
+
+                <!-- Accuracy -->
+                <div class="telemetry-card">
+                    <div class="card-head">
+                        <span class="card-label">Accuracy</span>
+                        <span class="card-icon">🎯</span>
+                    </div>
+                    <div class="card-value" id="valAccuracy">--</div>
+                    <div class="card-sub" id="subAccuracy">Sensor Precision</div>
+                </div>
+
+                <!-- Full Width Packet & Delivery Card -->
+                <div class="telemetry-card card-full">
+                    <div class="card-head">
+                        <span class="card-label">Stream Telemetry Status</span>
+                        <span class="badge-mini" id="packetBadge">Packets: 0</span>
+                    </div>
+                    <div class="stream-status-row">
+                        <div class="stream-col">
+                            <span class="stream-label">Last Transmission:</span>
+                            <span class="stream-val" id="valTimestamp">--:--:--</span>
+                        </div>
+                        <div class="stream-col">
+                            <span class="stream-label">Delivery Server:</span>
+                            <span class="stream-val delivery-good" id="diagServerStatus">Idle</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SYSTEM DIAGNOSTICS -->
+        <section class="diagnostics-section">
+            <h3 class="diag-title">System & Telemetry Pipeline</h3>
+            <div class="diag-card">
+                <div class="diag-item">
+                    <span class="diag-key">Target Device ID</span>
+                    <span class="diag-val" id="diagDeviceId">{{ device_id }}</span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-key">Host Endpoint</span>
+                    <span class="diag-val" id="diagHost">{{ server_host|default:'Render Cloud' }}</span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-key">Screen WakeLock</span>
+                    <span class="diag-val" id="diagWakeLock">Inactive</span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-key">Packets Transmitted</span>
+                    <span class="diag-val" id="diagPacketsSent">0</span>
+                </div>
+                <div class="diag-item">
+                    <span class="diag-key">Destination API</span>
+                    <span class="diag-val code-val">/api/phone-location/</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- DASHBOARD SHORTCUT BUTTON -->
+        <div class="quick-nav-box">
+            <a href="{% url 'telemetry:dashboard' %}" class="btn-goto-dashboard">
+                <span>View Live Tactical Map Dashboard</span>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </a>
         </div>
-        <div class="guide-steps" id="accuracyGuideSteps">
-            <div class="guide-step">
-                <span class="step-num">1</span>
-                <span>In Chrome, tap the <strong>🔒 Lock icon</strong> (or tune icon) in the address bar.</span>
-            </div>
-            <div class="guide-step">
-                <span class="step-num">2</span>
-                <span>Tap <strong>Permissions</strong> &rarr; turn ON <strong>"Use precise location"</strong> (not Approximate).</span>
-            </div>
-            <div class="guide-step">
-                <span class="step-num">3</span>
-                <span>Ensure phone <strong>Location / GPS</strong> is set to <strong>High Accuracy</strong> in Android settings.</span>
-            </div>
-            <div class="guide-step">
-                <span class="step-num">4</span>
-                <span>Move near a window or outdoors so the phone has direct line of sight to GPS satellites.</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- LIVE TELEMETRY CARDS -->
-    <section class="telemetry-section">
-        <div class="section-title">
-            <span>Live GPS Parameters</span>
-            <span id="rateIndicator" style="font-family: var(--mono-font); font-size: 0.75rem; text-transform: none; color: var(--primary-blue);">Direct GPS Events</span>
-        </div>
-
-        <div class="cards-grid">
-            <!-- Latitude -->
-            <div class="telemetry-card">
-                <div class="card-label">Latitude</div>
-                <div class="card-value" id="valLat">--</div>
-            </div>
-
-            <!-- Longitude -->
-            <div class="telemetry-card">
-                <div class="card-label">Longitude</div>
-                <div class="card-value" id="valLon">--</div>
-            </div>
-
-            <!-- Altitude -->
-            <div class="telemetry-card">
-                <div class="card-label">Altitude</div>
-                <div class="card-value" id="valAlt">--</div>
-            </div>
-
-            <!-- Heading -->
-            <div class="telemetry-card">
-                <div class="card-label">Heading</div>
-                <div class="card-value" id="valHeading">--</div>
-            </div>
-
-            <!-- Accuracy -->
-            <div class="telemetry-card">
-                <div class="card-label">Accuracy</div>
-                <div class="card-value" id="valAccuracy">--</div>
-            </div>
-
-            <!-- Speed -->
-            <div class="telemetry-card">
-                <div class="card-label">Speed</div>
-                <div class="card-value" id="valSpeed">--</div>
-            </div>
-
-            <!-- Last Update -->
-            <div class="telemetry-card card-full">
-                <div class="card-label">Last GPS Update</div>
-                <div class="card-value" id="valTimestamp" style="font-size: 1rem;">--</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- DIAGNOSTICS -->
-    <section class="diagnostics-card">
-        <div class="diag-row">
-            <span class="diag-label">Device ID:</span>
-            <span class="diag-val" id="diagDeviceId">{{ device_id }}</span>
-        </div>
-        <div class="diag-row">
-            <span class="diag-label">Server Host:</span>
-            <span class="diag-val" id="diagHost">{{ server_host|default:'Render Cloud' }}</span>
-        </div>
-        <div class="diag-row">
-            <span class="diag-label">Screen Wake Lock:</span>
-            <span class="diag-val" id="diagWakeLock" style="color: var(--text-muted);">Inactive</span>
-        </div>
-        <div class="diag-row">
-            <span class="diag-label">Packets Transmitted:</span>
-            <span class="diag-val" id="diagPacketsSent">0</span>
-        </div>
-        <div class="diag-row">
-            <span class="diag-label">Backend Delivery:</span>
-            <span class="diag-val" id="diagServerStatus">Idle</span>
-        </div>
-        <div class="diag-row">
-            <span class="diag-label">Destination API:</span>
-            <span class="diag-val" style="font-size: 0.75rem;">/api/phone-location/</span>
-        </div>
-    </section>
-
-    <!-- SECURITY CONTEXT BANNER -->
-    <div class="security-banner" id="securityBanner">
-        <strong id="securityBannerTitle">🔒 Secure HTTPS Context</strong>
-        <span id="securityBannerDesc">Device location services ready.</span>
-    </div>
+    </main>
 
     <!-- FOOTER -->
     <footer class="mobile-footer">
-        <div>Unified Telemetry Monitor &bull; Phone GPS Source Mode</div>
-        <div style="margin-top: 4px;">
-            <a href="/dashboard/" target="_blank">Open Main Dashboard &rarr;</a>
-        </div>
+        <div>Unified Telemetry Monitor &bull; Defense & Civil Aviation UTM</div>
+        <div class="footer-sub">DGCA Compliant &bull; High-Precision GNSS Receiver</div>
     </footer>
 
-    <!-- JavaScript Client -->
-    <script src="{% static 'js/mobile.js' %}"></script>
+    <!-- JavaScript Engine -->
+    <script src="{% static 'js/mobile.js' %}?v=5.0"></script>
 </body>
 </html>

@@ -145,6 +145,10 @@
         hardwareOfflineAlert: document.getElementById('hardwareOfflineAlert'),
 
         // Tester Panel
+        mapStatsContainer: document.getElementById('mapStatsContainer'),
+        statRegisteredDronesBox: document.getElementById('statRegisteredDronesBox'),
+          valRegisteredDrones: document.getElementById('valRegisteredDrones'),
+        valDronesInAir: document.getElementById('valDronesInAir'),
         testerPanel: document.getElementById('testerPanel'),
         testerForm: document.getElementById('testerForm'),
         testerFeedback: document.getElementById('testerFeedback'),
@@ -231,6 +235,7 @@
     // Deselect marker and clear telemetry on map click
     map.on('click', function(e) {
         activeMarker = null;
+        activeTelemetryTargetId = null;
         resetTelemetryUI();
     });
 
@@ -322,6 +327,16 @@
         if (activeMode === newMode) return;
         activeMode = newMode;
 
+        // Handle Registered Drones Box visibility
+        if (elements.statRegisteredDronesBox) {
+            elements.statRegisteredDronesBox.style.display = (newMode === 'simulator') ? 'none' : 'flex';
+        }
+
+        // Always hide API tools and panel when changing modes, only show for drone
+        if (elements.btnToggleTester) elements.btnToggleTester.style.display = (newMode === 'drone') ? 'flex' : 'none';
+        if (elements.testerPanel) elements.testerPanel.style.display = 'none';
+
+
         // Clear displayed trail when switching modes
         trailCoordinates = [];
         if (movementTrail) {
@@ -338,15 +353,31 @@
             if (elements.testModeBadge) elements.testModeBadge.style.display = 'none';
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'none';
-            
-            if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Main Mode (Overview)';
-            if (elements.mapRouteHud) {
-                elements.mapRouteHud.textContent = 'Overview';
-                elements.mapRouteHud.style.background = '#e0f2fe';
-                elements.mapRouteHud.style.borderColor = '#bae6fd';
-                elements.mapRouteHud.style.color = '#0369a1';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valRegisteredDrones && elements.valDronesInAir) {
+                if (elements.valRegisteredDrones) elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
+                // the simulation polling will update drones in air if needed
             }
-        } else if (activeMode === 'phone') {
+            
+            if (elements.mapMainTitle) elements.mapMainTitle.textContent = window.MAIN_MODE_TITLE || 'Main Mode (Overview)';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valRegisteredDrones && elements.valDronesInAir) {
+                if (elements.valRegisteredDrones) elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
+                if (elements.valDronesInAir) elements.valDronesInAir.textContent = elements.valDronesInAir.getAttribute('data-original') || '0';
+            }
+            if (elements.mapRouteHud) {
+                if (elements.mapRouteHud) elements.mapRouteHud.textContent = 'Overview';
+                if (elements.mapRouteHud) elements.mapRouteHud.style.background = '#e0f2fe';
+                if (elements.mapRouteHud) elements.mapRouteHud.style.borderColor = '#bae6fd';
+                if (elements.mapRouteHud) elements.mapRouteHud.style.color = '#0369a1';
+            }
+            if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'UTM Network Overview';
+            if (elements.statusFeedText) elements.statusFeedText.textContent = 'Aggregated DB';
+            if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'All active drones';
+            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Multi-Drone Network';
+            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Cloud Database Aggregation';
+            if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = 'Network Traffic';
+                                } else if (activeMode === 'phone') {
             // Update Tab styles
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab active phone-tab';
             if (elements.tabDroneMode) elements.tabDroneMode.className = 'mode-tab';
@@ -356,6 +387,7 @@
             if (phoneMarker) {
                 phoneMarker.addTo(map);
                 activeMarker = phoneMarker;
+                if (map) map.setView(phoneMarker.getLatLng(), 17, { animate: true });
             }
 
             // Update polyline styling for phone
@@ -364,35 +396,39 @@
             }
 
             // Mode Badge
-            elements.testModeBadge.style.display = 'inline-flex';
-            elements.modeBadgeText.textContent = '🟢 TEST MODE — PHONE GPS';
-            elements.gpsSourceText.textContent = 'GPS Source: Android Phone';
-            elements.sourcePill.style.background = '#e0f2fe';
-            elements.sourcePill.style.color = '#0369a1';
-            elements.sourcePill.style.borderColor = '#bae6fd';
+            if (elements.testModeBadge) elements.testModeBadge.style.display = 'inline-flex';
+            if (elements.modeBadgeText) elements.modeBadgeText.textContent = '🟢 TEST MODE — PHONE GPS';
+            if (elements.gpsSourceText) elements.gpsSourceText.textContent = 'GPS Source: Android Phone';
+            if (elements.sourcePill) elements.sourcePill.style.background = '#e0f2fe';
+            if (elements.sourcePill) elements.sourcePill.style.color = '#0369a1';
+            if (elements.sourcePill) elements.sourcePill.style.borderColor = '#bae6fd';
 
             // Show hotspot banner, hide esp32 banner, sim bar and offline alert
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'flex';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'none';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valRegisteredDrones && elements.valDronesInAir) {
+                if (elements.valRegisteredDrones) elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
+                // the simulation polling will update drones in air if needed
+            }
             if (elements.simFloatingBar) elements.simFloatingBar.style.display = 'none';
             if (elements.hardwareOfflineAlert) elements.hardwareOfflineAlert.style.display = 'none';
-
-            // Buttons & Headers
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'none';
+                                    // Buttons & Headers
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Phone';
             if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Live Tactical Map (Phone GPS)';
             if (elements.mapRouteHud) {
-                elements.mapRouteHud.textContent = 'Source: Android Phone';
-                elements.mapRouteHud.style.background = '#ecfdf5';
-                elements.mapRouteHud.style.borderColor = '#a7f3d0';
-                elements.mapRouteHud.style.color = '#047857';
+                if (elements.mapRouteHud) elements.mapRouteHud.textContent = 'Source: Android Phone';
+                if (elements.mapRouteHud) elements.mapRouteHud.style.background = '#ecfdf5';
+                if (elements.mapRouteHud) elements.mapRouteHud.style.borderColor = '#a7f3d0';
+                if (elements.mapRouteHud) elements.mapRouteHud.style.color = '#047857';
             }
             if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'Phone GPS Telemetry Overview';
             if (elements.statusFeedText) elements.statusFeedText.textContent = 'Android Phone';
             if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Temporary test replacement';
-            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Cube Orange+ → ESP32 → Wi-Fi';
-            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Currently tested via Phone GPS';
+            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Android Device GPS API';
+            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Tested via Mobile Web';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Device: ${targetPhoneDeviceId}`;
-
         } else if (activeMode === 'simulator') {
             // Simulator Mode
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab';
@@ -404,17 +440,43 @@
             if (elements.testModeBadge) elements.testModeBadge.style.display = 'none';
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'none';
-
-        } else if (activeMode === 'drone') {
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valRegisteredDrones && elements.valDronesInAir) {
+                if (elements.valRegisteredDrones) elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
+                // the simulation polling will update drones in air if needed
+            }
+            if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'Drone Telemetry & Hardware Overview';
+            if (elements.statusFeedText) elements.statusFeedText.textContent = 'Simulation Engine';
+            if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Local Python Script';
+            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Software In The Loop (SITL)';
+            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Virtual hardware simulation';
+            if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
+                                } else if (activeMode === 'drone') {
             // Drone Mode (ESP32 Live Hardware)
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab';
             if (elements.tabDroneMode) elements.tabDroneMode.className = 'mode-tab active';
 
             // Switch markers
             if (phoneMarker && map.hasLayer(phoneMarker)) map.removeLayer(phoneMarker);
+
+            if (!droneMarker) {
+                droneMarker = L.marker([lastKnownLat || 30.9010, lastKnownLon || 75.8573], {
+                    icon: createDroneIcon(lastKnownHeading || 0),
+                    title: 'Drone 01 (Cube Orange+ / ESP32)',
+                    zIndexOffset: 1000
+                });
+                droneMarker.bindPopup(`
+                    <div style="font-family: inherit; font-size: 13px; line-height: 1.4;">
+                        <strong style="color: #0284c7;">Drone 01 — Cube Orange+</strong><br>
+                        <span>Target: ESP32 Wi-Fi Telemetry</span>
+                    </div>
+                `);
+            }
             if (droneMarker) {
+
                 droneMarker.addTo(map);
                 activeMarker = droneMarker;
+                if (map) map.setView(droneMarker.getLatLng(), 17, { animate: true });
             }
 
             // Update polyline styling for drone
@@ -423,25 +485,30 @@
             }
 
             // Mode Badge
-            elements.testModeBadge.style.display = 'inline-flex';
-            elements.modeBadgeText.textContent = 'Live Hardware Stream (ESP32)';
-            elements.gpsSourceText.textContent = 'GPS Source: ESP32 / Cube Orange+';
+            if (elements.testModeBadge) elements.testModeBadge.style.display = 'inline-flex';
+            if (elements.modeBadgeText) elements.modeBadgeText.textContent = 'Live Hardware Stream (ESP32)';
+            if (elements.gpsSourceText) elements.gpsSourceText.textContent = 'GPS Source: ESP32 / Cube Orange+';
 
             // Hide phone hotspot banner, show ESP32 WebSocket bridge banner
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'flex';
             if (location.protocol === 'https:' && elements.esp32HttpsTip) {
-                elements.esp32HttpsTip.style.display = 'block';
+                if (elements.esp32HttpsTip) elements.esp32HttpsTip.style.display = 'block';
             }
 
             // Buttons & Headers
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Drone';
             if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Live Tactical Map (Cube Orange+ / ESP32)';
             if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'Drone Telemetry & Hardware Overview';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valDronesInAir) elements.valDronesInAir.textContent = '1';
+            if (elements.valRegisteredDrones) elements.valRegisteredDrones.textContent = '1';
             if (elements.statusFeedText) elements.statusFeedText.textContent = 'ESP32 Wi-Fi';
             if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Cube Orange+ Telem (UART2)';
+            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Cube Orange+ → ESP32 → Wi-Fi';
+            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Direct Hardware Stream';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
-        }
+                    }
 
         try {
             localStorage.setItem('utm_active_mode', newMode);
@@ -508,7 +575,7 @@
         const accuracy = telemetryData.accuracy !== null && telemetryData.accuracy !== undefined ? parseFloat(telemetryData.accuracy) : null;
         
         if (elements.mapCoordinatesHud) {
-            elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
+            if (elements.mapCoordinatesHud) elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
         }
         if (elements.hudAlt) elements.hudAlt.textContent = alt !== null ? `${alt.toFixed(1)} m` : 'N/A';
         if (elements.hudHdg) elements.hudHdg.textContent = hdg !== null ? `${Math.round(hdg)}°` : 'N/A';
@@ -540,10 +607,10 @@
                 } else if (accuracy > 25) {
                     elements.valAccuracy.innerHTML = `<span style="color: #f59e0b; font-weight: 700;">${accuracy.toFixed(1)} m</span>`;
                 } else {
-                    elements.valAccuracy.textContent = `${accuracy.toFixed(1)} m`;
+                    if (elements.valAccuracy) elements.valAccuracy.textContent = `${accuracy.toFixed(1)} m`;
                 }
             } else {
-                elements.valAccuracy.textContent = 'N/A';
+                if (elements.valAccuracy) elements.valAccuracy.textContent = 'N/A';
             }
         }
     }
@@ -609,8 +676,9 @@
         }
 
         // 2. Update Map HUD Overlay
+        if (activeMarker === null) return; // Don't update HUD or Cards if user deselected map
         if (elements.mapCoordinatesHud) {
-            elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
+            if (elements.mapCoordinatesHud) elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
         }
         if (elements.hudAlt) elements.hudAlt.textContent = alt !== null ? `${alt.toFixed(1)} m` : 'N/A';
         if (elements.hudHdg) elements.hudHdg.textContent = hdg !== null ? `${Math.round(hdg)}°` : 'N/A';
@@ -646,29 +714,31 @@
                     elements.valAccuracy.innerHTML = `<span style="color: #10b981; font-weight: 700;">${accuracy.toFixed(1)} m</span>`;
                 }
             } else {
-                elements.valAccuracy.textContent = 'N/A';
+                if (elements.valAccuracy) elements.valAccuracy.textContent = 'N/A';
             }
         }
 
         if (elements.subAccuracy) {
             if (accuracy !== null) {
                 if (accuracy > 100) {
-                    elements.subAccuracy.textContent = 'Coarse Cell Tower (~1.4km) — Enable Precise Location on Phone';
-                    elements.subAccuracy.style.color = '#ef4444';
+                    if (elements.subAccuracy) elements.subAccuracy.textContent = 'Coarse Cell Tower (~1.4km) — Enable Precise Location on Phone';
+                    if (elements.subAccuracy) elements.subAccuracy.style.color = '#ef4444';
                 } else if (accuracy > 25) {
-                    elements.subAccuracy.textContent = 'Moderate GPS accuracy (Acquiring satellites)';
-                    elements.subAccuracy.style.color = '#b45309';
+                    if (elements.subAccuracy) elements.subAccuracy.textContent = 'Moderate GPS accuracy (Acquiring satellites)';
+                    if (elements.subAccuracy) elements.subAccuracy.style.color = '#b45309';
                 } else {
-                    elements.subAccuracy.textContent = 'High-precision satellite lock';
-                    elements.subAccuracy.style.color = '#047857';
+                    if (elements.subAccuracy) elements.subAccuracy.textContent = 'High-precision satellite lock';
+                    if (elements.subAccuracy) elements.subAccuracy.style.color = '#047857';
                 }
             } else {
-                elements.subAccuracy.textContent = 'Unavailable';
-                elements.subAccuracy.style.color = 'var(--text-muted)';
+                if (elements.subAccuracy) elements.subAccuracy.textContent = 'Unavailable';
+                if (elements.subAccuracy) elements.subAccuracy.style.color = 'var(--text-muted)';
             }
         }
 
-        if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
+        if (activeMarker !== null) {
+            if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
+        }
 
         // 4. Update Connection Status
         const secondsAgo = apiState ? apiState.seconds_since_update : 0;
@@ -696,7 +766,7 @@
         // If GPS has not acquired 3D lock yet (Cube sends 0, 0)
         if (lat === 0 && lon === 0) {
             if (elements.mapCoordinatesHud) {
-                elements.mapCoordinatesHud.textContent = 'GPS: Waiting for 3D satellite lock (lat: 0, lon: 0)';
+                if (elements.mapCoordinatesHud) elements.mapCoordinatesHud.textContent = 'GPS: Waiting for 3D satellite lock (lat: 0, lon: 0)';
             }
             if (elements.hudAccuracy) elements.hudAccuracy.textContent = 'No Lock';
             if (elements.valAccuracy) elements.valAccuracy.innerHTML = '<span style="color: #f59e0b; font-weight: 700;">Acquiring Sats</span>';
@@ -715,8 +785,28 @@
             hasReceivedFirstDroneFix = true;
         }
 
+        
         // Update Drone Marker Position & Rotator
+        if (!droneMarker) {
+            droneMarker = L.marker([lat, lon], {
+                icon: createDroneIcon(hdg),
+                title: 'Drone 01 (Cube Orange+ / ESP32)',
+                zIndexOffset: 1000
+            });
+            droneMarker.bindPopup(`
+                <div style="font-family: inherit; font-size: 13px; line-height: 1.4;">
+                    <strong style="color: #0284c7;">Drone 01 — Cube Orange+</strong><br>
+                    <span>Target: ESP32 Wi-Fi Telemetry</span>
+                </div>
+            `);
+            if (activeMode === 'drone') {
+                droneMarker.addTo(map);
+                activeMarker = droneMarker;
+            }
+        }
+        
         if (droneMarker) {
+
             droneMarker.setLatLng([lat, lon]);
             const rotatorEl = document.getElementById('droneRotator');
             if (rotatorEl) {
@@ -733,14 +823,15 @@
         }
 
         // Update Map HUD
+        if (activeMarker === null) return; // Don't update HUD or Cards if user deselected map
         if (elements.mapCoordinatesHud) {
-            elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
+            if (elements.mapCoordinatesHud) elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
         }
         if (elements.mapRouteHud) {
-            elements.mapRouteHud.textContent = `Source: ESP32 (${telemetryData.drone_id || telemetryData.id || 'DRONE-ALPHA'})`;
-            elements.mapRouteHud.style.background = '#e0f2fe';
-            elements.mapRouteHud.style.borderColor = '#bae6fd';
-            elements.mapRouteHud.style.color = '#0369a1';
+            if (elements.mapRouteHud) elements.mapRouteHud.textContent = `Source: ESP32 (${telemetryData.drone_id || telemetryData.id || 'DRONE-ALPHA'})`;
+            if (elements.mapRouteHud) elements.mapRouteHud.style.background = '#e0f2fe';
+            if (elements.mapRouteHud) elements.mapRouteHud.style.borderColor = '#bae6fd';
+            if (elements.mapRouteHud) elements.mapRouteHud.style.color = '#0369a1';
         }
         if (elements.hudAlt) elements.hudAlt.textContent = `${alt.toFixed(1)} m`;
         if (elements.hudHdg) elements.hudHdg.textContent = `${Math.round(hdg)}°`;
@@ -753,8 +844,12 @@
         if (elements.hudAccuracy) elements.hudAccuracy.textContent = 'Hardware Fix';
 
         // Update Cards using unified generic function
-        updateTelemetryCards(telemetryData);
-        if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
+        if (activeMarker !== null) {
+            updateTelemetryCards(telemetryData);
+            if (activeMarker !== null) {
+            if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
+        }
+        }
 
         const isHw = apiState ? apiState.hardware_connected : true;
         const secondsAgo = apiState ? apiState.seconds_since_update : 0;
@@ -768,40 +863,40 @@
         const secText = (secondsAgo !== null && secondsAgo !== undefined) ? `${secondsAgo.toFixed(1)}s ago` : 'never';
 
         if (elements.statusHeartbeatSec) {
-            elements.statusHeartbeatSec.textContent = (secondsAgo !== null && secondsAgo !== undefined) ? secondsAgo.toFixed(1) : '--';
+            if (elements.statusHeartbeatSec) elements.statusHeartbeatSec.textContent = (secondsAgo !== null && secondsAgo !== undefined) ? secondsAgo.toFixed(1) : '--';
         }
         if (elements.subLastUpdate) {
             if (activeMode === 'phone' && !isConnected && secondsAgo && secondsAgo > 10) {
-                elements.subLastUpdate.textContent = `Last update: ${secText} (disconnected / frozen)`;
-                elements.subLastUpdate.style.color = '#ef4444';
+                if (elements.subLastUpdate) elements.subLastUpdate.textContent = `Last update: ${secText} (disconnected / frozen)`;
+                if (elements.subLastUpdate) elements.subLastUpdate.style.color = '#ef4444';
             } else {
-                elements.subLastUpdate.textContent = `Last update: ${secText}`;
-                elements.subLastUpdate.style.color = 'var(--text-muted)';
+                if (elements.subLastUpdate) elements.subLastUpdate.textContent = `Last update: ${secText}`;
+                if (elements.subLastUpdate) elements.subLastUpdate.style.color = 'var(--text-muted)';
             }
         }
 
         if (activeMode === 'simulator') {
-            elements.connectionStatusPill.className = 'connection-status connected';
-            elements.statusDot.className = 'status-indicator-dot dot-green';
-            elements.statusLabel.textContent = '🟢 Simulation Connected';
+            if (elements.connectionStatusPill) elements.connectionStatusPill.className = 'connection-status connected';
+            if (elements.statusDot) elements.statusDot.className = 'status-indicator-dot dot-green';
+            if (elements.statusLabel) elements.statusLabel.textContent = '🟢 Simulation Connected';
 
             if (elements.statusConnBadge) {
-                elements.statusConnBadge.className = 'item-value-pill pill-green';
-                elements.statusConnDot.className = 'dot-indicator dot-green';
-                elements.statusConnText.textContent = '🟢 Simulated Drones Active';
-                elements.statusConnHint.textContent = 'Random flight paths';
+                if (elements.statusConnBadge) elements.statusConnBadge.className = 'item-value-pill pill-green';
+                if (elements.statusConnDot) elements.statusConnDot.className = 'dot-indicator dot-green';
+                if (elements.statusConnText) elements.statusConnText.textContent = '🟢 Simulated Drones Active';
+                if (elements.statusConnHint) elements.statusConnHint.textContent = 'Random flight paths';
             }
         } else if (activeMode === 'phone') {
             if (isConnected) {
                 // 🟢 Phone Connected
-                elements.connectionStatusPill.className = 'connection-status connected';
-                elements.statusDot.className = 'status-indicator-dot dot-green';
-                elements.statusLabel.textContent = '🟢 Phone Connected';
+                if (elements.connectionStatusPill) elements.connectionStatusPill.className = 'connection-status connected';
+                if (elements.statusDot) elements.statusDot.className = 'status-indicator-dot dot-green';
+                if (elements.statusLabel) elements.statusLabel.textContent = '🟢 Phone Connected';
 
-                elements.statusConnBadge.className = 'item-value-pill pill-green';
-                elements.statusConnDot.className = 'dot-indicator dot-green';
-                elements.statusConnText.textContent = '🟢 Phone Connected';
-                elements.statusConnHint.textContent = `Live GPS packets active (${secText})`;
+                if (elements.statusConnBadge) elements.statusConnBadge.className = 'item-value-pill pill-green';
+                if (elements.statusConnDot) elements.statusConnDot.className = 'dot-indicator dot-green';
+                if (elements.statusConnText) elements.statusConnText.textContent = '🟢 Phone Connected';
+                if (elements.statusConnHint) elements.statusConnHint.textContent = `Live GPS packets active (${secText})`;
 
                 // Update Banner for Connected state
                 if (elements.hotspotBanner) elements.hotspotBanner.classList.add('is-connected');
@@ -809,14 +904,14 @@
                 if (elements.bannerHelpText) elements.bannerHelpText.textContent = `Streaming to tactical map (${secText}):`;
             } else {
                 // 🔴 Phone Disconnected
-                elements.connectionStatusPill.className = 'connection-status disconnected';
-                elements.statusDot.className = 'status-indicator-dot dot-red';
-                elements.statusLabel.textContent = '🔴 Phone Disconnected';
+                if (elements.connectionStatusPill) elements.connectionStatusPill.className = 'connection-status disconnected';
+                if (elements.statusDot) elements.statusDot.className = 'status-indicator-dot dot-red';
+                if (elements.statusLabel) elements.statusLabel.textContent = '🔴 Phone Disconnected';
 
-                elements.statusConnBadge.className = 'item-value-pill';
-                elements.statusConnDot.className = 'dot-indicator dot-red';
-                elements.statusConnText.textContent = '🔴 Phone Disconnected';
-                elements.statusConnHint.textContent = `No GPS updates (${secText}). Coordinates frozen. Check /mobile/`;
+                if (elements.statusConnBadge) elements.statusConnBadge.className = 'item-value-pill';
+                if (elements.statusConnDot) elements.statusConnDot.className = 'dot-indicator dot-red';
+                if (elements.statusConnText) elements.statusConnText.textContent = '🔴 Phone Disconnected';
+                if (elements.statusConnHint) elements.statusConnHint.textContent = `No GPS updates (${secText}). Coordinates frozen. Check /mobile/`;
 
                 // Update Banner for Disconnected state
                 if (elements.hotspotBanner) elements.hotspotBanner.classList.remove('is-connected');
@@ -826,23 +921,23 @@
         } else {
             // Drone Mode (ESP32 Hardware)
             if (isConnected) {
-                elements.connectionStatusPill.className = 'connection-status connected';
-                elements.statusDot.className = 'status-indicator-dot dot-green';
-                elements.statusLabel.textContent = 'Drone Connected (ESP32 Live)';
+                if (elements.connectionStatusPill) elements.connectionStatusPill.className = 'connection-status connected';
+                if (elements.statusDot) elements.statusDot.className = 'status-indicator-dot dot-green';
+                if (elements.statusLabel) elements.statusLabel.textContent = 'Drone Connected (ESP32 Live)';
 
-                elements.statusConnBadge.className = 'item-value-pill pill-green';
-                elements.statusConnDot.className = 'dot-indicator dot-green';
-                elements.statusConnText.textContent = 'ESP32 Broadcasting';
-                elements.statusConnHint.textContent = 'Hardware online';
+                if (elements.statusConnBadge) elements.statusConnBadge.className = 'item-value-pill pill-green';
+                if (elements.statusConnDot) elements.statusConnDot.className = 'dot-indicator dot-green';
+                if (elements.statusConnText) elements.statusConnText.textContent = 'ESP32 Broadcasting';
+                if (elements.statusConnHint) elements.statusConnHint.textContent = 'Hardware online';
             } else {
-                elements.connectionStatusPill.className = 'connection-status disconnected';
-                elements.statusDot.className = 'status-indicator-dot dot-red';
-                elements.statusLabel.textContent = 'Drone Not Connected';
+                if (elements.connectionStatusPill) elements.connectionStatusPill.className = 'connection-status disconnected';
+                if (elements.statusDot) elements.statusDot.className = 'status-indicator-dot dot-red';
+                if (elements.statusLabel) elements.statusLabel.textContent = 'Drone Not Connected';
 
-                elements.statusConnBadge.className = 'item-value-pill';
-                elements.statusConnDot.className = 'dot-indicator dot-red';
-                elements.statusConnText.textContent = 'Disconnected';
-                elements.statusConnHint.textContent = 'Awaiting ESP32 packet';
+                if (elements.statusConnBadge) elements.statusConnBadge.className = 'item-value-pill';
+                if (elements.statusConnDot) elements.statusConnDot.className = 'dot-indicator dot-red';
+                if (elements.statusConnText) elements.statusConnText.textContent = 'Disconnected';
+                if (elements.statusConnHint) elements.statusConnHint.textContent = 'Awaiting ESP32 packet';
             }
         }
     }
@@ -998,40 +1093,77 @@
     // Map Controls: Center, Clear Trail, Toggle Trail, Reset
     // -------------------------------------------------------------------------
     function centerCurrentMarker() {
-        if (map && activeMarker) {
-            const pos = activeMarker.getLatLng();
-            map.panTo(pos, { animate: true, duration: 0.8 });
+        if (!map) return;
+        if (activeMode === 'main') {
+            if (activeTelemetryTargetId && mainModeMarkers[activeTelemetryTargetId]) {
+                map.panTo(mainModeMarkers[activeTelemetryTargetId].getLatLng(), { animate: true, duration: 0.8 });
+            }
+        } else if (activeMode === 'simulator') {
+            if (activeTelemetryTargetId && typeof simulatorState !== 'undefined' && simulatorState.markers) {
+                let d = simulatorState.markers.find(m => m.id === activeTelemetryTargetId);
+                if (d && d.marker) {
+                    map.panTo(d.marker.getLatLng(), { animate: true, duration: 0.8 });
+                }
+            }
+        } else {
+            if (activeMarker) {
+                map.panTo(activeMarker.getLatLng(), { animate: true, duration: 0.8 });
+            }
         }
     }
 
     function clearMovementTrail() {
-        // Clear visually from map and memory immediately; DO NOT delete database records!
-        trailCoordinates = [];
-        if (activeMarker) {
-            // Start recording new trail from current location
-            const curPos = activeMarker.getLatLng();
-            trailCoordinates.push([curPos.lat, curPos.lng]);
-        }
-        if (movementTrail) {
-            movementTrail.setLatLngs(trailCoordinates);
+        if (activeMode === 'simulator') {
+            if (typeof simulatorState !== 'undefined' && simulatorState.markers) {
+                simulatorState.markers.forEach(d => {
+                    d.pathCoords = [[d.lat, d.lng]];
+                    d.path.setLatLngs(d.pathCoords);
+                });
+            }
+        } else {
+            trailCoordinates = [];
+            if (activeMarker) {
+                const curPos = activeMarker.getLatLng();
+                trailCoordinates.push([curPos.lat, curPos.lng]);
+            }
+            if (movementTrail) {
+                movementTrail.setLatLngs(trailCoordinates);
+            }
         }
         console.log('[UTM] Movement trail cleared visually.');
     }
 
     function toggleTrailVisibility() {
         isTrailVisible = !isTrailVisible;
-        if (isTrailVisible) {
-            if (movementTrail) map.addLayer(movementTrail);
-            if (elements.trailButtonText) elements.trailButtonText.textContent = 'Hide Trail';
+        if (activeMode === 'simulator') {
+            if (typeof simulatorState !== 'undefined' && simulatorState.markers) {
+                simulatorState.markers.forEach(d => {
+                    if (isTrailVisible) {
+                        map.addLayer(d.path);
+                    } else {
+                        map.removeLayer(d.path);
+                    }
+                });
+            }
         } else {
-            if (movementTrail) map.removeLayer(movementTrail);
-            if (elements.trailButtonText) elements.trailButtonText.textContent = 'Show Trail';
+            if (isTrailVisible) {
+                if (movementTrail) map.addLayer(movementTrail);
+            } else {
+                if (movementTrail) map.removeLayer(movementTrail);
+            }
+        }
+        if (elements.trailButtonText) {
+            elements.trailButtonText.textContent = isTrailVisible ? 'Hide Trail' : 'Show Trail';
         }
     }
 
     function resetMapView() {
-        if (map) {
-            map.setView([lastKnownLat, lastKnownLon], 16, { animate: true });
+        if (!map) return;
+        let zoom = (activeMode === 'main' || activeMode === 'simulator') ? 5 : 16;
+        if (lastKnownLat && lastKnownLon) {
+            map.setView([lastKnownLat, lastKnownLon], zoom, { animate: true });
+        } else {
+            map.setView([28.6139, 77.2090], zoom, { animate: true });
         }
     }
 
@@ -1045,10 +1177,10 @@
             const timeout = activeMode === 'phone' ? phoneTimeoutSeconds : droneTimeoutSeconds;
 
             if (elements.statusHeartbeatSec) {
-                elements.statusHeartbeatSec.textContent = secondsAgo.toFixed(1);
+                if (elements.statusHeartbeatSec) elements.statusHeartbeatSec.textContent = secondsAgo.toFixed(1);
             }
             if (elements.subLastUpdate) {
-                elements.subLastUpdate.textContent = `Last update: ${secondsAgo.toFixed(1)}s ago`;
+                if (elements.subLastUpdate) elements.subLastUpdate.textContent = `Last update: ${secondsAgo.toFixed(1)}s ago`;
             }
 
             if (secondsAgo > timeout) {
@@ -1085,7 +1217,7 @@
         if (elements.btnTrackThisDevice) {
             elements.btnTrackThisDevice.classList.add('is-active');
             if (elements.btnTrackThisDeviceText) {
-                elements.btnTrackThisDeviceText.textContent = '⏹️ Stop Live Tracking';
+                if (elements.btnTrackThisDeviceText) elements.btnTrackThisDeviceText.textContent = '⏹️ Stop Live Tracking';
             }
         }
 
@@ -1132,10 +1264,10 @@
                 updatePhoneUI(telemetryObj, apiState);
 
                 if (elements.bannerTitle) {
-                    elements.bannerTitle.textContent = `🟢 Device GPS Live (Accurate to ${accuracy !== null ? accuracy + 'm' : 'GPS fix'})`;
+                    if (elements.bannerTitle) elements.bannerTitle.textContent = `🟢 Device GPS Live (Accurate to ${accuracy !== null ? accuracy + 'm' : 'GPS fix'})`;
                 }
                 if (elements.bannerHelpText) {
-                    elements.bannerHelpText.textContent = `Streaming location directly to tactical map:`;
+                    if (elements.bannerHelpText) elements.bannerHelpText.textContent = `Streaming location directly to tactical map:`;
                 }
 
                 // Also persist packet to backend database so history is preserved
@@ -1186,14 +1318,14 @@
         if (elements.btnTrackThisDevice) {
             elements.btnTrackThisDevice.classList.remove('is-active');
             if (elements.btnTrackThisDeviceText) {
-                elements.btnTrackThisDeviceText.textContent = 'Track My Location Live';
+                if (elements.btnTrackThisDeviceText) elements.btnTrackThisDeviceText.textContent = 'Track My Location Live';
             }
         }
         if (elements.bannerTitle) {
-            elements.bannerTitle.textContent = '📱 Live GPS Mode — Track Direct or Connect Phone';
+            if (elements.bannerTitle) elements.bannerTitle.textContent = '📱 Live GPS Mode — Track Direct or Connect Phone';
         }
         if (elements.bannerHelpText) {
-            elements.bannerHelpText.textContent = 'Click below to track this device live, or scan QR code on smartphone:';
+            if (elements.bannerHelpText) elements.bannerHelpText.textContent = 'Click below to track this device live, or scan QR code on smartphone:';
         }
     }
 
@@ -1323,21 +1455,21 @@
 
     function updateEsp32WsStatus(state, text) {
         if (!elements.esp32WsStatusBadge || !elements.esp32WsDot || !elements.esp32WsStatusText) return;
-        elements.esp32WsStatusText.textContent = text;
+        if (elements.esp32WsStatusText) elements.esp32WsStatusText.textContent = text;
         if (state === 'connected') {
-            elements.esp32WsStatusBadge.style.background = '#ecfdf5';
-            elements.esp32WsStatusBadge.style.color = '#065f46';
-            elements.esp32WsStatusBadge.style.borderColor = '#a7f3d0';
+            if (elements.esp32WsStatusBadge) elements.esp32WsStatusBadge.style.background = '#ecfdf5';
+            if (elements.esp32WsStatusBadge) elements.esp32WsStatusBadge.style.color = '#065f46';
+            if (elements.esp32WsStatusBadge) elements.esp32WsStatusBadge.style.borderColor = '#a7f3d0';
             elements.esp32WsDot.className = 'status-indicator-dot dot-green';
         } else if (state === 'connecting') {
-            elements.esp32WsStatusBadge.style.background = '#fffbeb';
-            elements.esp32WsStatusBadge.style.color = '#b45309';
-            elements.esp32WsStatusBadge.style.borderColor = '#fde68a';
+            if (elements.esp32WsStatusBadge) elements.esp32WsStatusBadge.style.background = '#fffbeb';
+            if (elements.esp32WsStatusBadge) elements.esp32WsStatusBadge.style.color = '#b45309';
+            if (elements.esp32WsStatusBadge) elements.esp32WsStatusBadge.style.borderColor = '#fde68a';
             elements.esp32WsDot.className = 'status-indicator-dot dot-amber';
         } else {
-            elements.esp32WsStatusBadge.style.background = '#fef2f2';
-            elements.esp32WsStatusBadge.style.color = '#b91c1c';
-            elements.esp32WsStatusBadge.style.borderColor = '#fecaca';
+            if (elements.esp32WsStatusBadge) elements.esp32WsStatusBadge.style.background = '#fef2f2';
+            if (elements.esp32WsStatusBadge) elements.esp32WsStatusBadge.style.color = '#b91c1c';
+            if (elements.esp32WsStatusBadge) elements.esp32WsStatusBadge.style.borderColor = '#fecaca';
             elements.esp32WsDot.className = 'status-indicator-dot dot-red';
         }
     }
@@ -1377,15 +1509,14 @@
         // Tester Panel
         if (elements.btnToggleTester) {
             elements.btnToggleTester.addEventListener('click', () => {
-                const isHidden = elements.testerPanel.style.display === 'none';
-                elements.testerPanel.style.display = isHidden ? 'block' : 'none';
+                const isHidden = elements.testerPanel && elements.testerPanel.style.display === 'none';
+                if (elements.testerPanel) elements.testerPanel.style.display = isHidden ? 'block' : 'none';
                 if (isHidden) elements.testerPanel.scrollIntoView({ behavior: 'smooth' });
             });
         }
         if (elements.btnCloseTester) {
             elements.btnCloseTester.addEventListener('click', () => {
-                elements.testerPanel.style.display = 'none';
-            });
+                            });
         }
 
         // Tester Form Submit (Supports both phone and drone test packet injection)
@@ -1425,16 +1556,16 @@
                         body: JSON.stringify(payload)
                     });
                     const resData = await res.json();
-                    elements.testerFeedback.style.display = 'block';
+                    if (elements.testerFeedback) elements.testerFeedback.style.display = 'block';
                     elements.testerFeedback.className = res.ok ? 'tester-feedback success' : 'tester-feedback error';
-                    elements.testerFeedback.textContent = res.ok ?
+                    if (elements.testerFeedback) elements.testerFeedback.textContent = res.ok ?
                         `Packet transmitted successfully (${res.status} Created) to ${endpoint}` :
                         `Error: ${JSON.stringify(resData)}`;
                     fetchActiveTelemetry();
                 } catch (err) {
-                    elements.testerFeedback.style.display = 'block';
+                    if (elements.testerFeedback) elements.testerFeedback.style.display = 'block';
                     elements.testerFeedback.className = 'tester-feedback error';
-                    elements.testerFeedback.textContent = `Transmission failed: ${err.message}`;
+                    if (elements.testerFeedback) elements.testerFeedback.textContent = `Transmission failed: ${err.message}`;
                 }
             });
         }
@@ -1452,7 +1583,7 @@
         if (elements.btnShowQrModal) {
             elements.btnShowQrModal.addEventListener('click', () => {
                 if (!elements.qrModalBackdrop) return;
-                elements.qrModalBackdrop.style.display = 'flex';
+                if (elements.qrModalBackdrop) elements.qrModalBackdrop.style.display = 'flex';
                 const skeleton = document.getElementById('qrCardSkeleton');
                 const actual = document.getElementById('qrCardActual');
                 const gradientBg = document.getElementById('qrGradientBg');
@@ -1490,7 +1621,7 @@
         if (elements.qrModalBackdrop) {
             elements.qrModalBackdrop.addEventListener('click', (e) => {
                 if (e.target === elements.qrModalBackdrop) {
-                    elements.qrModalBackdrop.style.display = 'none';
+                    if (elements.qrModalBackdrop) elements.qrModalBackdrop.style.display = 'none';
                 }
             });
         }
@@ -1636,6 +1767,10 @@
 
         map.setView([startLat, startLng], 14, {animate: true});
 
+        if (elements.valDronesInAir) {
+            elements.valDronesInAir.textContent = simulatorState.markers.length;
+        }
+
         simulatorState.interval = setInterval(() => {
             simulatorState.markers.forEach(d => {
                 if (Math.random() < 0.05) {
@@ -1753,6 +1888,7 @@
             simulatorState.markers.forEach(m => {
                 if (m.marker) map.removeLayer(m.marker);
                 if (m.circle) map.removeLayer(m.circle);
+                if (m.path) map.removeLayer(m.path);
             });
             simulatorState.markers = [];
         }
