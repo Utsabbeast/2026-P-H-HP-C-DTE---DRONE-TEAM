@@ -145,6 +145,9 @@
         hardwareOfflineAlert: document.getElementById('hardwareOfflineAlert'),
 
         // Tester Panel
+        mapStatsContainer: document.getElementById('mapStatsContainer'),
+        valRegisteredDrones: document.getElementById('valRegisteredDrones'),
+        valDronesInAir: document.getElementById('valDronesInAir'),
         testerPanel: document.getElementById('testerPanel'),
         testerForm: document.getElementById('testerForm'),
         testerFeedback: document.getElementById('testerFeedback'),
@@ -231,6 +234,7 @@
     // Deselect marker and clear telemetry on map click
     map.on('click', function(e) {
         activeMarker = null;
+        activeTelemetryTargetId = null;
         resetTelemetryUI();
     });
 
@@ -338,8 +342,18 @@
             if (elements.testModeBadge) elements.testModeBadge.style.display = 'none';
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'none';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valRegisteredDrones && elements.valDronesInAir) {
+                elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
+                // the simulation polling will update drones in air if needed
+            }
             
             if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Main Mode (Overview)';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valRegisteredDrones && elements.valDronesInAir) {
+                elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
+                elements.valDronesInAir.textContent = elements.valDronesInAir.getAttribute('data-original') || '0';
+            }
             if (elements.mapRouteHud) {
                 elements.mapRouteHud.textContent = 'Overview';
                 elements.mapRouteHud.style.background = '#e0f2fe';
@@ -375,8 +389,14 @@
             // Show hotspot banner, hide esp32 banner, sim bar and offline alert
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'flex';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'none';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valRegisteredDrones && elements.valDronesInAir) {
+                elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
+                // the simulation polling will update drones in air if needed
+            }
             if (elements.simFloatingBar) elements.simFloatingBar.style.display = 'none';
             if (elements.hardwareOfflineAlert) elements.hardwareOfflineAlert.style.display = 'none';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'none';
 
             // Buttons & Headers
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Phone';
@@ -405,6 +425,11 @@
             if (elements.testModeBadge) elements.testModeBadge.style.display = 'none';
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'none';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valRegisteredDrones && elements.valDronesInAir) {
+                elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
+                // the simulation polling will update drones in air if needed
+            }
 
         } else if (activeMode === 'drone') {
             // Drone Mode (ESP32 Live Hardware)
@@ -440,6 +465,9 @@
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Drone';
             if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Live Tactical Map (Cube Orange+ / ESP32)';
             if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'Drone Telemetry & Hardware Overview';
+            if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
+            if (elements.valDronesInAir) elements.valDronesInAir.textContent = '1';
+            if (elements.valRegisteredDrones) elements.valRegisteredDrones.textContent = '1';
             if (elements.statusFeedText) elements.statusFeedText.textContent = 'ESP32 Wi-Fi';
             if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Cube Orange+ Telem (UART2)';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
@@ -611,6 +639,7 @@
         }
 
         // 2. Update Map HUD Overlay
+        if (activeMarker === null) return; // Don't update HUD or Cards if user deselected map
         if (elements.mapCoordinatesHud) {
             elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
         }
@@ -670,7 +699,9 @@
             }
         }
 
-        if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
+        if (activeMarker !== null) {
+            if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
+        }
 
         // 4. Update Connection Status
         const secondsAgo = apiState ? apiState.seconds_since_update : 0;
@@ -735,6 +766,7 @@
         }
 
         // Update Map HUD
+        if (activeMarker === null) return; // Don't update HUD or Cards if user deselected map
         if (elements.mapCoordinatesHud) {
             elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
         }
@@ -755,8 +787,12 @@
         if (elements.hudAccuracy) elements.hudAccuracy.textContent = 'Hardware Fix';
 
         // Update Cards using unified generic function
-        updateTelemetryCards(telemetryData);
-        if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
+        if (activeMarker !== null) {
+            updateTelemetryCards(telemetryData);
+            if (activeMarker !== null) {
+            if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
+        }
+        }
 
         const isHw = apiState ? apiState.hardware_connected : true;
         const secondsAgo = apiState ? apiState.seconds_since_update : 0;

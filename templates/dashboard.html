@@ -326,17 +326,17 @@
                         transition-delay: 0.1s;
                     }
                 </style>
-                <div class="map-stats-container" style="position: absolute; bottom: 20px; left: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;">
+                <div id="mapStatsContainer" class="map-stats-container" style="position: absolute; bottom: 20px; left: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;">
                     <!-- Registered Drones -->
                     <div class="map-stat-box" style="background: #002D74; border: 2px solid #001A4A;" title="Registered Drones">
-                        <div style="width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-weight: bold; font-size: 1.1rem;">
+                        <div id="valRegisteredDrones" style="width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-weight: bold; font-size: 1.1rem;" data-original="{{ total_registered_drones|default:'0' }}">
                             {{ total_registered_drones|default:"0" }}
                         </div>
                         <div class="map-stat-text">REGISTERED DRONES</div>
                     </div>
                     <!-- Drones In Air -->
                     <div class="map-stat-box" style="background: #0ea5e9; border: 2px solid #0284c7;" title="Drones In Air">
-                        <div style="width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-weight: bold; font-size: 1.1rem;">
+                        <div id="valDronesInAir" style="width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-weight: bold; font-size: 1.1rem;" data-original="{{ total_flying_drones|default:'0' }}">
                             {{ total_flying_drones|default:"0" }}
                         </div>
                         <div class="map-stat-text">DRONES IN AIR</div>
