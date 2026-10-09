@@ -120,7 +120,7 @@
                 <a href="{% url 'telemetry:history' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">History</a>
                 {% else %}
                 <!-- ATC specific Right tools -->
-                <button class="btn btn-outline btn-sm" id="btnToggleTester" title="Open ESP32 API Test Panel" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; color: #002D74; border-color: #002D74; border-radius: 0;">
+                <button class="btn btn-outline btn-sm" id="btnToggleTester" title="Open ESP32 API Test Panel" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; color: #002D74; border-color: #002D74; border-radius: 0;" onclick="event.stopPropagation(); const tp = document.getElementById('testerPanel'); if(tp){ const isHidden = tp.style.display === 'none'; tp.style.display = isHidden ? 'block' : 'none'; if(isHidden) tp.scrollIntoView({behavior: 'smooth'}); }">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                     </svg>
