@@ -1,0 +1,111 @@
+import os
+
+base_template = """{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{TITLE}}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/error.css' %}">
+</head>
+<body class="bg-gray-50 font-['Outfit'] h-screen w-screen relative overflow-hidden flex items-center justify-center">
+
+    <!-- Top Bar -->
+    <div class="absolute top-0 left-0 w-full h-8 z-50">
+        <div class="absolute top-0 left-0 w-full flex items-center justify-between bg-white px-6 py-2 shadow-md transition-transform duration-300 ease-in-out">
+            <div class="flex items-center gap-6">
+                <a href="https://digitalsky.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo1.png' %}" alt="Digital Sky" class="h-6 w-auto object-contain"></a>
+                <a href="https://www.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo2.jpg' %}" alt="DGCA" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+                <a href="https://en.wikipedia.org/wiki/National_Cadet_Corps_(India)" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo3.png' %}" alt="NCC India" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+            </div>
+            <div class="absolute left-1/2 -translate-x-1/2 text-center text-red-600 font-bold uppercase tracking-[0.2em] text-sm z-20 hidden sm:block">
+                Unity and Discipline
+            </div>
+            <div>
+                <img src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" alt="Indian Flag" class="h-6 w-auto border border-gray-200">
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Box matching Login Portal styling -->
+    <div class="bg-white border border-gray-200 flex flex-col w-full max-w-2xl mx-4 md:mx-12 p-8 items-center relative z-10 shadow-2xl rounded-sm">
+        
+        <!-- Animated Face (Color palette from Login Page) -->
+        <div class="my-custom-face-container text-[#002D74]">
+            <svg class="face" viewBox="0 0 320 380">
+                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="25">
+                    <g class="face__eyes" transform="translate(0,112.5)">
+                        <g transform="translate(15,0)">
+                            <polyline class="face__eye-lid" points="37,0 0,120 75,120"></polyline>
+                            <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35"></polyline>
+                        </g>
+                        <g transform="translate(230,0)">
+                            <polyline class="face__eye-lid" points="37,0 0,120 75,120"></polyline>
+                            <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35"></polyline>
+                        </g>
+                    </g>
+                    <rect class="face__nose" x="132.5" y="112.5" width="55" height="155" rx="4" ry="4"></rect>
+                    <g transform="translate(65,334)" stroke-dasharray="102 102">
+                        <path class="face__mouth-left" d="M 0 30 C 0 30 40 0 95 0"></path>
+                        <path class="face__mouth-right" d="M 95 0 C 150 0 190 30 190 30"></path>
+                    </g>
+                </g>
+            </svg>
+        </div>
+
+        <h1 class="text-4xl font-bold text-[#002D74] mb-4 tracking-tight uppercase text-center">{{HEADING}}</h1>
+        
+        <p class="text-lg text-[#002D74]/80 font-medium mb-8 leading-relaxed max-w-md mx-auto text-center">
+            {{MESSAGE}}
+        </p>
+        
+        <button onclick="{{BUTTON_ACTION}}" class="btn-96 btn-navy shadow-lg border border-gray-300 max-w-xs w-full">
+            <span>{{BUTTON_TEXT}}</span>
+        </button>
+    </div>
+
+    <!-- Footer Copyright -->
+    <a href="{% url 'telemetry:terms' %}" class="absolute bottom-4 right-6 bg-white/60 backdrop-blur-md px-4 py-1.5 shadow-[0_5px_15px_rgba(0,0,0,0.2)] text-[10px] text-gray-800 font-bold border border-white/80 z-50 hover:bg-white/80 transition-colors cursor-pointer block">
+        &copy; 2026 P H HP & C DTE - DRONE TEAM. All rights reserved.
+    </a>
+
+</body>
+</html>
+"""
+
+# dev_error.html (restricted/development phase)
+dev_error_html = base_template.replace(
+    '{{TITLE}}', 'Development Phase Restricted'
+).replace(
+    '{{HEADING}}', 'Action Restricted'
+).replace(
+    '{{MESSAGE}}', 'We are currently in the development phase.'
+).replace(
+    '{{BUTTON_ACTION}}', 'window.history.back()'
+).replace(
+    '{{BUTTON_TEXT}}', 'Return'
+)
+
+# 404.html (page not found or under construction)
+error_404_html = base_template.replace(
+    '{{TITLE}}', '{% if custom_title %}{{ custom_title }}{% else %}Page Not Found{% endif %} — UTM'
+).replace(
+    '{{HEADING}}', '{% if custom_title %}{{ custom_title }}{% else %}404 - Not Found{% endif %}'
+).replace(
+    '{{MESSAGE}}', '{% if custom_message %}{{ custom_message }}{% else %}Oops! The page you were looking for doesn\'t exist.{% endif %}'
+).replace(
+    '{{BUTTON_ACTION}}', "window.location.href='/'"
+).replace(
+    '{{BUTTON_TEXT}}', 'Return to Dashboard'
+)
+
+with open('templates/dev_error.html', 'w', encoding='utf-8') as f:
+    f.write(dev_error_html)
+
+with open('templates/404.html', 'w', encoding='utf-8') as f:
+    f.write(error_404_html)
+
+print("Unified error pages generated successfully!")
