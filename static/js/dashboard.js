@@ -360,6 +360,12 @@
                 elements.mapRouteHud.style.borderColor = '#bae6fd';
                 elements.mapRouteHud.style.color = '#0369a1';
             }
+            if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'UTM Network Overview';
+            if (elements.statusFeedText) elements.statusFeedText.textContent = 'Aggregated DB';
+            if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'All active drones';
+            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Multi-Drone Network';
+            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Cloud Database Aggregation';
+            if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = 'Network Traffic';
         } else if (activeMode === 'phone') {
             // Update Tab styles
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab active phone-tab';
@@ -410,10 +416,9 @@
             if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'Phone GPS Telemetry Overview';
             if (elements.statusFeedText) elements.statusFeedText.textContent = 'Android Phone';
             if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Temporary test replacement';
-            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Cube Orange+ → ESP32 → Wi-Fi';
-            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Currently tested via Phone GPS';
+            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Android Device GPS API';
+            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Tested via Mobile Web';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Device: ${targetPhoneDeviceId}`;
-
         } else if (activeMode === 'simulator') {
             // Simulator Mode
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab';
@@ -430,6 +435,12 @@
                 elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
                 // the simulation polling will update drones in air if needed
             }
+            if (elements.overviewHeaderTitle) elements.overviewHeaderTitle.textContent = 'Drone Telemetry & Hardware Overview';
+            if (elements.statusFeedText) elements.statusFeedText.textContent = 'Simulation Engine';
+            if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Local Python Script';
+            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Software In The Loop (SITL)';
+            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Virtual hardware simulation';
+            if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
 
         } else if (activeMode === 'drone') {
             // Drone Mode (ESP32 Live Hardware)
@@ -470,6 +481,8 @@
             if (elements.valRegisteredDrones) elements.valRegisteredDrones.textContent = '1';
             if (elements.statusFeedText) elements.statusFeedText.textContent = 'ESP32 Wi-Fi';
             if (elements.statusFeedHint) elements.statusFeedHint.textContent = 'Cube Orange+ Telem (UART2)';
+            if (elements.statusRouteName) elements.statusRouteName.textContent = 'Cube Orange+ → ESP32 → Wi-Fi';
+            if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Direct Hardware Stream';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
         }
 
