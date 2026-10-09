@@ -1095,19 +1095,19 @@
     function centerCurrentMarker() {
         if (!map) return;
         if (activeMode === 'main') {
-            if (mainModeMarkers.length > 0) {
-                const group = new L.featureGroup(mainModeMarkers.map(m => m.marker));
-                map.fitBounds(group.getBounds(), { padding: [20, 20], animate: true });
+            if (activeTelemetryTargetId && mainModeMarkers[activeTelemetryTargetId]) {
+                map.panTo(mainModeMarkers[activeTelemetryTargetId].getLatLng(), { animate: true, duration: 0.8 });
             }
         } else if (activeMode === 'simulator') {
-            if (typeof simulatorState !== 'undefined' && simulatorState.markers && simulatorState.markers.length > 0) {
-                const group = new L.featureGroup(simulatorState.markers.map(m => m.marker));
-                map.fitBounds(group.getBounds(), { padding: [20, 20], animate: true });
+            if (activeTelemetryTargetId && typeof simulatorState !== 'undefined' && simulatorState.markers) {
+                let d = simulatorState.markers.find(m => m.id === activeTelemetryTargetId);
+                if (d && d.marker) {
+                    map.panTo(d.marker.getLatLng(), { animate: true, duration: 0.8 });
+                }
             }
         } else {
             if (activeMarker) {
-                const pos = activeMarker.getLatLng();
-                map.panTo(pos, { animate: true, duration: 0.8 });
+                map.panTo(activeMarker.getLatLng(), { animate: true, duration: 0.8 });
             }
         }
     }
