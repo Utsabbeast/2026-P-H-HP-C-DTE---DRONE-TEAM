@@ -359,7 +359,7 @@
                 // the simulation polling will update drones in air if needed
             }
             
-            if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Main Mode (Overview)';
+            if (elements.mapMainTitle) elements.mapMainTitle.textContent = window.MAIN_MODE_TITLE || 'Main Mode (Overview)';
             if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
             if (elements.valRegisteredDrones && elements.valDronesInAir) {
                 if (elements.valRegisteredDrones) elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';

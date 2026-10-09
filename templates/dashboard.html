@@ -25,6 +25,9 @@
     
     <!-- UTM Dashboard CSS -->
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=4.0">
+<script>
+    window.MAIN_MODE_TITLE = "{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% elif request.session.user_role == 'GUEST' %}Guest Dashboard{% else %}User Dashboard{% endif %} (Overview)";
+</script>
 </head>
 <body data-simulation="{{ simulation_mode|yesno:'true,false' }}" 
       data-drone-id="{{ drone_id }}" 
@@ -68,7 +71,7 @@
                         </svg>
                     </label>
                     <div id="modsDropdown" class="dropdown-content" style="display: none; position: absolute; top: 100%; left: 0; background-color: #fff; min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1000; border: 1px solid #002D74; margin-top: 5px;">
-                        <a href="#" onclick="selectMod('main', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: block; font-weight: 600; border-bottom: 1px solid #e2e8f0;">{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% else %}User Dashboard{% endif %}</a>
+                        <a href="#" onclick="selectMod('main', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: block; font-weight: 600; border-bottom: 1px solid #e2e8f0;">{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% elif request.session.user_role == 'GUEST' %}Guest Dashboard{% else %}User Dashboard{% endif %}</a>
                         <div class="dropdown-submenu" style="position: relative;">
                             <a href="#" onclick="toggleDropdown('testingDropdown', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: flex; justify-content: space-between; font-weight: 600; border-bottom: 1px solid #e2e8f0;">Testing Mode <span>▶</span></a>
                             <div id="testingDropdown" class="dropdown-content submenu-content" style="display: none; position: absolute; left: 100%; top: 0; background-color: #fff; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border: 1px solid #002D74;">
@@ -786,7 +789,7 @@
         
         if (mode === 'main') {
             if (window.setDashboardMode) window.setDashboardMode('main');
-            if (mapTitle) mapTitle.innerText = "{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% else %}User Dashboard{% endif %}";
+            if (mapTitle) mapTitle.innerText = "{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% elif request.session.user_role == 'GUEST' %}Guest Dashboard{% else %}User Dashboard{% endif %}";
             if (mapRoute) mapRoute.innerText = "Overview";
             if (centerBtnText) centerBtnText.innerText = "Center Map";
             if (telemetryGrid) telemetryGrid.style.display = 'grid';
