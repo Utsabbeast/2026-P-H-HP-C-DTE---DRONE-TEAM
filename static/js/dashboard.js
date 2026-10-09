@@ -458,7 +458,22 @@
 
             // Switch markers
             if (phoneMarker && map.hasLayer(phoneMarker)) map.removeLayer(phoneMarker);
+
+            if (!droneMarker) {
+                droneMarker = L.marker([lastKnownLat || 30.9010, lastKnownLon || 75.8573], {
+                    icon: createDroneIcon(lastKnownHeading || 0),
+                    title: 'Drone 01 (Cube Orange+ / ESP32)',
+                    zIndexOffset: 1000
+                });
+                droneMarker.bindPopup(`
+                    <div style="font-family: inherit; font-size: 13px; line-height: 1.4;">
+                        <strong style="color: #0284c7;">Drone 01 — Cube Orange+</strong><br>
+                        <span>Target: ESP32 Wi-Fi Telemetry</span>
+                    </div>
+                `);
+            }
             if (droneMarker) {
+
                 droneMarker.addTo(map);
                 activeMarker = droneMarker;
                 if (map) map.setView(droneMarker.getLatLng(), 17, { animate: true });
@@ -772,8 +787,28 @@
             hasReceivedFirstDroneFix = true;
         }
 
+        
         // Update Drone Marker Position & Rotator
+        if (!droneMarker) {
+            droneMarker = L.marker([lat, lon], {
+                icon: createDroneIcon(hdg),
+                title: 'Drone 01 (Cube Orange+ / ESP32)',
+                zIndexOffset: 1000
+            });
+            droneMarker.bindPopup(`
+                <div style="font-family: inherit; font-size: 13px; line-height: 1.4;">
+                    <strong style="color: #0284c7;">Drone 01 — Cube Orange+</strong><br>
+                    <span>Target: ESP32 Wi-Fi Telemetry</span>
+                </div>
+            `);
+            if (activeMode === 'drone') {
+                droneMarker.addTo(map);
+                activeMarker = droneMarker;
+            }
+        }
+        
         if (droneMarker) {
+
             droneMarker.setLatLng([lat, lon]);
             const rotatorEl = document.getElementById('droneRotator');
             if (rotatorEl) {
@@ -1815,6 +1850,7 @@
             simulatorState.markers.forEach(m => {
                 if (m.marker) map.removeLayer(m.marker);
                 if (m.circle) map.removeLayer(m.circle);
+                if (m.path) map.removeLayer(m.path);
             });
             simulatorState.markers = [];
         }
