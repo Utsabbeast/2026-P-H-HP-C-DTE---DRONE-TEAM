@@ -1474,7 +1474,7 @@
         // Tester Panel
         if (elements.btnToggleTester) {
             elements.btnToggleTester.addEventListener('click', () => {
-                const isHidden = if (elements.testerPanel) elements.testerPanel.style.display === 'none';
+                const isHidden = elements.testerPanel && elements.testerPanel.style.display === 'none';
                 if (elements.testerPanel) elements.testerPanel.style.display = isHidden ? 'block' : 'none';
                 if (isHidden) elements.testerPanel.scrollIntoView({ behavior: 'smooth' });
             });
