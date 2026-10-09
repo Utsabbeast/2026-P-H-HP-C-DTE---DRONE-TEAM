@@ -104,7 +104,7 @@
                 <h1 class="requests-title">1. Complete Pilot Profile</h1>
             </div>
             <div class="requests-table-container" style="padding: 2rem;">
-                <form method="POST" action="{% url 'telemetry:status' %}" style="display: flex; flex-direction: column; gap: 1rem;">
+                <form onsubmit="event.preventDefault(); alert('This website is under development. We will be making that overall coding part later.');" method="POST" action="{% url 'telemetry:status' %}" style="display: flex; flex-direction: column; gap: 1rem;">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="profile">
                     <div>
@@ -127,7 +127,7 @@
                 <h1 class="requests-title">2. Drone Registration</h1>
             </div>
             <div class="requests-table-container" style="padding: 2rem;">
-                <form method="POST" action="{% url 'telemetry:status' %}" style="display: flex; flex-direction: column; gap: 1rem;">
+                <form onsubmit="event.preventDefault(); alert('This website is under development. We will be making that overall coding part later.');" method="POST" action="{% url 'telemetry:status' %}" style="display: flex; flex-direction: column; gap: 1rem;">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="drone">
                     <div>
@@ -185,7 +185,7 @@
                 <h1 class="requests-title">3. Submit Flight Permission Request</h1>
             </div>
             <div class="requests-table-container" style="padding: 2rem;">
-                <form method="POST" action="{% url 'telemetry:status' %}"
+                <form onsubmit="event.preventDefault(); alert('This website is under development. We will be making that overall coding part later.');" method="POST" action="{% url 'telemetry:status' %}"
                     style="display: flex; flex-direction: column; gap: 1rem; max-width: 100%;">
                     {% csrf_token %}
                     <input type="hidden" name="form_type" value="flight">
