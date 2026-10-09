@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Database</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body class="bg-gray-50 font-['Outfit'] h-screen w-screen relative overflow-hidden flex items-center justify-center">
+
+    <div class="bg-white border border-gray-200 flex flex-col w-full max-w-5xl max-h-[85vh] mx-4 md:mx-12 p-8 items-center relative z-10 shadow-2xl rounded-sm overflow-hidden">
+        
+        <h1 class="text-3xl font-bold text-[#002D74] mb-6 tracking-tight uppercase text-center w-full border-b pb-4">User Database (Admin Only)</h1>
+        
+        <div class="w-full overflow-y-auto mb-8 border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200 text-left text-sm">
+                <thead class="bg-gray-50 text-[#002D74]">
+                    <tr>
+                        <th class="px-6 py-3 font-bold uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-3 font-bold uppercase tracking-wider">Username</th>
+                        <th class="px-6 py-3 font-bold uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 font-bold uppercase tracking-wider">Date Joined</th>
+                        <th class="px-6 py-3 font-bold uppercase tracking-wider">Password (Hash)</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 text-gray-700">
+                    {% for u in users %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">{{ u.id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-semibold">{{ u.username }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ u.email }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ u.date_joined|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400 max-w-[200px] overflow-hidden text-ellipsis">{{ u.password }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">No users found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <button onclick="window.history.back()" class="btn-96 btn-navy shadow-lg border border-gray-300 max-w-xs w-full mt-auto">
+            <span>Return</span>
+        </button>
+    </div>
+
+</body>
+</html>

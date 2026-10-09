@@ -37,6 +37,7 @@ urlpatterns = [
     path('under-construction/', views.UnderConstructionView.as_view(), name='under_construction'),
     path('nosql-admin/', views.NoSQLAdminView.as_view(), name='nosql-admin'),
     path('dev-error/', views.DevErrorView.as_view(), name='dev-error'),
+    path('user-database/', views.UserDatabaseView.as_view(), name='user-database'),
 ]
 
 
