@@ -6,29 +6,35 @@
     <title>{% if custom_title %}{{ custom_title }}{% else %}Page Not Found{% endif %} — UTM</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
     <link rel="stylesheet" href="{% static 'css/error.css' %}">
-    <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
-        .text-navy { color: #002D74; }
-        .btn-navy {
-            background-color: #002D74;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        .btn-navy:hover {
-            background-color: #001f52;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 45, 116, 0.2);
-        }
-    </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 max-w-lg w-full text-center border border-gray-100">
+<body class="bg-gray-50 font-['Outfit'] h-screen w-screen relative overflow-hidden flex items-center justify-center">
+
+    <!-- Top Bar -->
+    <div class="absolute top-0 left-0 w-full h-8 z-50">
+        <div class="absolute top-0 left-0 w-full flex items-center justify-between bg-white px-6 py-2 shadow-md transition-transform duration-300 ease-in-out">
+            <div class="flex items-center gap-6">
+                <a href="https://digitalsky.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo1.png' %}" alt="Digital Sky" class="h-6 w-auto object-contain"></a>
+                <a href="https://www.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo2.jpg' %}" alt="DGCA" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+                <a href="https://en.wikipedia.org/wiki/National_Cadet_Corps_(India)" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo3.png' %}" alt="NCC India" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+            </div>
+            <div class="absolute left-1/2 -translate-x-1/2 text-center text-red-600 font-bold uppercase tracking-[0.2em] text-sm z-20 hidden sm:block">
+                Unity and Discipline
+            </div>
+            <div>
+                <img src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" alt="Indian Flag" class="h-6 w-auto border border-gray-200">
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Box matching Login Portal styling -->
+    <div class="bg-white border border-gray-200 flex flex-col w-full max-w-2xl mx-4 md:mx-12 p-8 items-center relative z-10 shadow-2xl rounded-sm">
         
-        <!-- From Uiverse.io by preet_7613 --> 
-        <main class="my-custom-face-container mx-auto">
+        <!-- Animated Face (Color palette from Login Page) -->
+        <div class="my-custom-face-container text-[#002D74]">
             <svg class="face" viewBox="0 0 320 380">
-                <g fill="none" stroke="#002D74" stroke-linecap="round" stroke-linejoin="round" stroke-width="25">
+                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="25">
                     <g class="face__eyes" transform="translate(0,112.5)">
                         <g transform="translate(15,0)">
                             <polyline class="face__eye-lid" points="37,0 0,120 75,120"></polyline>
@@ -46,15 +52,23 @@
                     </g>
                 </g>
             </svg>
-        </main>
+        </div>
 
-        <h1 class="text-3xl md:text-4xl font-extrabold text-navy mb-4 tracking-tight">{% if custom_title %}{{ custom_title }}{% else %}404 - Not Found{% endif %}</h1>
-        <p class="text-gray-500 mb-8 leading-relaxed font-medium">{% if custom_message %}{{ custom_message }}{% else %}Oops! The page you were looking for doesn't exist.{% endif %}</p>
+        <h1 class="text-4xl font-bold text-[#002D74] mb-4 tracking-tight uppercase text-center">{% if custom_title %}{{ custom_title }}{% else %}404 - Not Found{% endif %}</h1>
         
-        <a href="/" class="btn-navy inline-flex items-center justify-center font-bold py-3 px-8 rounded-xl w-full md:w-auto text-sm uppercase tracking-wider">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Return to Dashboard
-        </a>
+        <p class="text-lg text-[#002D74]/80 font-medium mb-8 leading-relaxed max-w-md mx-auto text-center">
+            {% if custom_message %}{{ custom_message }}{% else %}Oops! The page you were looking for doesn't exist.{% endif %}
+        </p>
+        
+        <button onclick="window.location.href='/'" class="btn-96 btn-navy shadow-lg border border-gray-300 max-w-xs w-full">
+            <span>Return to Dashboard</span>
+        </button>
     </div>
+
+    <!-- Footer Copyright -->
+    <a href="{% url 'telemetry:terms' %}" class="absolute bottom-4 right-6 bg-white/60 backdrop-blur-md px-4 py-1.5 shadow-[0_5px_15px_rgba(0,0,0,0.2)] text-[10px] text-gray-800 font-bold border border-white/80 z-50 hover:bg-white/80 transition-colors cursor-pointer block">
+        &copy; 2026 P H HP & C DTE - DRONE TEAM. All rights reserved.
+    </a>
+
 </body>
 </html>
