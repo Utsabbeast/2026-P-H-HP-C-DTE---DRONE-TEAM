@@ -326,6 +326,11 @@
         if (activeMode === newMode) return;
         activeMode = newMode;
 
+        // Always hide API tools and panel when changing modes, only show for drone
+        if (elements.btnToggleTester) elements.btnToggleTester.style.display = (newMode === 'drone') ? 'flex' : 'none';
+        if (elements.testerPanel) elements.testerPanel.style.display = 'none';
+
+
         // Clear displayed trail when switching modes
         trailCoordinates = [];
         if (movementTrail) {
@@ -366,10 +371,7 @@
             if (elements.statusRouteName) elements.statusRouteName.textContent = 'Multi-Drone Network';
             if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Cloud Database Aggregation';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = 'Network Traffic';
-            if (elements.btnToggleTester) elements.btnToggleTester.style.display = 'none';
-            if (elements.testerPanel) elements.testerPanel.style.display = 'none';
-
-        } else if (activeMode === 'phone') {
+                                } else if (activeMode === 'phone') {
             // Update Tab styles
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab active phone-tab';
             if (elements.tabDroneMode) elements.tabDroneMode.className = 'mode-tab';
@@ -406,11 +408,7 @@
             if (elements.simFloatingBar) elements.simFloatingBar.style.display = 'none';
             if (elements.hardwareOfflineAlert) elements.hardwareOfflineAlert.style.display = 'none';
             if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'none';
-            if (elements.btnToggleTester) elements.btnToggleTester.style.display = 'none';
-            if (elements.testerPanel) elements.testerPanel.style.display = 'none';
-
-
-            // Buttons & Headers
+                                    // Buttons & Headers
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Phone';
             if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Live Tactical Map (Phone GPS)';
             if (elements.mapRouteHud) {
@@ -447,11 +445,7 @@
             if (elements.statusRouteName) elements.statusRouteName.textContent = 'Software In The Loop (SITL)';
             if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Virtual hardware simulation';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
-            if (elements.btnToggleTester) elements.btnToggleTester.style.display = 'none';
-            if (elements.testerPanel) elements.testerPanel.style.display = 'none';
-
-
-        } else if (activeMode === 'drone') {
+                                } else if (activeMode === 'drone') {
             // Drone Mode (ESP32 Live Hardware)
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab';
             if (elements.tabDroneMode) elements.tabDroneMode.className = 'mode-tab active';
@@ -508,9 +502,7 @@
             if (elements.statusRouteName) elements.statusRouteName.textContent = 'Cube Orange+ → ESP32 → Wi-Fi';
             if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Direct Hardware Stream';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
-            if (elements.btnToggleTester) elements.btnToggleTester.style.display = 'flex';
-
-        }
+                    }
 
         try {
             localStorage.setItem('utm_active_mode', newMode);
@@ -1481,8 +1473,7 @@
         }
         if (elements.btnCloseTester) {
             elements.btnCloseTester.addEventListener('click', () => {
-                if (elements.testerPanel) elements.testerPanel.style.display = 'none';
-            });
+                            });
         }
 
         // Tester Form Submit (Supports both phone and drone test packet injection)
