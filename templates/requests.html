@@ -169,8 +169,8 @@
                         <td>
                             {% if profile.status == 'PENDING' %}
                             <div class="action-buttons">
-                                <button class="btn-outline" onclick="alert('Profile Approved (Simulated)')">Approve</button>
-                                <button class="btn-primary" onclick="alert('Profile Rejected (Simulated)')">Reject</button>
+                                <button class="btn-outline" onclick="window.location.href='/telemetry/dev-error/'">Approve</button>
+                                <button class="btn-primary" onclick="window.location.href='/telemetry/dev-error/'">Reject</button>
                             </div>
                             {% else %}
                             <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed</span>
