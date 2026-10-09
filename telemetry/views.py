@@ -7,7 +7,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import DroneTelemetry, PhoneTelemetry
+from .models import DroneTelemetry, PhoneTelemetry, FlightPermissionRequest
+from django.contrib import messages
+from django.shortcuts import redirect
 from .serializers import (
     DroneTelemetrySerializer,
     DroneStatusSerializer,
@@ -37,8 +39,28 @@ class DashboardView(TemplateView):
     template_name = 'dashboard.html'
 
     def get_context_data(self, **kwargs):
+        from django.contrib.auth.models import User
+        from django.utils import timezone
+        from datetime import timedelta
         context = super().get_context_data(**kwargs)
         host = self.request.get_host()
+        
+        # Add requested counters
+        context['total_registered_drones'] = User.objects.count()
+        recent_time = timezone.now() - timedelta(seconds=15)
+        # Note: In a real system, you might count unique drone_ids from recent DroneTelemetry
+        # We can pass 0 or a query if there are records
+        from .models import DroneTelemetry
+        context['total_flying_drones'] = DroneTelemetry.objects.filter(received_at__gte=recent_time).values('drone_id').distinct().count()
+        
+        # Check registration status for pilots
+        if self.request.session.get('user_role') == 'PILOT' and self.request.user.is_authenticated:
+            from .models import PilotProfile, DroneRegistration
+            profile = PilotProfile.objects.filter(user=self.request.user, status='APPROVED').exists()
+            drone = DroneRegistration.objects.filter(owner=self.request.user, status='APPROVED').exists()
+            context['is_fully_registered'] = profile and drone
+        else:
+            context['is_fully_registered'] = True
         context['simulation_mode'] = getattr(settings, 'SIMULATION_MODE', True)
         context['drone_id'] = getattr(settings, 'DEFAULT_DRONE_ID', 'drone01')
         context['device_id'] = getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
@@ -59,8 +81,28 @@ class MobilePageView(TemplateView):
     template_name = 'mobile.html'
 
     def get_context_data(self, **kwargs):
+        from django.contrib.auth.models import User
+        from django.utils import timezone
+        from datetime import timedelta
         context = super().get_context_data(**kwargs)
         host = self.request.get_host()
+        
+        # Add requested counters
+        context['total_registered_drones'] = User.objects.count()
+        recent_time = timezone.now() - timedelta(seconds=15)
+        # Note: In a real system, you might count unique drone_ids from recent DroneTelemetry
+        # We can pass 0 or a query if there are records
+        from .models import DroneTelemetry
+        context['total_flying_drones'] = DroneTelemetry.objects.filter(received_at__gte=recent_time).values('drone_id').distinct().count()
+        
+        # Check registration status for pilots
+        if self.request.session.get('user_role') == 'PILOT' and self.request.user.is_authenticated:
+            from .models import PilotProfile, DroneRegistration
+            profile = PilotProfile.objects.filter(user=self.request.user, status='APPROVED').exists()
+            drone = DroneRegistration.objects.filter(owner=self.request.user, status='APPROVED').exists()
+            context['is_fully_registered'] = profile and drone
+        else:
+            context['is_fully_registered'] = True
         context['device_id'] = getattr(settings, 'DEFAULT_PHONE_DEVICE_ID', 'phone_test_01')
         context['local_ip'] = get_local_ip()
         context['mobile_url'] = self.request.build_absolute_uri('/mobile/')
@@ -510,3 +552,122 @@ class PhoneLocationHistoryView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+
+
+class RequestsView(TemplateView):
+    template_name = 'requests.html'
+
+class StatusView(TemplateView):
+    template_name = 'status.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from .models import FlightPermissionRequest, DroneRegistration, PilotProfile
+        context['user_role'] = self.request.session.get('user_role', 'GUEST')
+        context['user_role_label'] = self.request.session.get('user_role_label', 'Guest Observer (Read-Only)')
+        
+        if self.request.user.is_authenticated:
+            context['pilot_profile'] = PilotProfile.objects.filter(user=self.request.user).first()
+            context['drone_registration'] = DroneRegistration.objects.filter(owner=self.request.user).first()
+            context['flight_requests'] = FlightPermissionRequest.objects.filter(pilot=self.request.user).order_by('-created_at')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        from .models import FlightPermissionRequest, DroneRegistration, PilotProfile
+        form_type = request.POST.get('form_type')
+        
+        if form_type == 'profile':
+            PilotProfile.objects.create(
+                user=request.user,
+                license_number=request.POST.get('license', ''),
+                status='PENDING'
+            )
+            messages.success(request, 'Profile submitted for ATC approval.')
+            
+        elif form_type == 'drone':
+            DroneRegistration.objects.create(
+                owner=request.user,
+                name=request.POST.get('drone_name', ''),
+                uin=request.POST.get('uin', ''),
+                category=request.POST.get('category', 'MICRO'),
+                max_altitude_m=float(request.POST.get('max_alt', 120.0)),
+                status='PENDING'
+            )
+            messages.success(request, 'Drone registration submitted for ATC approval.')
+            
+        elif form_type == 'flight':
+            FlightPermissionRequest.objects.create(
+                pilot=request.user if request.user.is_authenticated else None,
+                location_name=request.POST.get('locName', 'Unknown'),
+                latitude=request.POST.get('locLat', 0.0) or 0.0,
+                longitude=request.POST.get('locLon', 0.0) or 0.0,
+                max_altitude=request.POST.get('maxAlt', 0.0) or 0.0,
+                purpose=request.POST.get('purpose', ''),
+                status='PENDING'
+            )
+            messages.error(request, 'We are not accepting any request right now because website is under development.')
+            
+        return redirect('telemetry:status')
+
+class TermsView(TemplateView):
+    template_name = 'terms.html'
+
+from django.views import View
+
+class UnderConstructionView(View):
+    def get(self, request):
+        context = {
+            'custom_message': 'This feature is currently under development. Please check back later.',
+            'custom_title': 'Feature Unavailable'
+        }
+        return render(request, '404.html', context, status=403)
+
+
+class HistoryView(TemplateView):
+    template_name = 'history.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_role'] = self.request.session.get('user_role', 'GUEST')
+        context['user_role_label'] = self.request.session.get('user_role_label', 'Guest Observer (Read-Only)')
+        context['flight_requests'] = FlightPermissionRequest.objects.all()
+        return context
+
+
+class NoSQLAdminView(TemplateView):
+    template_name = 'nosql_admin.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_role'] = self.request.session.get('user_role', 'GUEST')
+        context['user_role_label'] = self.request.session.get('user_role_label', 'Guest Observer (Read-Only)')
+        return context
+
+class DevErrorView(TemplateView):
+    template_name = 'dev_error.html'
+
+
+
+class AllDronesLatestView(APIView):
+    authentication_classes = []
+    permission_classes = []
+    
+    def get(self, request, *args, **kwargs):
+        from .models import DroneTelemetry
+        from .serializers import DroneTelemetrySerializer
+        
+        # Get distinct drone IDs that are not simulated
+        drone_ids = DroneTelemetry.objects.filter(is_simulated=False).values_list('drone_id', flat=True).distinct()
+        
+        latest_records = []
+        for d_id in drone_ids:
+            latest = DroneTelemetry.objects.filter(drone_id=d_id, is_simulated=False).order_by('-received_at').first()
+            if latest:
+                latest_records.append(latest)
+                
+        serializer = DroneTelemetrySerializer(latest_records, many=True)
+        return Response({
+            "status": "success",
+            "count": len(latest_records),
+            "results": serializer.data
+        })

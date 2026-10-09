@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if custom_title %}{{ custom_title }}{% else %}Page Not Found{% endif %} — UTM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/error.css' %}">
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
+        .text-navy { color: #002D74; }
+        .btn-navy {
+            background-color: #002D74;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-navy:hover {
+            background-color: #001f52;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 45, 116, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-xl p-8 md:p-12 max-w-lg w-full text-center border border-gray-100">
+        
+        <!-- From Uiverse.io by preet_7613 --> 
+        <main class="my-custom-face-container mx-auto">
+            <svg class="face" viewBox="0 0 320 380">
+                <g fill="none" stroke="#002D74" stroke-linecap="round" stroke-linejoin="round" stroke-width="25">
+                    <g class="face__eyes" transform="translate(0,112.5)">
+                        <g transform="translate(15,0)">
+                            <polyline class="face__eye-lid" points="37,0 0,120 75,120"></polyline>
+                            <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35"></polyline>
+                        </g>
+                        <g transform="translate(230,0)">
+                            <polyline class="face__eye-lid" points="37,0 0,120 75,120"></polyline>
+                            <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35"></polyline>
+                        </g>
+                    </g>
+                    <rect class="face__nose" x="132.5" y="112.5" width="55" height="155" rx="4" ry="4"></rect>
+                    <g transform="translate(65,334)" stroke-dasharray="102 102">
+                        <path class="face__mouth-left" d="M 0 30 C 0 30 40 0 95 0"></path>
+                        <path class="face__mouth-right" d="M 95 0 C 150 0 190 30 190 30"></path>
+                    </g>
+                </g>
+            </svg>
+        </main>
+
+        <h1 class="text-3xl md:text-4xl font-extrabold text-navy mb-4 tracking-tight">{% if custom_title %}{{ custom_title }}{% else %}404 - Not Found{% endif %}</h1>
+        <p class="text-gray-500 mb-8 leading-relaxed font-medium">{% if custom_message %}{{ custom_message }}{% else %}Oops! The page you were looking for doesn't exist.{% endif %}</p>
+        
+        <a href="/" class="btn-navy inline-flex items-center justify-center font-bold py-3 px-8 rounded-xl w-full md:w-auto text-sm uppercase tracking-wider">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Return to Dashboard
+        </a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,249 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <style>
+        .shuffle-container { position: relative; width: 100%; height: 500px; overflow: hidden; }
+        .shuffle-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            animation: fade 8s infinite;
+        }
+        .shuffle-img:nth-child(2) { animation-delay: 4s; }
+        @keyframes fade {
+            0%, 45% { opacity: 1; }
+            50%, 95% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Full Page Loader -->
+    <div id="page-loader" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ffffff; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease, visibility 0.5s ease;">
+        <div class="loader">
+          <div class="box1"></div>
+          <div class="box2"></div>
+          <div class="box3"></div>
+        </div>
+        <div style="color: #002D74; margin-top: 40px; font-family: 'Outfit', sans-serif; font-weight: 700; letter-spacing: 0.2em; font-size: 14px; animation: pulse 2s infinite;">INITIALIZING...</div>
+    </div>
+    <style>
+        .loader { width: 112px; height: 112px; position: relative; }
+        .box1, .box2, .box3 { box-sizing: border-box; position: absolute; display: block; }
+        .box1 { width: 112px; height: 48px; margin-top: 64px; margin-left: 0px; animation: abox1 4s 1s forwards ease-in-out infinite; border: 16px solid #002D74; }
+        .box2 { width: 48px; height: 48px; margin-top: 0px; margin-left: 0px; animation: abox2 4s 1s forwards ease-in-out infinite; border: 16px solid #dc2626; }
+        .box3 { width: 48px; height: 48px; margin-top: 0px; margin-left: 64px; animation: abox3 4s 1s forwards ease-in-out infinite; border: 16px solid #0ea5e9; }
+        @keyframes abox1 {
+          0% { width: 112px; height: 48px; margin-top: 64px; margin-left: 0px; }
+          12.5% { width: 48px; height: 48px; margin-top: 64px; margin-left: 0px; }
+          25% { width: 48px; height: 48px; margin-top: 64px; margin-left: 0px; }
+          37.5% { width: 48px; height: 48px; margin-top: 64px; margin-left: 0px; }
+          50% { width: 48px; height: 48px; margin-top: 64px; margin-left: 0px; }
+          62.5% { width: 48px; height: 48px; margin-top: 64px; margin-left: 0px; }
+          75% { width: 48px; height: 112px; margin-top: 0px; margin-left: 0px; }
+          87.5% { width: 48px; height: 48px; margin-top: 0px; margin-left: 0px; }
+          100% { width: 48px; height: 48px; margin-top: 0px; margin-left: 0px; }
+        }
+        @keyframes abox2 {
+          0% { width: 48px; height: 48px; margin-top: 0px; margin-left: 0px; }
+          12.5% { width: 48px; height: 48px; margin-top: 0px; margin-left: 0px; }
+          25% { width: 48px; height: 48px; margin-top: 0px; margin-left: 0px; }
+          37.5% { width: 48px; height: 48px; margin-top: 0px; margin-left: 0px; }
+          50% { width: 112px; height: 48px; margin-top: 0px; margin-left: 0px; }
+          62.5% { width: 48px; height: 48px; margin-top: 0px; margin-left: 64px; }
+          75% { width: 48px; height: 48px; margin-top: 0px; margin-left: 64px; }
+          87.5% { width: 48px; height: 48px; margin-top: 0px; margin-left: 64px; }
+          100% { width: 48px; height: 48px; margin-top: 0px; margin-left: 64px; }
+        }
+        @keyframes abox3 {
+          0% { width: 48px; height: 48px; margin-top: 0px; margin-left: 64px; }
+          12.5% { width: 48px; height: 48px; margin-top: 0px; margin-left: 64px; }
+          25% { width: 48px; height: 112px; margin-top: 0px; margin-left: 64px; }
+          37.5% { width: 48px; height: 48px; margin-top: 64px; margin-left: 64px; }
+          50% { width: 48px; height: 48px; margin-top: 64px; margin-left: 64px; }
+          62.5% { width: 48px; height: 48px; margin-top: 64px; margin-left: 64px; }
+          75% { width: 48px; height: 48px; margin-top: 64px; margin-left: 64px; }
+          87.5% { width: 48px; height: 48px; margin-top: 64px; margin-left: 64px; }
+          100% { width: 112px; height: 48px; margin-top: 64px; margin-left: 0px; }
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+    <script>
+        window.addEventListener('load', function() {
+            const loader = document.getElementById('page-loader');
+            if (loader) {
+                // Ensure loader shows for at least a brief moment for transition effect
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    loader.style.visibility = 'hidden';
+                }, 400);
+            }
+        });
+        
+        // Also show loader on beforeunload to simulate 'in-between' transition
+        window.addEventListener('beforeunload', function() {
+            const loader = document.getElementById('page-loader');
+            if (loader) {
+                loader.style.visibility = 'visible';
+                loader.style.opacity = '1';
+            }
+        });
+    </script>
+
+    <section class="bg-slate-50 min-h-screen flex box-border justify-center items-center relative overflow-hidden">
+        
+        <!-- Left Side Background -->
+        <div class="absolute left-0 top-0 bottom-0 w-1/4 z-0 shadow-2xl border-r border-white/20" style="background-image: url('{% static 'img/left side.jpg' %}'); background-size: 105% 100%; background-position: left center; background-repeat: no-repeat;"></div>
+
+        <!-- Right Side Video Background -->
+        <div class="absolute right-0 top-0 bottom-0 w-3/4 z-0 overflow-hidden pointer-events-none bg-black">
+            <div id="ytplayer" class="absolute top-1/2 left-1/2 w-[150vw] h-[150vh] min-w-[100%] min-h-[100%] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-90 pointer-events-none"></div>
+            <!-- Subtle overlay to make the login box pop out better against the video -->
+            <div class="absolute inset-0 bg-white/40"></div>
+        </div>
+
+        
+        <!-- Hover Area for Institution Logos -->
+        <div class="absolute top-0 left-0 w-full h-8 z-50">
+            <!-- Always visible top bar -->
+            <div class="absolute top-0 left-0 w-full flex items-center justify-between bg-white px-6 py-2 shadow-md transition-transform duration-300 ease-in-out">
+                <div class="flex items-center gap-6">
+                    <a href="https://digitalsky.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo1.svg' %}" alt="Digital Sky" class="h-6 w-auto object-contain"></a>
+                    <a href="https://www.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo2.jpg' %}" alt="DGCA" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+                    <a href="https://en.wikipedia.org/wiki/National_Cadet_Corps_(India)" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo3.png' %}" alt="NCC India" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+                </div>
+                <!-- Unity and Discipline in top bar -->
+                <div class="absolute left-1/2 -translate-x-1/2 text-center text-red-600 font-bold uppercase tracking-[0.2em] text-sm hidden md:block whitespace-nowrap">
+                    Unity and Discipline
+                </div>
+                <div>
+                    <img src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" alt="Indian Flag" class="h-6 w-auto border border-gray-200">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 flex w-full max-w-6xl mx-4 md:mx-12 p-6 items-center relative z-10 shadow-2xl rounded-sm">
+            <div class="md:w-1/2 px-8 min-h-[400px] flex flex-col justify-center">
+                
+                <!-- Role Selection View -->
+                <div id="role-selection">
+                    <div class="flex items-center gap-3">
+                        <img src="{% static 'img/login img.png' %}" alt="Login Icon" class="w-10 h-10 object-contain">
+                        <h2 class="font-bold text-4xl text-[#002D74] tracking-tight">LOGIN PORTAL</h2>
+                    </div>
+                    <p class="text-sm mt-4 text-[#002D74]/80 font-medium">Select your login type to continue.</p>
+                    
+                    <div class="flex flex-col gap-4 mt-8">
+                        <button onclick="showLogin('Admin')" class="btn-96 btn-red shadow-lg border border-gray-300"><span>Admin Login</span></button>
+                        <button onclick="showLogin('User')" class="btn-96 btn-navy shadow-lg border border-gray-300"><span>User Login</span></button>
+                        <button onclick="guestLogin()" class="btn-96 btn-sky shadow-lg border border-gray-300"><span>Guest Login</span></button>
+                    </div>
+                </div>
+
+                <!-- Login Form View -->
+                <div id="login-form-view" class="hidden text-slate-800">
+                    <button onclick="showRoles()" class="text-[#002D74] text-sm mb-4 font-semibold flex items-center hover:text-[#206ab1] transition-colors">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Back
+                    </button>
+                    
+                    <div class="flex items-center gap-3">
+                        <img src="{% static 'img/login img.png' %}" alt="Login Icon" class="w-8 h-8 object-contain">
+                        <h2 id="login-title" class="font-bold text-3xl text-[#002D74] tracking-tight">Login</h2>
+                    </div>
+                    <p class="text-sm mt-4 text-[#002D74]/80 font-medium">If you are already a member, easily log in now.</p>
+                    
+                    <div id="inline-msg-box" class="hidden mt-4 p-3 bg-red-50 text-red-600 text-sm font-semibold border-l-4 border-red-500 shadow-sm transition-all"></div>
+
+                    <form method="POST" action="/login/" class="flex flex-col gap-4">
+                        {% csrf_token %}
+                        <input class="p-3 mt-8 border border-gray-300 bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 shadow-sm transition-all font-medium" type="text" name="username" placeholder="Username">
+                        <div class="relative">
+                            <input class="p-3 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 shadow-sm transition-all font-medium" type="password" name="password" id="password" placeholder="Password">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" id="togglePassword"
+                                class="bi bi-eye absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer z-20 opacity-70 hover:opacity-100 text-[#002D74] transition-opacity"
+                                viewBox="0 0 16 16">
+                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"></path>
+                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"></path>
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-eye-slash-fill absolute top-1/2 right-4 -z-1 -translate-y-1/2 cursor-pointer hidden text-[#002D74] opacity-70 hover:opacity-100 transition-opacity"
+                                id="mama" viewBox="0 0 16 16">
+                                <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588zM5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z"></path>
+                                <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12-.708.708z"></path>
+                            </svg>
+                        </div>
+                        <button class="btn-96 btn-navy shadow-lg border border-gray-300 mt-2" type="submit"><span>Login</span></button>
+                    </form>
+
+                    <div onclick="document.getElementById('inline-msg-box').textContent = 'Contact Admin'; document.getElementById('inline-msg-box').classList.remove('hidden');" class="mt-5 text-sm border-b border-[#002D74]/20 py-3 tooltip cursor-pointer hover:text-[#206ab1] text-[#002D74] transition-colors font-semibold">Forget password?</div>
+
+                    <div id="register-section" class="mt-4 text-sm flex justify-between items-center container-mr">
+                        <p class="mr-3 md:mr-0 text-[#002D74]/90 font-medium">If you don't have an account..</p>
+                        <a href="#" onclick="document.getElementById('inline-msg-box').textContent = 'Coming soon...'; document.getElementById('inline-msg-box').classList.remove('hidden'); return false;" class="register text-[#002D74] bg-white border border-gray-300 shadow-sm hover:shadow-md py-2 px-5 hover:bg-gray-50 font-bold duration-300 inline-block text-center text-sm" style="text-decoration:none;">Register</a>
+                    </div>
+                </div>
+            </div>
+            <div class="md:block hidden w-1/2 p-2">
+                <div class="shuffle-container shadow-inner">
+                    <img class="shuffle-img" src="{% static 'img/Image 1.jpeg' %}" alt="login form image 1">
+                    <img class="shuffle-img" src="{% static 'img/Image 2.jpeg' %}" alt="login form image 2">
+                </div>
+            </div>
+        </div>
+        <a href="{% url 'telemetry:terms' %}" class="absolute bottom-4 right-6 bg-white/60 backdrop-blur-md px-4 py-1.5 shadow-[0_5px_15px_rgba(0,0,0,0.2)] text-[10px] text-gray-800 font-bold border border-white/80 z-50 hover:bg-white/80 transition-colors cursor-pointer block">
+            &copy; 2026 P H HP & C DTE - DRONE TEAM. All rights reserved.
+        </a>
+    </section>
+
+    <script src="{% static 'js/login.js' %}"></script>
+    <script>
+      var tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('ytplayer', {
+          videoId: '9IeSvD4PBfI',
+          playerVars: {
+            'autoplay': 1,
+            'controls': 0,
+            'mute': 1,
+            'loop': 1,
+            'playlist': '9IeSvD4PBfI',
+            'rel': 0,
+            'showinfo': 0,
+            'modestbranding': 1,
+            'playsinline': 1,
+            'disablekb': 1
+          },
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+
+      function onPlayerReady(event) {
+        event.target.mute();
+        event.target.playVideo();
+      }
+
+      function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.ENDED) {
+            player.playVideo(); 
+        }
+      }
+    </script>
+{% include 'messages.html' %}
+</body>
+</html>

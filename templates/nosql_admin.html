@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin NoSQL Database — UTM</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    
+    <!-- UTM Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=4.0">
+    <style>
+    body { background-color: #f8fafc; font-family: 'Outfit', sans-serif; }
+    .admin-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .admin-title { color: #002D74; font-size: 1.8rem; font-weight: 800; border-bottom: 2px solid #002D74; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+    .admin-card { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-radius: 0; overflow-x: auto; margin-bottom: 3rem; padding: 2rem; }
+</style>
+</head>
+
+<body>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="navbar" role="banner">
+        <div class="nav-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="nav-left" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                <a href="{% url 'telemetry:dashboard' %}" class="btn btn-outline btn-sm">← Back to Dashboard</a>
+            </div>
+
+            <div class="nav-center" style="display: flex; align-items: center; justify-content: center; flex: 2;">
+                <div class="nav-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="brand-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" />
+                            <circle cx="12" cy="12" r="3" fill="#002D74" stroke="none" />
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <div class="brand-title">UTM</div>
+                        <div class="brand-subtitle">Unified Telemetry Monitor</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-status" style="display: flex; align-items: center; justify-content: flex-end; flex: 1;">
+                <span style="font-weight: 600; font-size: 0.875rem;">{{ user_role_label }}</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="requests-container">
+        <div class="requests-header">
+            <h1 class="requests-title">Temporary NoSQL Database Storage</h1>
+        </div>
+
+        <div class="requests-table-container" style="padding: 2rem;">
+            <p style="margin-bottom: 1rem; color: var(--text-secondary);">This represents the temporary NoSQL registration database dump (<code style="background: #e2e8f0; padding: 2px 4px; border-radius: 0px;">nosql_db.json</code>).</p>
+            <pre style="background: #1e293b; color: #f8fafc; padding: 1.5rem; border-radius: 0px; font-family: var(--font-mono); font-size: 0.875rem; overflow-x: auto; white-space: pre-wrap;">{{ nosql_data }}</pre>
+        </div>
+    </main>
+{% include 'messages.html' %}
+</body>
+</html>
+

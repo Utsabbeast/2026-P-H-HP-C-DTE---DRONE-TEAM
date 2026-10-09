@@ -2,6 +2,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+
+    // Auto logout on refresh
+    if (performance.getEntriesByType("navigation").length > 0 && performance.getEntriesByType("navigation")[0].type === "reload") {
+        window.location.replace("/logout/");
+    }
+
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UTM — Unified Telemetry Monitor</title>
@@ -24,69 +32,102 @@
       data-phone-device-id="{{ device_id }}"
       data-phone-timeout="{{ phone_timeout }}"
       data-local-ip="{{ local_ip }}">
+
     
-    <!-- TOP NAVIGATION BAR -->
+        <!-- TOP NAVIGATION BAR -->
     <header class="navbar" role="banner">
-        <div class="nav-container">
-            <!-- Brand & Subtitle -->
-            <div class="nav-brand">
-                <div class="brand-icon">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/>
-                        <circle cx="12" cy="12" r="3" fill="#0284c7" stroke="none"/>
-                    </svg>
+        <div class="nav-container" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem;">
+            
+            <!-- LEFT CORNER -->
+            <div class="nav-left" style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                {% if request.session.user_role == 'GUEST' or request.user.username == 'guest' %}
+                <a href="{% url 'telemetry:logout' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; font-weight: 700; color: #002D74; border-color: #002D74; border-radius: 0;">&larr; Back</a>
+                {% elif request.session.user_role == 'PILOT' %}
+                <a href="{% url 'telemetry:under_construction' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">Profile</a>
+                <a href="{% url 'telemetry:status' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">Status</a>
+                {% else %}
+                <a href="{% url 'telemetry:requests' %}" class="btn-underline" style="text-decoration: none; font-size: 0.9rem; color: #002D74; font-weight: 700;">Requests</a>
+                <!-- Mods Dropdown (Hamburger) -->
+                <div class="dropdown" style="position: relative; display: flex; align-items: center;">
+                    <style>
+                        .hamburger { cursor: pointer; display: flex; align-items: center; margin-left: 10px; }
+                        .hamburger input { display: none; }
+                        .hamburger svg { height: 38px; width: 38px; transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1); }
+                        .hamburger .line { fill: none; stroke: #002D74; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.5; transition: stroke-dasharray 600ms cubic-bezier(0.4, 0, 0.2, 1), stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1); }
+                        .hamburger .line-top-bottom { stroke-dasharray: 12 63; }
+                        .hamburger input:checked + svg { transform: rotate(-45deg); }
+                        .hamburger input:checked + svg .line-top-bottom { stroke-dasharray: 20 300; stroke-dashoffset: -32.42; }
+                    </style>
+                    <label class="hamburger" onclick="toggleDropdown('modsDropdown', event)" title="Select Mode">
+                        <input type="checkbox" id="hamburger-checkbox" />
+                        <svg viewBox="0 0 32 32">
+                            <path class="line line-top-bottom" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22"></path>
+                            <path class="line" d="M7 16 27 16"></path>
+                        </svg>
+                    </label>
+                    <div id="modsDropdown" class="dropdown-content" style="display: none; position: absolute; top: 100%; left: 0; background-color: #fff; min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1000; border: 1px solid #002D74; margin-top: 5px;">
+                        <a href="#" onclick="selectMod('main', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: block; font-weight: 600; border-bottom: 1px solid #e2e8f0;">Main Mode</a>
+                        <div class="dropdown-submenu" style="position: relative;">
+                            <a href="#" onclick="toggleDropdown('testingDropdown', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: flex; justify-content: space-between; font-weight: 600; border-bottom: 1px solid #e2e8f0;">Testing Mode <span>▶</span></a>
+                            <div id="testingDropdown" class="dropdown-content submenu-content" style="display: none; position: absolute; left: 100%; top: 0; background-color: #fff; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border: 1px solid #002D74;">
+                                <a href="#" onclick="selectMod('test_phone', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: block; font-weight: 600; border-bottom: 1px solid #e2e8f0;">Phone Mode</a>
+                                <a href="#" onclick="selectMod('test_drone', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: block; font-weight: 600;">Drone Mode</a>
+                            </div>
+                        </div>
+                        <a href="#" onclick="selectMod('simulator', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: block; font-weight: 600;">Simulator Mode</a>
+                    </div>
                 </div>
-                <div class="brand-text">
-                    <div class="brand-title">UTM</div>
-                    <div class="brand-subtitle">Unified Telemetry Monitor</div>
+                {% endif %}
+            </div>
+            
+            <!-- CENTER BRAND -->
+            <div class="nav-center" style="display: flex; align-items: center; justify-content: center; flex: 1;">
+                <div class="nav-brand" style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="brand-icon" style="background-color: #002D74; color: white; border-radius: 0; padding: 4px;">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/>
+                            <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <div class="brand-title" style="color: #002D74; font-weight: 800; font-size: 1.2rem; line-height: 1;">UTM</div>
+                        {% if request.session.user_role == 'PILOT' %}
+                        <div class="brand-subtitle" style="color: #002D74; font-size: 0.75rem;">{{ request.session.user_name|default:"Pilot" }}</div>
+                        {% else %}
+                        <div class="brand-subtitle" style="color: #002D74; font-size: 0.75rem;">Unified Telemetry Monitor</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
-            <!-- Mode Switcher & Mode Indicator -->
-            <div class="nav-center" style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
-                <!-- Mode Switcher Tabs -->
-                <div class="mode-switcher-container" role="tablist">
-                    <button class="mode-tab active phone-tab" id="tabPhoneMode" role="tab" aria-selected="true" title="Switch to Phone GPS Mode">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                            <line x1="12" y1="18" x2="12.01" y2="18"/>
-                        </svg>
-                        <span>Phone GPS</span>
-                    </button>
-                    <button class="mode-tab" id="tabDroneMode" role="tab" aria-selected="false" title="Switch to Drone ESP32 Mode">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                            <path d="M12 2L4 7v10l8 5 8-5V7l-8-5zm0 2.2L18.2 8 12 11.8 5.8 8 12 4.2z"/>
-                        </svg>
-                        <span>Drone (ESP32)</span>
-                    </button>
+            <!-- RIGHT CORNER -->
+            <div class="nav-right" style="display: flex; align-items: center; justify-content: flex-end; gap: 1rem; flex: 1;">
+                {% if request.session.user_role == 'GUEST' or request.user.username == 'guest' %}
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="color: #002D74; font-size: 0.8rem; font-weight: 600;">Drone</span>
+                    <a href="{% url 'telemetry:register' %}" style="color: #dc2626; text-decoration: none; font-weight: 700; font-size: 0.8rem;">Register</a>
                 </div>
-
-                <!-- Live Mode Indicator -->
-                <div class="test-mode-badge" id="testModeBadge">
-                    <span class="test-pulse"></span>
-                    <span class="test-text" id="modeBadgeText">🟢 LIVE GPS TRACKING</span>
-                </div>
-
-                <!-- GPS Source Indicator -->
-                <div class="drone-pill" id="sourcePill" style="background: #e0f2fe; border: 1px solid #bae6fd; color: #0369a1;">
-                    <span id="gpsSourceText" style="font-weight: 600; font-size: 0.8125rem;">GPS Source: Android Phone</span>
-                </div>
-            </div>
-
-            <!-- Connection Status & Tools -->
-            <div class="nav-status">
-                <div class="connection-status disconnected" id="connectionStatusPill">
+                {% else %}
+                <!-- Phone Status Indicator -->
+                <div class="connection-status disconnected" id="connectionStatusPill" style="border-radius: 0;">
                     <span class="status-indicator-dot dot-red" id="statusDot"></span>
-                    <span class="status-label" id="statusLabel">🔴 Phone Disconnected</span>
+                    <span class="status-label" id="statusLabel">?? Phone Disconnected</span>
                 </div>
-
-                <!-- Hardware Testing Button -->
-                <button class="btn btn-outline btn-sm" id="btnToggleTester" title="Open ESP32 API Test Panel">
+                
+                {% if request.session.user_role == 'PILOT' %}
+                <a href="{% url 'telemetry:history' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">History</a>
+                {% else %}
+                <!-- ATC specific Right tools -->
+                <button class="btn btn-outline btn-sm" id="btnToggleTester" title="Open ESP32 API Test Panel" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; color: #002D74; border-color: #002D74; border-radius: 0;">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                     </svg>
                     <span>API Tools</span>
                 </button>
+                {% endif %}
+                
+                <a href="{% url 'telemetry:logout' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; font-weight: 700; color: #dc2626; border-color: #dc2626; border-radius: 0;">Log out</a>
+                {% endif %}
             </div>
         </div>
     </header>
@@ -95,6 +136,7 @@
     <main class="dashboard-layout">
         
         <!-- UNIVERSAL PHONE GPS CONNECTION BANNER (Visible in Phone Test Mode) -->
+        {% if request.session.user_role == 'ATC' %}
         <div class="hotspot-info-card" id="hotspotBanner">
             <div class="hotspot-info-left">
                 <div class="hotspot-icon" id="hotspotBannerIcon">
@@ -188,14 +230,21 @@
                 </div>
             </div>
         </div>
+        {% endif %}
+
+
+
+        
+
 
         <!-- MAP SECTION (LARGEST SECTION) -->
-        <section class="map-section" aria-label="Interactive Map">
+        <section class="map-section" aria-label="Interactive Map" style="position: relative;">
             <div class="map-header">
                 <div class="map-title-area">
                     <div class="map-title-row">
                         <h1 class="section-title" id="mapMainTitle">Live Tactical Map (Phone GPS)</h1>
                         <span class="route-badge" id="mapRouteHud" style="background: #ecfdf5; border-color: #a7f3d0; color: #047857;">Source: Android Phone</span>
+
                     </div>
                     <span class="map-subtitle" id="mapCoordinatesHud">Coordinates: 30.901000°, 75.857300°</span>
                 </div>
@@ -241,9 +290,57 @@
             </div>
 
             <!-- Map Container -->
-            <div class="map-wrapper">
+            <div class="map-wrapper" style="position: relative;">
                 <div id="droneMap" class="drone-map" role="application"></div>
                 
+                <!-- On-Map Drone Stats -->
+                <style>
+                    .map-stat-box {
+                        height: 40px;
+                        max-width: 40px;
+                        border-radius: 4px;
+                        display: flex;
+                        align-items: center;
+                        cursor: pointer;
+                        transition: max-width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+                        overflow: hidden;
+                        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+                        color: white;
+                        pointer-events: auto;
+                    }
+                    .map-stat-box:hover {
+                        max-width: 250px;
+                    }
+                    .map-stat-box .map-stat-text {
+                        white-space: nowrap;
+                        font-weight: 700;
+                        font-size: 0.85rem;
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
+                        padding-right: 12px;
+                    }
+                    .map-stat-box:hover .map-stat-text {
+                        opacity: 1;
+                        transition-delay: 0.1s;
+                    }
+                </style>
+                <div class="map-stats-container" style="position: absolute; bottom: 20px; left: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;">
+                    <!-- Registered Drones -->
+                    <div class="map-stat-box" style="background: #002D74; border: 2px solid #001A4A;" title="Registered Drones">
+                        <div style="width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-weight: bold; font-size: 1.1rem;">
+                            {{ total_registered_drones|default:"0" }}
+                        </div>
+                        <div class="map-stat-text">REGISTERED DRONES</div>
+                    </div>
+                    <!-- Drones In Air -->
+                    <div class="map-stat-box" style="background: #0ea5e9; border: 2px solid #0284c7;" title="Drones In Air">
+                        <div style="width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-weight: bold; font-size: 1.1rem;">
+                            {{ total_flying_drones|default:"0" }}
+                        </div>
+                        <div class="map-stat-text">DRONES IN AIR</div>
+                    </div>
+                </div>
+
                 <!-- Floating Map HUD Overlay -->
                 <div class="map-floating-hud">
                     <div class="hud-item">
@@ -271,6 +368,7 @@
         </section>
 
         <!-- TELEMETRY CARDS ROW (7 REQUIRED CARDS FOR PHONE TEST MODE) -->
+        {% if request.session.user_role != 'GUEST' and request.user.username != 'guest' %}
         <section class="telemetry-grid" aria-label="Live Telemetry Metrics">
             
             <!-- 1. Latitude Card -->
@@ -408,6 +506,7 @@
                 </div>
             </div>
         </section>
+        {% endif %}
 
         <!-- SYSTEM & TELEMETRY STATUS OVERVIEW ROW -->
         <section class="status-section" aria-label="System and Telemetry Status">
@@ -567,17 +666,9 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="dashboard-footer">
+    <footer class="dashboard-footer" style="padding: 10px; text-align: center; background: #0f172a; color: white; font-size: 0.8rem; font-weight: 500;">
         <div class="footer-container">
-            <span>UTM v1.1.0 — Phone GPS Test Mode</span>
-            <span class="footer-divider">•</span>
-            <span>Temporary GPS Source: Android Phone (/mobile/)</span>
-            <span class="footer-divider">•</span>
-            <span>Future Architecture: Cube Orange+ (TELEM) → ESP32 → Wi-Fi → Django</span>
-            <span class="footer-divider">•</span>
-            <a href="/mobile/" target="_blank" class="footer-link">Mobile Portal</a>
-            <span class="footer-divider">•</span>
-            <a href="/admin/" target="_blank" class="footer-link">Django Admin</a>
+            <span>&copy; 2026 P H HP & C DTE - DRONE TEAM</span>
         </div>
     </footer>
 
@@ -615,5 +706,135 @@
     
     <!-- UTM Dashboard Core JavaScript (v4.0 - OpenStreetMap Only with zoom interpolation up to 22) -->
     <script src="{% static 'js/dashboard.js' %}?v=4.0"></script>
+
+<script>
+    // State Tracking for Modes to allow Back/Forth navigation
+    window.addEventListener('popstate', function(event) {
+        if (event.state && event.state.mode) {
+            selectMod(event.state.mode, null, true);
+        } else if (event.state && event.state.barrier) {
+            // Hit the barrier! Stay on dashboard by pushing the mode back to history.
+            const currentMode = location.hash ? location.hash.replace('#', '') : 'main';
+            history.pushState({mode: currentMode}, '', location.pathname + '#' + currentMode);
+        } else {
+            // Default fallback
+            if (location.hash) {
+                selectMod(location.hash.replace('#', ''), null, true);
+            } else {
+                selectMod('main', null, true);
+            }
+        }
+    });
+
+    function toggleDropdown(id, event) {
+        if (id === 'modsDropdown' && event.target.tagName !== 'INPUT') {
+            const cb = document.getElementById('hamburger-checkbox');
+            if (cb) cb.checked = !cb.checked;
+        }
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const el = document.getElementById(id);
+        const isVisible = el.style.display === 'block';
+        
+        if (id === 'modsDropdown') {
+            const testingDropdown = document.getElementById('testingDropdown');
+            if (testingDropdown) testingDropdown.style.display = 'none';
+        }
+        
+        el.style.display = isVisible ? 'none' : 'block';
+    }
+
+    window.onclick = function(event) {
+        if (!event.target.closest('.hamburger') && !event.target.matches('.btn-outline') && !event.target.closest('.dropdown-submenu')) {
+            const mods = document.getElementById('modsDropdown');
+            const test = document.getElementById('testingDropdown');
+            if (mods) { mods.style.display = 'none'; const cb = document.getElementById('hamburger-checkbox'); if (cb) cb.checked = false; }
+            if (test) test.style.display = 'none';
+        }
+    }
+
+    function selectMod(mode, event, isPopState=false) {
+        if (event) event.preventDefault();
+        
+        const mods = document.getElementById('modsDropdown');
+        const test = document.getElementById('testingDropdown');
+        if (mods) { mods.style.display = 'none'; const cb = document.getElementById('hamburger-checkbox'); if (cb) cb.checked = false; }
+        if (test) test.style.display = 'none';
+        
+        const hotspotBanner = document.getElementById('hotspotBanner');
+        const esp32Banner = document.getElementById('esp32Banner');
+        const telemetryGrid = document.querySelector('.telemetry-grid');
+        const statusSection = document.querySelector('.status-section');
+        const testerPanel = document.getElementById('testerPanel');
+        
+        const mapTitle = document.getElementById('mapMainTitle');
+        const centerBtnText = document.getElementById('centerButtonText');
+        const mapRoute = document.getElementById('mapRouteHud');
+        
+        if (hotspotBanner) hotspotBanner.style.display = 'none';
+        if (esp32Banner) esp32Banner.style.display = 'none';
+        if (telemetryGrid) telemetryGrid.style.display = 'none';
+        if (statusSection) statusSection.style.display = 'none';
+        if (testerPanel) testerPanel.style.display = 'none';
+        
+        if (window.clearMapHistory) window.clearMapHistory();
+        if (window.stopSimulator) window.stopSimulator();
+        
+        if (mode === 'main') {
+            if (window.setDashboardMode) window.setDashboardMode('main');
+            if (mapTitle) mapTitle.innerText = "Main Mode";
+            if (mapRoute) mapRoute.innerText = "Overview";
+            if (centerBtnText) centerBtnText.innerText = "Center Map";
+            if (telemetryGrid) telemetryGrid.style.display = 'grid';
+        } else if (mode === 'simulator') {
+            if (window.setDashboardMode) window.setDashboardMode('simulator');
+            if (mapTitle) mapTitle.innerText = "Simulation Mode";
+            if (mapRoute) mapRoute.innerText = "Simulator";
+            if (centerBtnText) centerBtnText.innerText = "Center Drone";
+            if (telemetryGrid) telemetryGrid.style.display = 'grid';
+            if (statusSection) statusSection.style.display = 'block';
+            if (window.startSimulator) window.startSimulator();
+        } else if (mode === 'test_phone') {
+            if (window.setDashboardMode) window.setDashboardMode('phone');
+            if (mapTitle) mapTitle.innerText = "Live Tactical Map";
+            if (mapRoute) mapRoute.innerText = "Source: Android Phone";
+            if (centerBtnText) centerBtnText.innerText = "Center Phone";
+            if (hotspotBanner) hotspotBanner.style.display = 'flex';
+            if (telemetryGrid) telemetryGrid.style.display = 'grid';
+            if (statusSection) statusSection.style.display = 'block';
+        } else if (mode === 'test_drone') {
+            if (window.setDashboardMode) window.setDashboardMode('drone');
+            if (mapTitle) mapTitle.innerText = "Live Tactical Map";
+            if (mapRoute) mapRoute.innerText = "Source: Drone ESP32";
+            if (esp32Banner) esp32Banner.style.display = 'flex';
+            if (telemetryGrid) telemetryGrid.style.display = 'grid';
+            if (statusSection) statusSection.style.display = 'block';
+        }
+
+        if (!isPopState) {
+            history.pushState({mode: mode}, '', location.pathname + '#' + mode);
+        }
+    }
+
+    // Initialize default view based on Role
+    document.addEventListener("DOMContentLoaded", function() {
+        // Create a barrier history state so the user cannot use the back button to reach the login page
+        if (!history.state || !history.state.barrier) {
+            history.replaceState({barrier: true}, '', location.pathname);
+            
+            const initialMode = location.hash ? location.hash.replace('#', '') : 'main';
+            history.pushState({mode: initialMode}, '', location.pathname + '#' + initialMode);
+            selectMod(initialMode, null, true);
+        } else {
+            // If barrier already exists, just load mode
+            const currentMode = location.hash ? location.hash.replace('#', '') : 'main';
+            selectMod(currentMode, null, true);
+        }
+    });
+</script>
+{% include 'messages.html' %}
 </body>
+
 </html>

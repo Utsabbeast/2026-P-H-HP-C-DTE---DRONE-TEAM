@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Terms and Conditions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex justify-center items-center min-h-screen">
+    <div class="max-w-3xl w-full bg-white shadow-[0_15px_30px_rgba(0,0,0,0.15)] rounded-lg p-8 m-4">
+        <h1 class="text-3xl font-bold text-[#002D74] mb-6">Terms and Conditions</h1>
+        
+        <div class="prose prose-slate text-center py-10">
+            <p class="text-2xl font-medium text-slate-500">coming soon......</p>
+        </div>
+        
+        <div class="mt-8 flex justify-end">
+            <a href="{% url 'telemetry:login' %}" class="bg-[#002D74] text-white px-6 py-2 rounded font-semibold shadow hover:bg-[#001A4A] transition-colors">Back to Login</a>
+        </div>
+    </div>
+</body>
+</html>

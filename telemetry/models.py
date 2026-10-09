@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
@@ -152,3 +153,77 @@ class PhoneTelemetry(models.Model):
             timeout_seconds = getattr(settings, 'PHONE_TIMEOUT_SECONDS', 10)
         return self.seconds_since_received <= timeout_seconds
 
+
+class FlightPermissionRequest(models.Model):
+    pilot = models.ForeignKey(User, on_delete=models.CASCADE, related_name='flight_requests', null=True)
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+        ('ACTIVE', 'Active'),
+    )
+    drone_identifier = models.CharField(max_length=100, default='drone01')
+    location_name = models.CharField(max_length=255)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    max_altitude = models.FloatField()
+    purpose = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    admin_notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Flight Permission Request'
+        verbose_name_plural = 'Flight Permission Requests'
+
+    def __str__(self):
+        return f"{self.location_name} - {self.get_status_display()}"
+
+
+
+class PilotProfile(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    )
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pilot_profile')
+    license_number = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Pilot Profile'
+        verbose_name_plural = 'Pilot Profiles'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_status_display()}"
+
+class DroneRegistration(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    )
+    CATEGORY_CHOICES = (
+        ('NANO', 'Nano (<= 250g)'),
+        ('MICRO', 'Micro (> 250g to <= 2kg)'),
+        ('SMALL', 'Small (> 2kg to <= 25kg)'),
+        ('MEDIUM', 'Medium (> 25kg to <= 150kg)'),
+        ('LARGE', 'Large (> 150kg)'),
+    )
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='drones')
+    name = models.CharField(max_length=255)
+    uin = models.CharField(max_length=50, unique=True, blank=True, null=True, help_text="Unique Identification Number")
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='MICRO')
+    max_altitude_m = models.FloatField(default=120.0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Drone Registration'
+        verbose_name_plural = 'Drone Registrations'
+
+    def __str__(self):
+        return f"{self.name} ({self.uin}) - {self.owner.username}"

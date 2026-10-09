@@ -558,3 +558,36 @@
         init();
     }
 })();
+
+
+// Fingerprint UI Logic
+const fpBtn = document.getElementById('btnFingerprintStart');
+const fpInst = document.getElementById('fpInstruction');
+const fpTime = document.getElementById('fpTime');
+const fpDate = document.getElementById('fpDate');
+
+if (fpBtn) {
+    fpBtn.addEventListener('click', () => {
+        if (!isTracking) {
+            startTracking();
+            fpBtn.classList.add('active-pulse');
+            fpInst.textContent = 'GPS Active - Tracking';
+            fpInst.style.color = '#10b981';
+        } else {
+            stopTracking();
+            fpBtn.classList.remove('active-pulse');
+            fpInst.textContent = 'Tap to Activate GPS';
+            fpInst.style.color = 'rgba(255, 255, 255, 0.8)';
+        }
+    });
+}
+
+// Update clock
+setInterval(() => {
+    const now = new Date();
+    if(fpTime) fpTime.textContent = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+    if(fpDate) {
+        const options = { weekday: 'short', day: 'numeric', month: 'long' };
+        fpDate.textContent = now.toLocaleDateString('en-US', options);
+    }
+}, 1000);

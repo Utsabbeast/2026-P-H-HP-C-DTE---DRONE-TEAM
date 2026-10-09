@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register — UTM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    <section class="bg-slate-50 min-h-screen flex box-border justify-center items-center relative overflow-hidden">
+        
+        <!-- Left Side Background -->
+        <div class="absolute left-0 top-0 bottom-0 w-1/4 z-0 shadow-2xl border-r border-white/20" style="background-image: url('{% static 'img/left side.jpg' %}'); background-size: 105% 100%; background-position: left center; background-repeat: no-repeat;"></div>
+
+        <!-- Right Side Video Background -->
+        <div class="absolute right-0 top-0 bottom-0 w-3/4 z-0 overflow-hidden pointer-events-none bg-black">
+            <div id="ytplayer" class="absolute top-1/2 left-1/2 w-[150vw] h-[150vh] min-w-[100%] min-h-[100%] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-90 pointer-events-none"></div>
+            <div class="absolute inset-0 bg-white/40"></div>
+        </div>
+
+        <!-- Hover Area for Institution Logos -->
+        <div class="absolute top-0 left-0 w-full h-8 z-50">
+            <div class="absolute top-0 left-0 w-full flex items-center justify-between bg-white px-6 py-2 shadow-md transition-transform duration-300 ease-in-out">
+                <div class="flex items-center gap-6">
+                    <a href="https://digitalsky.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo1.svg' %}" alt="Digital Sky" class="h-6 w-auto object-contain"></a>
+                    <a href="https://www.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo2.jpg' %}" alt="DGCA" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+                    <a href="https://en.wikipedia.org/wiki/National_Cadet_Corps_(India)" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo3.png' %}" alt="NCC India" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+                </div>
+                <div class="absolute left-1/2 -translate-x-1/2 text-center text-red-600 font-bold uppercase tracking-[0.2em] text-sm hidden md:block whitespace-nowrap">
+                    Unity and Discipline
+                </div>
+                <div>
+                    <img src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" alt="Indian Flag" class="h-6 w-auto border border-gray-200">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 flex w-full max-w-6xl mx-4 md:mx-12 p-6 items-center relative z-10 shadow-2xl rounded-sm">
+            <div class="md:w-1/2 px-8 min-h-[400px] flex flex-col justify-center">
+                
+                <a href="{% url 'telemetry:login' %}" class="text-[#002D74] text-sm mb-4 font-semibold flex items-center hover:text-[#206ab1] transition-colors inline-block w-fit">
+                    <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Back to Login
+                </a>
+                
+                <div class="flex items-center gap-3">
+                    <img src="{% static 'img/login img.png' %}" alt="Register Icon" class="w-8 h-8 object-contain">
+                    <h2 class="font-bold text-3xl text-[#002D74] tracking-tight">Drone Registration</h2>
+                </div>
+                <p class="text-sm mt-2 mb-6 text-[#002D74]/80 font-medium">Create your pilot account to access the UTM network.</p>
+
+                
+<div style="text-align: center; margin: 40px 0;">
+    <h2 style="font-weight: 800; color: #002D74; font-size: 2rem;">COMING SOON</h2>
+    <p style="color: #64748b; margin-top: 10px;">Registration is currently unavailable.</p>
+</div>
+
+            </div>
+            
+            <div class="md:block hidden w-1/2 p-2">
+                <div class="relative w-full h-[500px] border border-gray-200 shadow-inner bg-slate-100 flex items-center justify-center rounded-sm overflow-hidden">
+                    <img src="{% static 'img/drone2.jpg' %}" alt="Drone" class="absolute w-full h-full object-cover opacity-80 mix-blend-multiply">
+                    <div class="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent z-10"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- YouTube Iframe API -->
+    <script>
+      var tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('ytplayer', {
+          videoId: '9IeSvD4PBfI', 
+          playerVars: {
+            'autoplay': 1,
+            'controls': 0,
+            'disablekb': 1,
+            'loop': 1,
+            'modestbranding': 1,
+            'rel': 0,
+            'showinfo': 0,
+            'mute': 1,
+            'playlist': '9IeSvD4PBfI'
+          },
+          events: {
+            'onReady': onPlayerReady
+          }
+        });
+      }
+      function onPlayerReady(event) {
+        event.target.playVideo();
+      }
+    </script>
+    
+    {% include 'messages.html' %}
+</body>
+</html>

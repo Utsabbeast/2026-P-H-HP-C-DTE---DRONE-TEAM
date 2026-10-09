@@ -1,0 +1,231 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<script>
+
+    // Auto logout on refresh
+    if (performance.getEntriesByType("navigation").length > 0 && performance.getEntriesByType("navigation")[0].type === "reload") {
+        window.location.replace("/logout/");
+    }
+
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Status & Requests — UTM</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- UTM Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=4.0">
+    <style>
+    body { background-color: #f8fafc; font-family: 'Outfit', sans-serif; }
+    .status-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .status-title { color: #002D74; font-size: 1.8rem; font-weight: 800; border-bottom: 2px solid #002D74; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+    .status-table-container { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-radius: 0; overflow-x: auto; margin-bottom: 3rem; }
+    .status-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .status-table th { background-color: #002D74; color: #fff; padding: 1rem; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
+    .status-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; color: #334155; font-size: 0.95rem; }
+    .status-table tr:hover { background-color: #f1f5f9; }
+    .status-badge { padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 700; border-radius: 0; text-transform: uppercase; border: 1px solid; display: inline-block; }
+    .status-PENDING { background-color: #fef3c7; color: #d97706; border-color: #d97706; }
+    .status-APPROVED { background-color: #dcfce7; color: #15803d; border-color: #15803d; }
+    .status-REJECTED { background-color: #fee2e2; color: #b91c1c; border-color: #b91c1c; }
+    .status-ACTIVE { background-color: #dbeafe; color: #1d4ed8; border-color: #1d4ed8; }
+</style>
+</head>
+
+<body>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="navbar" role="banner">
+        <div class="nav-container"
+            style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="nav-left" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                <a href="{% url 'telemetry:dashboard' %}" class="btn-underline">← Back to Dashboard</a>
+            </div>
+
+            <div class="nav-center" style="display: flex; align-items: center; justify-content: center; flex: 2;">
+                <div class="nav-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="brand-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" />
+                            <circle cx="12" cy="12" r="3" fill="#002D74" stroke="none" />
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <div class="brand-title">UTM</div>
+                        <div class="brand-subtitle">Unified Telemetry Monitor</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-status" style="display: flex; align-items: center; justify-content: flex-end; flex: 1;">
+                <span style="font-weight: 600; font-size: 0.875rem;">{{ user_role_label }}</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="requests-container">
+
+        <!-- Latest Status Section -->
+        <div class="requests-header">
+            <h1 class="requests-title">Current Flight Permission Status</h1>
+        </div>
+
+        <div class="requests-table-container" style="padding: 2rem; margin-bottom: 3rem;">
+            {% if latest_request %}
+            <div style="font-size: 1.2rem; margin-bottom: 1rem;">
+                Status: <span class="status-badge status-{{ latest_request.status }} text-lg ml-2">{{
+                    latest_request.get_status_display }}</span>
+            </div>
+            <div style="color: var(--text-secondary); line-height: 1.6;">
+                <strong>Location:</strong> {{ latest_request.location_name }}<br>
+                <strong>Max Altitude:</strong> {{ latest_request.max_altitude }}m<br>
+                <strong>Requested on:</strong> {{ latest_request.created_at|date:"M d, Y H:i" }}<br>
+                <strong>Admin Notes:</strong> {{ latest_request.admin_notes|default:"None yet." }}
+            </div>
+            {% else %}
+            <div style="text-align: center; color: var(--text-secondary);">
+                You have no recent flight permission requests.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sequential Forms Section -->
+        {% if not pilot_profile %}
+            <div class="requests-header">
+                <h1 class="requests-title">1. Complete Pilot Profile</h1>
+            </div>
+            <div class="requests-table-container" style="padding: 2rem;">
+                <form method="POST" action="{% url 'telemetry:status' %}" style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="profile">
+                    <div>
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Pilot License Number</label>
+                        <input type="text" name="license" placeholder="Optional" style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); font-family: inherit;">
+                    </div>
+                    <button type="submit" style="background: #002D74; color: white; padding: 1rem; border: none; font-weight: 600; cursor: pointer;">Submit Profile for Approval</button>
+                </form>
+            </div>
+        {% elif pilot_profile.status != 'APPROVED' %}
+            <div class="requests-header">
+                <h1 class="requests-title">Profile Pending</h1>
+            </div>
+            <div class="requests-table-container" style="padding: 2rem; text-align: center; border-color: #d97706; background: #fff8f1;">
+                <p style="color: #d97706; font-weight: 600; font-size: 1.1rem;">Your Pilot Profile is currently under review by ATC Admin.</p>
+                <p style="color: #666; margin-top: 0.5rem;">Please wait for approval before registering a drone.</p>
+            </div>
+        {% elif not drone_registration %}
+            <div class="requests-header">
+                <h1 class="requests-title">2. Drone Registration</h1>
+            </div>
+            <div class="requests-table-container" style="padding: 2rem;">
+                <form method="POST" action="{% url 'telemetry:status' %}" style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="drone">
+                    <div>
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Drone Model / Name</label>
+                        <input type="text" name="drone_name" required style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); font-family: inherit;">
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">UIN (Unique ID)</label>
+                        <input type="text" name="uin" required style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); font-family: inherit;">
+                    </div>
+                    <button type="submit" style="background: #002D74; color: white; padding: 1rem; border: none; font-weight: 600; cursor: pointer;">Submit Drone Registration</button>
+                </form>
+            </div>
+        {% elif drone_registration.status != 'APPROVED' %}
+            <div class="requests-header">
+                <h1 class="requests-title">Drone Registration Pending</h1>
+            </div>
+            <div class="requests-table-container" style="padding: 2rem; text-align: center; border-color: #d97706; background: #fff8f1;">
+                <p style="color: #d97706; font-weight: 600; font-size: 1.1rem;">Your Drone Registration is currently under review by ATC Admin.</p>
+                <p style="color: #666; margin-top: 0.5rem;">Please wait for approval before submitting flight requests.</p>
+            </div>
+        {% else %}
+            
+            <div class="requests-header">
+                <h1 class="requests-title">Current Flight Permission Status</h1>
+            </div>
+            <div class="requests-table-container" style="padding: 2rem; margin-bottom: 2rem;">
+                {% if flight_requests %}
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <tr style="border-bottom: 2px solid #e2e8f0;">
+                            <th style="padding: 0.5rem;">Location</th>
+                            <th style="padding: 0.5rem;">Max Alt.</th>
+                            <th style="padding: 0.5rem;">Status</th>
+                            <th style="padding: 0.5rem;">Date</th>
+                        </tr>
+                        {% for req in flight_requests %}
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 0.8rem 0.5rem;">{{ req.location_name }}</td>
+                            <td style="padding: 0.8rem 0.5rem;">{{ req.max_altitude }}m</td>
+                            <td style="padding: 0.8rem 0.5rem;">
+                                {% if req.status == 'PENDING' %} <span style="color: #d97706; font-weight:bold;">Pending</span>
+                                {% elif req.status == 'APPROVED' %} <span style="color: #15803d; font-weight:bold;">Approved</span>
+                                {% else %} <span style="color: #b91c1c; font-weight:bold;">Rejected</span> {% endif %}
+                            </td>
+                            <td style="padding: 0.8rem 0.5rem; font-size: 0.9rem; color: #666;">{{ req.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                {% else %}
+                    <p style="text-align: center; color: #666;">No flight permission requests submitted yet.</p>
+                {% endif %}
+            </div>
+
+            <div class="requests-header">
+                <h1 class="requests-title">3. Submit Flight Permission Request</h1>
+            </div>
+            <div class="requests-table-container" style="padding: 2rem;">
+                <form method="POST" action="{% url 'telemetry:status' %}"
+                    style="display: flex; flex-direction: column; gap: 1rem; max-width: 100%;">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="flight">
+                    <div>
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Location Name</label>
+                        <input type="text" name="locName" id="locName" placeholder="e.g. Ludhiana Sector 4" required
+                            style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); font-family: inherit;">
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Latitude</label>
+                            <input type="number" step="any" name="locLat" id="locLat" required value="30.900965"
+                                style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); font-family: inherit;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Longitude</label>
+                            <input type="number" step="any" name="locLon" id="locLon" required value="75.857275"
+                                style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); font-family: inherit;">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Max Altitude (m)</label>
+                        <input type="number" name="maxAlt" id="maxAlt" required value="120"
+                            style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); font-family: inherit;">
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Purpose</label>
+                        <textarea name="purpose" id="purpose" required
+                            style="width: 100%; padding: 0.8rem; border: 1px solid var(--border-color); font-family: inherit; height: 100px;"></textarea>
+                    </div>
+                    <button type="submit"
+                        style="background: #002D74; color: white; padding: 1rem; border: none; font-weight: 600; cursor: pointer; margin-top: 1rem;">Submit
+                        Request for ATC Approval</button>
+                </form>
+            </div>
+        {% endif %}
+    </main>
+
+    
+{% include 'messages.html' %}
+</body>
+
+</html>

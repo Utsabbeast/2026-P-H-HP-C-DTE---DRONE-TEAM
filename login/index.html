@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        /* From Uiverse.io by doniaskima (Adapted for theme) */ 
+        .btn-96,
+        .btn-96 *,
+        .btn-96 :after,
+        .btn-96 :before,
+        .btn-96:after,
+        .btn-96:before {
+          border: 0 solid;
+          box-sizing: border-box;
+        }
+
+        .btn-96 {
+          -webkit-tap-highlight-color: transparent;
+          -webkit-appearance: button;
+          background-color: #002D74;
+          background-image: none;
+          color: #fff;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 100%;
+          line-height: 1.5;
+          margin: 0;
+          -webkit-mask-image: -webkit-radial-gradient(#000, #fff);
+          padding: 0;
+          width: 100%;
+        }
+
+        .btn-96 {
+          box-sizing: border-box;
+          display: block;
+          font-weight: 700;
+          -webkit-mask-image: none;
+          padding: 1.2rem 3rem;
+          perspective: 800px;
+          position: relative;
+          text-transform: uppercase;
+          transform-style: preserve-3d;
+          letter-spacing: 1px;
+        }
+
+        .btn-96 span {
+          background: #002D74;
+          color: #fff;
+          display: grid;
+          inset: 0;
+          place-items: center;
+          position: absolute;
+          transform: rotateX(0deg);
+          transform-origin: top center;
+          transition: 0.2s;
+        }
+
+        .btn-96:hover span {
+          transform: rotateX(35deg);
+        }
+
+        .btn-96:after,
+        .btn-96:before {
+          background: #001A4A;
+          content: "";
+          height: 100%;
+          left: 0;
+          position: absolute;
+          top: 0;
+          transform: rotateX(0deg);
+          width: 100%;
+          z-index: -1;
+        }
+
+        .btn-96:after {
+          background: #206ab1;
+          width: 0;
+        }
+
+        .btn-96:hover:after {
+          -webkit-animation: progress-bar 1.2s;
+          animation: progress-bar 1.2s;
+        }
+
+        @-webkit-keyframes progress-bar {
+          0% { opacity: 1; width: 0; }
+          10% { opacity: 1; width: 15%; }
+          25% { opacity: 1; width: 25%; }
+          40% { opacity: 1; width: 35%; }
+          55% { opacity: 1; width: 75%; }
+          60% { opacity: 1; width: 100%; }
+          to { opacity: 0; width: 100%; }
+        }
+
+        @keyframes progress-bar {
+          0% { opacity: 1; width: 0; }
+          10% { opacity: 1; width: 15%; }
+          25% { opacity: 1; width: 25%; }
+          40% { opacity: 1; width: 35%; }
+          55% { opacity: 1; width: 75%; }
+          60% { opacity: 1; width: 100%; }
+          to { opacity: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <section class="bg-slate-50 min-h-screen flex box-border justify-center items-center relative overflow-hidden">
+        
+        <!-- Left Side Background -->
+        <div class="absolute left-0 top-0 bottom-0 w-1/4 z-0 shadow-[10px_0_25px_-5px_rgba(0,0,0,0.2)] border-r border-white/20" style="background-image: url('left%20side.jpg'); background-size: cover; background-position: center;"></div>
+
+        <!-- Right Side Video Background -->
+        <div class="absolute right-0 top-0 bottom-0 w-3/4 z-0 overflow-hidden pointer-events-none bg-black">
+            <iframe 
+                class="absolute top-1/2 left-1/2 w-[150vw] h-[150vh] min-w-[100%] min-h-[100%] max-w-none -translate-x-1/2 -translate-y-1/2 opacity-90"
+                src="https://www.youtube.com/embed/9IeSvD4PBfI?autoplay=1&mute=1&loop=1&playlist=9IeSvD4PBfI&controls=0&showinfo=0&rel=0&iv_load_policy=3&disablekb=1&fs=0&playsinline=1"
+                frameborder="0"
+                allow="autoplay; encrypted-media">
+            </iframe>
+            <!-- Subtle overlay to make the login box pop out better against the video -->
+            <div class="absolute inset-0 bg-white/40"></div>
+        </div>
+
+        
+        <!-- Hover Area for Institution Logos -->
+        <div class="absolute top-0 left-0 w-full h-8 z-50">
+            <!-- Always visible top bar -->
+            <div class="absolute top-0 left-0 w-full flex items-center justify-between bg-white px-6 py-2 shadow-md transition-transform duration-300 ease-in-out">
+                <div class="flex items-center gap-6">
+                    <a href="https://digitalsky.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="Logo1.svg" alt="Digital Sky" class="h-6 w-auto object-contain"></a>
+                    <a href="https://www.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="Logo2.jpg" alt="DGCA" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+                    <a href="https://en.wikipedia.org/wiki/National_Cadet_Corps_(India)" target="_blank" class="hover:scale-110 transition-transform"><img src="Logo3.png" alt="NCC India" class="h-6 w-auto object-contain mix-blend-multiply"></a>
+                </div>
+                <div>
+                    <img src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" alt="Indian Flag" class="h-6 w-auto border border-gray-200">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white border border-gray-200 flex w-full max-w-6xl mx-4 md:mx-12 p-6 items-center relative z-10 shadow-[0_15px_30px_rgba(0,0,0,0.15)]">
+            <div class="md:w-1/2 px-8 min-h-[400px] flex flex-col justify-center">
+                
+                <!-- Role Selection View -->
+                <div id="role-selection">
+                    <div class="flex items-center gap-3">
+                        <img src="login%20img.png" alt="Login Icon" class="w-10 h-10 object-contain">
+                        <h2 class="font-bold text-4xl text-[#002D74] tracking-tight">Login Portal</h2>
+                    </div>
+                    <p class="text-sm mt-4 text-[#002D74]/80 font-medium">Select your login type to continue.</p>
+                    
+                    <div class="flex flex-col gap-4 mt-8">
+                        <button onclick="showLogin('Admin')" class="btn-96 shadow-lg shadow-[#002D74]/20 border border-[#002D74]/10"><span>Admin Login</span></button>
+                        <button onclick="showLogin('User')" class="btn-96 shadow-lg shadow-[#002D74]/20 border border-[#002D74]/10"><span>User Login</span></button>
+                        <button onclick="guestLogin()" class="btn-96 shadow-lg shadow-[#002D74]/20 border border-[#002D74]/10"><span>Guest Login</span></button>
+                    </div>
+                </div>
+
+                <!-- Login Form View -->
+                <div id="login-form-view" class="hidden text-slate-800">
+                    <button onclick="showRoles()" class="text-[#002D74] text-sm mb-4 font-semibold flex items-center hover:text-[#206ab1] transition-colors">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                        Back
+                    </button>
+                    
+                    <div class="flex items-center gap-3">
+                        <img src="login%20img.png" alt="Login Icon" class="w-8 h-8 object-contain">
+                        <h2 id="login-title" class="font-bold text-3xl text-[#002D74] tracking-tight">Login</h2>
+                    </div>
+                    <p class="text-sm mt-4 text-[#002D74]/80 font-medium">If you are already a member, easily log in now.</p>
+
+                    <form action="" class="flex flex-col gap-4">
+                        <input class="p-3 mt-8 border border-gray-300 bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#002D74] transition-all font-medium" type="email" name="email" placeholder="Email">
+                        <div class="relative">
+                            <input class="p-3 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#002D74] transition-all font-medium" type="password" name="password" id="password" placeholder="Password">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" id="togglePassword"
+                                class="bi bi-eye absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer z-20 opacity-70 hover:opacity-100 text-[#002D74] transition-opacity"
+                                viewBox="0 0 16 16">
+                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"></path>
+                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"></path>
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                class="bi bi-eye-slash-fill absolute top-1/2 right-4 -z-1 -translate-y-1/2 cursor-pointer hidden text-[#002D74] opacity-70 hover:opacity-100 transition-opacity"
+                                id="mama" viewBox="0 0 16 16">
+                                <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588zM5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z"></path>
+                                <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12-.708.708z"></path>
+                            </svg>
+                        </div>
+                        <button class="btn-96 shadow-lg shadow-[#002D74]/20 border border-[#002D74]/10 mt-2" type="submit"><span>Login</span></button>
+                    </form>
+
+                    <div class="mt-5 text-sm border-b border-[#002D74]/20 py-3 tooltip cursor-pointer hover:text-white text-[#002D74] transition-colors font-semibold">Forget password?</div>
+
+                    <div id="register-section" class="mt-4 text-sm flex justify-between items-center container-mr">
+                        <p class="mr-3 md:mr-0 text-[#002D74]/90 font-medium">If you don't have an account..</p>
+                        <button class="register text-[#002D74] bg-white border border-gray-300 hover:border-[#002D74] py-2 px-5 hover:scale-110 hover:bg-gray-50 font-bold duration-300">Register</button>
+                    </div>
+                </div>
+            </div>
+            <div class="md:block hidden w-1/2 p-2">
+                <img class="w-full h-[500px] object-cover shadow-inner" src="left side.jpg" alt="login form image">
+            </div>
+            
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-red-600 font-bold uppercase tracking-[0.2em] text-sm z-20 bg-white/80 px-4 py-1 rounded-full shadow-sm">
+                Unity and Discipline
+            </div>
+        </div>
+        <a href="terms.html" class="absolute bottom-4 right-6 bg-white/60 backdrop-blur-md px-4 py-1.5 shadow-[0_5px_15px_rgba(0,0,0,0.2)] text-[10px] text-gray-800 font-bold border border-white/80 z-50 hover:bg-white/80 transition-colors cursor-pointer block">
+            &copy; 2026 P H HP & C DTE - DRONE TEAM. All rights reserved.
+        </a>
+    </section>
+
+    <script>
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+        const eyeSlash = document.querySelector('#mama');
+
+        togglePassword.addEventListener('click', function (e) {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('hidden');
+            eyeSlash.classList.toggle('hidden');
+        });
+
+        eyeSlash.addEventListener('click', function (e) {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.classList.toggle('hidden');
+            togglePassword.classList.toggle('hidden');
+        });
+
+        // Toggle Login Views
+        function showLogin(role) {
+            document.getElementById('role-selection').classList.add('hidden');
+            document.getElementById('login-form-view').classList.remove('hidden');
+            document.getElementById('login-title').innerText = role + ' Login';
+            
+            if(role === 'User') {
+                document.getElementById('register-section').classList.remove('hidden');
+                document.getElementById('register-section').classList.add('flex');
+            } else {
+                document.getElementById('register-section').classList.remove('flex');
+                document.getElementById('register-section').classList.add('hidden');
+            }
+        }
+
+        function showRoles() {
+            document.getElementById('role-selection').classList.remove('hidden');
+            document.getElementById('login-form-view').classList.add('hidden');
+            // reset fields
+            document.querySelector('form').reset();
+            password.setAttribute('type', 'password');
+            togglePassword.classList.remove('hidden');
+            eyeSlash.classList.add('hidden');
+        }
+
+        function guestLogin() {
+            window.location.href = 'error.html';
+        }
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            window.location.href = 'error.html';
+        });
+    </script>
+</body>
+</html>

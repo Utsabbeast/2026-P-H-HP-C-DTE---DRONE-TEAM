@@ -1,0 +1,123 @@
+body {
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        /* From Uiverse.io by doniaskima (Adapted for theme) */ 
+        .btn-96,
+        .btn-96 *,
+        .btn-96 :after,
+        .btn-96 :before,
+        .btn-96:after,
+        .btn-96:before {
+          border: 0 solid;
+          box-sizing: border-box;
+        }
+
+        .btn-96 {
+          --btn-bg: #002D74;
+          --btn-bg-dark: #001A4A;
+          --btn-bg-light: #206ab1;
+          -webkit-tap-highlight-color: transparent;
+          -webkit-appearance: button;
+          background-color: var(--btn-bg);
+          background-image: none;
+          color: #fff;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 100%;
+          line-height: 1.5;
+          margin: 0;
+          -webkit-mask-image: -webkit-radial-gradient(#000, #fff);
+          padding: 0;
+          width: 100%;
+        }
+
+        .btn-96 {
+          box-sizing: border-box;
+          display: block;
+          font-weight: 700;
+          -webkit-mask-image: none;
+          padding: 1.2rem 3rem;
+          perspective: 800px;
+          position: relative;
+          text-transform: uppercase;
+          transform-style: preserve-3d;
+          letter-spacing: 1px;
+        }
+
+        .btn-96 span {
+          background: var(--btn-bg);
+          color: #fff;
+          display: grid;
+          inset: 0;
+          place-items: center;
+          position: absolute;
+          transform: rotateX(0deg);
+          transform-origin: top center;
+          transition: 0.2s;
+        }
+
+        .btn-96:hover span {
+          transform: rotateX(35deg);
+        }
+
+        .btn-96:after,
+        .btn-96:before {
+          background: var(--btn-bg-dark);
+          content: "";
+          height: 100%;
+          left: 0;
+          position: absolute;
+          top: 0;
+          transform: rotateX(0deg);
+          width: 100%;
+          z-index: -1;
+        }
+
+        .btn-96:after {
+          background: var(--btn-bg-light);
+          width: 0;
+        }
+
+        .btn-red {
+          --btn-bg: #dc2626;
+          --btn-bg-dark: #991b1b;
+          --btn-bg-light: #ef4444;
+        }
+
+        .btn-navy {
+          --btn-bg: #002D74;
+          --btn-bg-dark: #001A4A;
+          --btn-bg-light: #206ab1;
+        }
+
+        .btn-sky {
+          --btn-bg: #0ea5e9;
+          --btn-bg-dark: #0284c7;
+          --btn-bg-light: #38bdf8;
+        }
+
+        .btn-96:hover:after {
+          -webkit-animation: progress-bar 1.2s;
+          animation: progress-bar 1.2s;
+        }
+
+        @-webkit-keyframes progress-bar {
+          0% { opacity: 1; width: 0; }
+          10% { opacity: 1; width: 15%; }
+          25% { opacity: 1; width: 25%; }
+          40% { opacity: 1; width: 35%; }
+          55% { opacity: 1; width: 75%; }
+          60% { opacity: 1; width: 100%; }
+          to { opacity: 0; width: 100%; }
+        }
+
+        @keyframes progress-bar {
+          0% { opacity: 1; width: 0; }
+          10% { opacity: 1; width: 15%; }
+          25% { opacity: 1; width: 25%; }
+          40% { opacity: 1; width: 35%; }
+          55% { opacity: 1; width: 75%; }
+          60% { opacity: 1; width: 100%; }
+          to { opacity: 0; width: 100%; }
+        }

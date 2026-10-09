@@ -1,0 +1,88 @@
+<style>
+  .utm-alert-container {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+  }
+  .utm-alert {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 0px; /* Sharp edges */
+    border-left: 4px solid;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    width: 340px;
+    cursor: pointer;
+    animation: slideInLeftAlert 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards, fadeOutAlert 0.4s ease-in forwards 5s;
+    opacity: 0;
+  }
+  .utm-alert:hover {
+    transform: scale(1.03);
+  }
+  .utm-alert-icon {
+    flex-shrink: 0;
+    margin-right: 14px;
+    width: 22px;
+    height: 22px;
+  }
+  .utm-alert-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin: 0;
+    font-family: 'Inter', 'Outfit', sans-serif;
+    line-height: 1.4;
+  }
+  
+  /* Success - Green */
+  .utm-alert-success { background-color: #dcfce7; border-left-color: #22c55e; color: #14532d; }
+  .utm-alert-success:hover { background-color: #bbf7d0; }
+  .utm-alert-success .utm-alert-icon { color: #16a34a; }
+  
+  /* Info - Blue */
+  .utm-alert-info { background-color: #e0f2fe; border-left-color: #3b82f6; color: #1e3a8a; }
+  .utm-alert-info:hover { background-color: #bfdbfe; }
+  .utm-alert-info .utm-alert-icon { color: #2563eb; }
+
+  /* Warning - Yellow */
+  .utm-alert-warning { background-color: #fef9c3; border-left-color: #eab308; color: #713f12; }
+  .utm-alert-warning:hover { background-color: #fef08a; }
+  .utm-alert-warning .utm-alert-icon { color: #ca8a04; }
+
+  /* Error - Red */
+  .utm-alert-error { background-color: #fee2e2; border-left-color: #ef4444; color: #7f1d1d; }
+  .utm-alert-error:hover { background-color: #fecaca; }
+  .utm-alert-error .utm-alert-icon { color: #dc2626; }
+
+  @keyframes slideInLeftAlert {
+    0% { transform: translateX(-120%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes fadeOutAlert {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(-20px); pointer-events: none; visibility: hidden; }
+  }
+</style>
+
+{% if messages %}
+<div class="utm-alert-container">
+  {% for message in messages %}
+  <!-- Maps django 'error' tag to our 'error' class -->
+  <div class="utm-alert {% if message.tags %}utm-alert-{{ message.tags }}{% else %}utm-alert-info{% endif %}" role="alert" onclick="this.style.display='none'">
+    <div class="utm-alert-icon">
+      <svg stroke="currentColor" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 16h-1v-4h1m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+      </svg>
+    </div>
+    <p class="utm-alert-text">{{ message }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

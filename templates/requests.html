@@ -1,0 +1,260 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<script>
+
+    // Auto logout on refresh
+    if (performance.getEntriesByType("navigation").length > 0 && performance.getEntriesByType("navigation")[0].type === "reload") {
+        window.location.replace("/logout/");
+    }
+
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Requests — UTM</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- UTM Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=4.0">
+    <style>
+    body { background-color: #f8fafc; font-family: 'Outfit', sans-serif; }
+    .requests-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .requests-title { color: #002D74; font-size: 1.8rem; font-weight: 800; border-bottom: 2px solid #002D74; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+    .requests-table-container { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-radius: 0; overflow-x: auto; margin-bottom: 3rem; }
+    .requests-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .requests-table th { background-color: #002D74; color: #fff; padding: 1rem; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
+    .requests-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; color: #334155; font-size: 0.95rem; }
+    .requests-table tr:hover { background-color: #f1f5f9; }
+    .status-badge { padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 700; border-radius: 0; text-transform: uppercase; border: 1px solid; display: inline-block; }
+    .status-PENDING { background-color: #fef3c7; color: #d97706; border-color: #d97706; }
+    .status-APPROVED { background-color: #dcfce7; color: #15803d; border-color: #15803d; }
+    .status-REJECTED { background-color: #fee2e2; color: #b91c1c; border-color: #b91c1c; }
+    .btn-approve { background: #fff; color: #15803d; border: 2px solid #15803d; padding: 0.4rem 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; border-radius: 0; }
+    .btn-approve:hover { background: #15803d; color: #fff; }
+    .btn-reject { background: #fff; color: #b91c1c; border: 2px solid #b91c1c; padding: 0.4rem 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; border-radius: 0; }
+    .btn-reject:hover { background: #b91c1c; color: #fff; }
+    .action-buttons { display: flex; gap: 0.5rem; }
+</style>
+</head>
+
+<body>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="navbar" role="banner">
+        <div class="nav-container"
+            style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="nav-left" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                <a href="{% url 'telemetry:dashboard' %}" class="btn-underline">← Back to Dashboard</a>
+            </div>
+
+            <div class="nav-center" style="display: flex; align-items: center; justify-content: center; flex: 2;">
+                <div class="nav-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="brand-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" />
+                            <circle cx="12" cy="12" r="3" fill="#002D74" stroke="none" />
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <div class="brand-title">UTM</div>
+                        <div class="brand-subtitle">Unified Telemetry Monitor</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-status" style="display: flex; align-items: center; justify-content: flex-end; flex: 1;">
+                <span style="font-weight: 600; font-size: 0.875rem;">{{ user_role_label }}</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="requests-container">
+        <div class="requests-header" style="margin-top: 2rem;">
+            <h2 class="requests-title">Flight Permission Requests</h2>
+        </div>
+
+        <div class="requests-table-container">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pilot</th>
+                        <th>Location</th>
+                        <th>Drone ID</th>
+                        <th>Max Alt.</th>
+                        <th>Purpose</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        {% if is_atc %}
+                        <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in flight_requests %}
+                    <tr>
+                        <td style="font-family: var(--font-mono);">#{{ req.id }}</td>
+                        <td style="font-weight: 600;">{{ req.pilot.username }}</td>
+                        <td>{{ req.location_name }}</td>
+                        <td style="font-family: var(--font-mono);">{{ req.drone_identifier }}</td>
+                        <td>{{ req.max_altitude }}m</td>
+                        <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                            title="{{ req.purpose }}">{{ req.purpose }}</td>
+                        <td><span class="status-badge status-{{ req.status }}">{{ req.get_status_display }}</span></td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ req.created_at|date:"M d, H:i"
+                            }}</td>
+
+                        {% if is_atc %}
+                        <td>
+                            {% if req.status == 'PENDING' %}
+                            <div class="action-buttons">
+                                <button class="btn-outline"
+                                    onclick="handleAction({{ req.id }}, 'approve')">Approve</button>
+                                <button class="btn-primary"
+                                    onclick="handleAction({{ req.id }}, 'reject')">Reject</button>
+                            </div>
+                            {% else %}
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if is_atc %}9{% else %}8{% endif %}"
+                            style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No flight requests found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+                <div class="requests-header" style="margin-top: 3rem;">
+            <h2 class="requests-title">Profile Acceptance</h2>
+        </div>
+
+        <div class="requests-table-container">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>License Number</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        {% if is_atc %}
+                        <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in profile_requests %}
+                    <tr>
+                        <td style="font-family: var(--font-mono);">#{{ profile.id }}</td>
+                        <td style="font-weight: 600;">{{ profile.user.username }}</td>
+                        <td>{{ profile.license_number|default:"N/A" }}</td>
+                        <td><span class="status-badge status-{{ profile.status }}">{{ profile.get_status_display }}</span></td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ profile.created_at|date:"M d, H:i" }}</td>
+                        {% if is_atc %}
+                        <td>
+                            {% if profile.status == 'PENDING' %}
+                            <div class="action-buttons">
+                                <button class="btn-outline" onclick="alert('Profile Approved (Simulated)')">Approve</button>
+                                <button class="btn-primary" onclick="alert('Profile Rejected (Simulated)')">Reject</button>
+                            </div>
+                            {% else %}
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if is_atc %}6{% else %}5{% endif %}" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No profile acceptance requests found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="requests-header" style="margin-top: 3rem;">
+            <h2 class="requests-title">Drone Registrations (UIN)</h2>
+        </div>
+
+        <div class="requests-table-container">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Owner</th>
+                        <th>Drone Name</th>
+                        <th>UIN</th>
+                        <th>Category</th>
+                        <th>Max Alt.</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        {% if is_atc %}
+                        <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for drone in drone_registrations %}
+                    <tr>
+                        <td style="font-family: var(--font-mono);">#{{ drone.id }}</td>
+                        <td style="font-weight: 600;">{{ drone.owner.username }}</td>
+                        <td>{{ drone.name }}</td>
+                        <td style="font-family: var(--font-mono);">{{ drone.uin }}</td>
+                        <td>{{ drone.get_category_display }}</td>
+                        <td>{{ drone.max_altitude_m }}m</td>
+                        <td><span class="status-badge status-{{ drone.status }}">{{ drone.get_status_display }}</span>
+                        </td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ drone.created_at|date:"M d,
+                            H:i" }}</td>
+
+                        {% if is_atc %}
+                        <td>
+                            {% if drone.status == 'PENDING' %}
+                            <div class="action-buttons">
+                                <button class="btn-outline"
+                                    onclick="handleDroneAction({{ drone.id }}, 'approve')">Approve</button>
+                                <button class="btn-primary"
+                                    onclick="handleDroneAction({{ drone.id }}, 'reject')">Reject</button>
+                            </div>
+                            {% else %}
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if is_atc %}9{% else %}8{% endif %}"
+                            style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No drone registrations found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="{% static 'js/requests_inline.js' %}"></script>
+{% include 'messages.html' %}
+</body>
+
+</html>
+

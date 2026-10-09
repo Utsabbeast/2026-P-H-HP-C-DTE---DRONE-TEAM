@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Development Phase Restricted</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dev_error_inline.css' %}">
+</head>
+<body>
+    <section class="h-screen w-screen bg-gray-50 flex items-center justify-center font-['Outfit'] relative overflow-hidden">
+        <!-- Plain Background (Matches Dashboard/Status) -->
+        <div class="absolute inset-0 z-0 bg-[#f8fafc]"></div>
+
+        <!-- Top Bar -->
+        <div class="absolute top-0 left-0 w-full h-8 z-50">
+            <div class="absolute top-0 left-0 w-full flex items-center justify-between bg-white px-6 py-2 shadow-md transition-transform duration-300 ease-in-out">
+                <div class="flex items-center gap-6">
+                    <a href="https://digitalsky.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo1.svg' %}" alt="Digital Sky" class="h-6 w-auto object-contain drop-shadow-md"></a>
+                    <a href="https://www.dgca.gov.in/" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo2.jpg' %}" alt="DGCA" class="h-6 w-auto object-contain mix-blend-multiply drop-shadow-md"></a>
+                    <a href="https://en.wikipedia.org/wiki/National_Cadet_Corps_(India)" target="_blank" class="hover:scale-110 transition-transform"><img src="{% static 'img/Logo3.png' %}" alt="NCC India" class="h-6 w-auto object-contain mix-blend-multiply drop-shadow-md"></a>
+                </div>
+                <div class="absolute left-1/2 -translate-x-1/2 text-center text-red-600 font-bold uppercase tracking-[0.2em] text-sm z-20 drop-shadow-lg hidden sm:block">
+                    Unity and Discipline
+                </div>
+                <div>
+                    <img src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" alt="Indian Flag" class="h-6 w-auto border border-gray-200 shadow-md">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white/95 backdrop-blur-md border border-red-500/50 flex w-full max-w-2xl mx-4 md:mx-12 p-8 items-center relative z-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+            <div class="flex flex-col w-full text-center items-center justify-center py-8">
+                <div class="my-custom-face-container text-red-600">
+                  <svg class="face" viewBox="0 0 320 380">
+                    <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="25">
+                      <g class="face__eyes" transform="translate(0,112.5)">
+                        <g transform="translate(15,0)">
+                          <polyline class="face__eye-lid" points="37,0 0,120 75,120"></polyline>
+                          <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35"></polyline>
+                        </g>
+                        <g transform="translate(230,0)">
+                          <polyline class="face__eye-lid" points="37,0 0,120 75,120"></polyline>
+                          <polyline class="face__pupil" points="55,120 55,155" stroke-dasharray="35 35"></polyline>
+                        </g>
+                      </g>
+                      <rect class="face__nose" x="132.5" y="112.5" width="55" height="155" rx="4" ry="4"></rect>
+                      <g transform="translate(65,334)" stroke-dasharray="102 102">
+                        <path class="face__mouth-left" d="M 0 30 C 0 30 40 0 95 0"></path>
+                        <path class="face__mouth-right" d="M 95 0 C 150 0 190 30 190 30"></path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                
+                <h1 class="text-4xl font-bold text-[#002D74] mb-4 tracking-tight uppercase">Action Restricted</h1>
+                
+                <div class="w-16 h-1 bg-red-600 mb-6"></div>
+                
+                <p class="text-lg text-gray-700 font-medium mb-8 leading-relaxed max-w-md mx-auto">
+                    We are currently in the <strong>development phase</strong>. To avoid filling up the database with test entries, this action has been temporarily disabled. 
+                    <br><br>
+                    No user accounts or flight requests can be created at this time.
+                </p>
+                
+                <button onclick="window.history.back()" class="btn-96 btn-deep-blue shadow-lg shadow-[#002D74]/20 border border-[#002D74]/10 max-w-xs w-full">
+                    <span>Return to Previous Page</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-4 right-6 bg-white/60 backdrop-blur-md px-4 py-1.5 shadow-[0_5px_15px_rgba(0,0,0,0.2)] text-[10px] text-gray-800 font-bold border border-white/80 z-50 hover:bg-white/80 transition-colors cursor-pointer block">
+            &copy; 2026 P H HP & C DTE - DRONE TEAM - ALL RIGHTS RESERVED.
+        </div>
+    </section>
+</body>
+</html>
