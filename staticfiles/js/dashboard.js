@@ -228,6 +228,12 @@
         // Add zoom control to topleft (first in column)
         L.control.zoom({ position: 'topleft' }).addTo(map);
 
+    // Deselect marker and clear telemetry on map click
+    map.on('click', function(e) {
+        activeMarker = null;
+        resetTelemetryUI();
+    });
+
         // Premier Map Tile Providers
         const googleStreets = L.tileLayer('http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
             maxZoom: 22,
@@ -474,7 +480,24 @@
 
     let activeTelemetryTargetId = null;
 
-    function updateTelemetryCards(telemetryData) {
+    
+    function resetTelemetryUI() {
+        if (elements.mapCoordinatesHud) elements.mapCoordinatesHud.textContent = 'Coordinates: --, --';
+        if (elements.hudAlt) elements.hudAlt.textContent = '--';
+        if (elements.hudHdg) elements.hudHdg.textContent = '--';
+        if (elements.hudSpeed) elements.hudSpeed.textContent = '--';
+        if (elements.hudAccuracy) elements.hudAccuracy.textContent = '--';
+
+        if (elements.valLatitude) elements.valLatitude.textContent = '--';
+        if (elements.subLatitude) elements.subLatitude.textContent = '--';
+        if (elements.valLongitude) elements.valLongitude.textContent = '--';
+        if (elements.valAltitude) elements.valAltitude.textContent = '--';
+        if (elements.valHeading) elements.valHeading.textContent = '--';
+        if (elements.valSpeed) elements.valSpeed.textContent = '--';
+        if (elements.valAccuracy) elements.valAccuracy.textContent = '--';
+        if (elements.valLastUpdate) elements.valLastUpdate.textContent = '--';
+    }
+\n    function updateTelemetryCards(telemetryData) {
         if (!telemetryData) return;
         const lat = parseFloat(telemetryData.latitude);
         const lon = parseFloat(telemetryData.longitude);
@@ -1711,6 +1734,30 @@
     window.clearMapHistory = function() { 
         trailCoordinates = []; 
         if (movementTrail) movementTrail.setLatLngs([]); 
+        
+        // Clear all main mode markers
+        for (let id in mainModeMarkers) {
+            if (mainModeMarkers[id]) map.removeLayer(mainModeMarkers[id]);
+        }
+        mainModeMarkers = {};
+        
+        // Clear phone/drone marker
+        if (droneMarker) {
+            map.removeLayer(droneMarker);
+            droneMarker = null;
+        }
+        
+        // Clear simulator markers
+        if (typeof simulatorState !== 'undefined' && simulatorState.markers) {
+            simulatorState.markers.forEach(m => {
+                if (m.marker) map.removeLayer(m.marker);
+                if (m.circle) map.removeLayer(m.circle);
+            });
+            simulatorState.markers = [];
+        }
+        
+        activeMarker = null;
+        resetTelemetryUI();
     }; 
 })();
 

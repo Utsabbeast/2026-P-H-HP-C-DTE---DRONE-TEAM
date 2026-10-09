@@ -231,10 +231,7 @@
     // Deselect marker and clear telemetry on map click
     map.on('click', function(e) {
         activeMarker = null;
-        updateTelemetryUI({
-            lat: '--', lng: '--', alt: '--', hdg: '--', speed: '--', accuracy: '--',
-            timestamp: '--', battery: '--', status: '--', id: '--'
-        });
+        resetTelemetryUI();
     });
 
         // Premier Map Tile Providers
@@ -483,7 +480,24 @@
 
     let activeTelemetryTargetId = null;
 
-    function updateTelemetryCards(telemetryData) {
+    
+    function resetTelemetryUI() {
+        if (elements.mapCoordinatesHud) elements.mapCoordinatesHud.textContent = 'Coordinates: --, --';
+        if (elements.hudAlt) elements.hudAlt.textContent = '--';
+        if (elements.hudHdg) elements.hudHdg.textContent = '--';
+        if (elements.hudSpeed) elements.hudSpeed.textContent = '--';
+        if (elements.hudAccuracy) elements.hudAccuracy.textContent = '--';
+
+        if (elements.valLatitude) elements.valLatitude.textContent = '--';
+        if (elements.subLatitude) elements.subLatitude.textContent = '--';
+        if (elements.valLongitude) elements.valLongitude.textContent = '--';
+        if (elements.valAltitude) elements.valAltitude.textContent = '--';
+        if (elements.valHeading) elements.valHeading.textContent = '--';
+        if (elements.valSpeed) elements.valSpeed.textContent = '--';
+        if (elements.valAccuracy) elements.valAccuracy.textContent = '--';
+        if (elements.valLastUpdate) elements.valLastUpdate.textContent = '--';
+    }
+\n    function updateTelemetryCards(telemetryData) {
         if (!telemetryData) return;
         const lat = parseFloat(telemetryData.latitude);
         const lon = parseFloat(telemetryData.longitude);
@@ -1743,10 +1757,7 @@
         }
         
         activeMarker = null;
-        updateTelemetryUI({
-            lat: '--', lng: '--', alt: '--', hdg: '--', speed: '--', accuracy: '--',
-            timestamp: '--', battery: '--', status: '--', id: '--'
-        });
+        resetTelemetryUI();
     }; 
 })();
 
