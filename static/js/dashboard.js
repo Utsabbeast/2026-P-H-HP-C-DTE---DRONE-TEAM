@@ -366,6 +366,9 @@
             if (elements.statusRouteName) elements.statusRouteName.textContent = 'Multi-Drone Network';
             if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Cloud Database Aggregation';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = 'Network Traffic';
+            if (elements.btnToggleTester) elements.btnToggleTester.style.display = 'none';
+            if (elements.testerPanel) elements.testerPanel.style.display = 'none';
+
         } else if (activeMode === 'phone') {
             // Update Tab styles
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab active phone-tab';
@@ -403,6 +406,9 @@
             if (elements.simFloatingBar) elements.simFloatingBar.style.display = 'none';
             if (elements.hardwareOfflineAlert) elements.hardwareOfflineAlert.style.display = 'none';
             if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'none';
+            if (elements.btnToggleTester) elements.btnToggleTester.style.display = 'none';
+            if (elements.testerPanel) elements.testerPanel.style.display = 'none';
+
 
             // Buttons & Headers
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Phone';
@@ -441,6 +447,9 @@
             if (elements.statusRouteName) elements.statusRouteName.textContent = 'Software In The Loop (SITL)';
             if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Virtual hardware simulation';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
+            if (elements.btnToggleTester) elements.btnToggleTester.style.display = 'none';
+            if (elements.testerPanel) elements.testerPanel.style.display = 'none';
+
 
         } else if (activeMode === 'drone') {
             // Drone Mode (ESP32 Live Hardware)
@@ -484,6 +493,8 @@
             if (elements.statusRouteName) elements.statusRouteName.textContent = 'Cube Orange+ → ESP32 → Wi-Fi';
             if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Direct Hardware Stream';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
+            if (elements.btnToggleTester) elements.btnToggleTester.style.display = 'flex';
+
         }
 
         try {
