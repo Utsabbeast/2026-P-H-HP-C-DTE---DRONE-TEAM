@@ -356,6 +356,7 @@
             if (phoneMarker) {
                 phoneMarker.addTo(map);
                 activeMarker = phoneMarker;
+                if (map) map.setView(phoneMarker.getLatLng(), 17, { animate: true });
             }
 
             // Update polyline styling for phone
@@ -415,6 +416,7 @@
             if (droneMarker) {
                 droneMarker.addTo(map);
                 activeMarker = droneMarker;
+                if (map) map.setView(droneMarker.getLatLng(), 17, { animate: true });
             }
 
             // Update polyline styling for drone
