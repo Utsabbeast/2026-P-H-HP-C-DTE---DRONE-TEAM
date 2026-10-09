@@ -1730,6 +1730,10 @@
 
         map.setView([startLat, startLng], 14, {animate: true});
 
+        if (elements.valDronesInAir) {
+            elements.valDronesInAir.textContent = simulatorState.markers.length;
+        }
+
         simulatorState.interval = setInterval(() => {
             simulatorState.markers.forEach(d => {
                 if (Math.random() < 0.05) {
