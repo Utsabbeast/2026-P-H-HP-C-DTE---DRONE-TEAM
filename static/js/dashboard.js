@@ -146,7 +146,8 @@
 
         // Tester Panel
         mapStatsContainer: document.getElementById('mapStatsContainer'),
-        valRegisteredDrones: document.getElementById('valRegisteredDrones'),
+        statRegisteredDronesBox: document.getElementById('statRegisteredDronesBox'),
+          valRegisteredDrones: document.getElementById('valRegisteredDrones'),
         valDronesInAir: document.getElementById('valDronesInAir'),
         testerPanel: document.getElementById('testerPanel'),
         testerForm: document.getElementById('testerForm'),
@@ -325,6 +326,11 @@
     function setDashboardMode(newMode) {
         if (activeMode === newMode) return;
         activeMode = newMode;
+
+        // Handle Registered Drones Box visibility
+        if (elements.statRegisteredDronesBox) {
+            elements.statRegisteredDronesBox.style.display = (newMode === 'simulator') ? 'none' : 'flex';
+        }
 
         // Always hide API tools and panel when changing modes, only show for drone
         if (elements.btnToggleTester) elements.btnToggleTester.style.display = (newMode === 'drone') ? 'flex' : 'none';
