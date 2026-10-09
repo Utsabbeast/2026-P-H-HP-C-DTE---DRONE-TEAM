@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<script>
+
+    // Auto logout on refresh
+    if (performance.getEntriesByType("navigation").length > 0 && performance.getEntriesByType("navigation")[0].type === "reload") {
+        window.location.replace("/logout/");
+    }
+
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Requests — UTM</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- UTM Dashboard CSS -->
+    <link rel="stylesheet" href="/static/css/dashboard.css?v=4.0">
+    <style>
+    body { background-color: #f8fafc; font-family: 'Outfit', sans-serif; }
+    .requests-container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .requests-title { color: #002D74; font-size: 1.8rem; font-weight: 800; border-bottom: 2px solid #002D74; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+    .requests-table-container { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-radius: 0; overflow-x: auto; margin-bottom: 3rem; }
+    .requests-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .requests-table th { background-color: #002D74; color: #fff; padding: 1rem; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
+    .requests-table td { padding: 1rem; border-bottom: 1px solid #e2e8f0; color: #334155; font-size: 0.95rem; }
+    .requests-table tr:hover { background-color: #f1f5f9; }
+    .status-badge { padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 700; border-radius: 0; text-transform: uppercase; border: 1px solid; display: inline-block; }
+    .status-PENDING { background-color: #fef3c7; color: #d97706; border-color: #d97706; }
+    .status-APPROVED { background-color: #dcfce7; color: #15803d; border-color: #15803d; }
+    .status-REJECTED { background-color: #fee2e2; color: #b91c1c; border-color: #b91c1c; }
+    .btn-approve { background: #fff; color: #15803d; border: 2px solid #15803d; padding: 0.4rem 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; border-radius: 0; }
+    .btn-approve:hover { background: #15803d; color: #fff; }
+    .btn-reject { background: #fff; color: #b91c1c; border: 2px solid #b91c1c; padding: 0.4rem 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s; border-radius: 0; }
+    .btn-reject:hover { background: #b91c1c; color: #fff; }
+    .action-buttons { display: flex; gap: 0.5rem; }
+</style>
+</head>
+
+<body>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="navbar" role="banner">
+        <div class="nav-container"
+            style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="nav-left" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                <a href="/dashboard/" class="btn-underline">← Back to Dashboard</a>
+            </div>
+
+            <div class="nav-center" style="display: flex; align-items: center; justify-content: center; flex: 2;">
+                <div class="nav-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="brand-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" />
+                            <circle cx="12" cy="12" r="3" fill="#002D74" stroke="none" />
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <div class="brand-title">UTM</div>
+                        <div class="brand-subtitle">Unified Telemetry Monitor</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-status" style="display: flex; align-items: center; justify-content: flex-end; flex: 1;">
+                <span style="font-weight: 600; font-size: 0.875rem;"></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="requests-container">
+        <div class="requests-header" style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002D74; padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
+            <h2 class="requests-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">Flight Permission Requests</h2>
+            
+            <a href="/user-database/" style="background: #002D74; color: white; padding: 0.6rem 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem; text-decoration: none; transition: background 0.3s;">
+                User Database
+            </a>
+            
+        </div>
+
+        <div class="requests-table-container">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pilot</th>
+                        <th>Location</th>
+                        <th>Drone ID</th>
+                        <th>Max Alt.</th>
+                        <th>Purpose</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td colspan="8"
+                            style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No flight requests found.
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+
+                <div class="requests-header" style="margin-top: 3rem;">
+            <h2 class="requests-title">Profile Acceptance</h2>
+        </div>
+
+        <div class="requests-table-container">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>License Number</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No profile acceptance requests found.
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+
+        <div class="requests-header" style="margin-top: 3rem;">
+            <h2 class="requests-title">Drone Registrations (UIN)</h2>
+        </div>
+
+        <div class="requests-table-container">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Owner</th>
+                        <th>Drone Name</th>
+                        <th>UIN</th>
+                        <th>Category</th>
+                        <th>Max Alt.</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td colspan="8"
+                            style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No drone registrations found.
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="/static/js/requests_inline.js"></script>
+<style>
+  .utm-alert-container {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: none;
+  }
+  .utm-alert {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 0px; /* Sharp edges */
+    border-left: 4px solid;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out;
+    width: 340px;
+    cursor: pointer;
+    animation: slideInLeftAlert 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards, fadeOutAlert 0.4s ease-in forwards 5s;
+    opacity: 0;
+  }
+  .utm-alert:hover {
+    transform: scale(1.03);
+  }
+  .utm-alert-icon {
+    flex-shrink: 0;
+    margin-right: 14px;
+    width: 22px;
+    height: 22px;
+  }
+  .utm-alert-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin: 0;
+    font-family: 'Inter', 'Outfit', sans-serif;
+    line-height: 1.4;
+  }
+  
+  /* Success - Green */
+  .utm-alert-success { background-color: #dcfce7; border-left-color: #22c55e; color: #14532d; }
+  .utm-alert-success:hover { background-color: #bbf7d0; }
+  .utm-alert-success .utm-alert-icon { color: #16a34a; }
+  
+  /* Info - Blue */
+  .utm-alert-info { background-color: #e0f2fe; border-left-color: #3b82f6; color: #1e3a8a; }
+  .utm-alert-info:hover { background-color: #bfdbfe; }
+  .utm-alert-info .utm-alert-icon { color: #2563eb; }
+
+  /* Warning - Yellow */
+  .utm-alert-warning { background-color: #fef9c3; border-left-color: #eab308; color: #713f12; }
+  .utm-alert-warning:hover { background-color: #fef08a; }
+  .utm-alert-warning .utm-alert-icon { color: #ca8a04; }
+
+  /* Error - Red */
+  .utm-alert-error { background-color: #fee2e2; border-left-color: #ef4444; color: #7f1d1d; }
+  .utm-alert-error:hover { background-color: #fecaca; }
+  .utm-alert-error .utm-alert-icon { color: #dc2626; }
+
+  @keyframes slideInLeftAlert {
+    0% { transform: translateX(-120%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes fadeOutAlert {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(-20px); pointer-events: none; visibility: hidden; }
+  }
+</style>
+
+
+
+</body>
+
+</html>
+
