@@ -497,7 +497,8 @@
         if (elements.valAccuracy) elements.valAccuracy.textContent = '--';
         if (elements.valLastUpdate) elements.valLastUpdate.textContent = '--';
     }
-\n    function updateTelemetryCards(telemetryData) {
+
+    function updateTelemetryCards(telemetryData) {
         if (!telemetryData) return;
         const lat = parseFloat(telemetryData.latitude);
         const lon = parseFloat(telemetryData.longitude);
