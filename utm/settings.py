@@ -22,6 +22,25 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = ['*']
 
+# Support Render external hostname and custom domains
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# CSRF Trusted Origins for HTTPS hosting on Render
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+    'https://*.render.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+
+_extra_csrf = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '')
+if _extra_csrf:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in _extra_csrf.split(',') if origin.strip()])
+
 
 # Application definition
 
@@ -80,6 +99,17 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Automatically support PostgreSQL if DATABASE_URL is configured (e.g. Render Postgres)
+if 'DATABASE_URL' in os.environ and os.environ['DATABASE_URL']:
+    try:
+        import dj_database_url
+        DATABASES['default'] = dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    except Exception as e:
+        print(f"[UTM Database] Error applying DATABASE_URL: {e}")
 
 
 # Password validation

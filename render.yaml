@@ -2,12 +2,14 @@ services:
   - type: web
     name: utm-telemetry
     runtime: python
-    buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --no-input
-    startCommand: python manage.py migrate && gunicorn utm.wsgi:application
+    buildCommand: bash build.sh
+    startCommand: gunicorn utm.wsgi:application
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.6
+        value: 3.11.8
       - key: DJANGO_DEBUG
         value: "False"
       - key: UTM_SIMULATION_MODE
         value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
