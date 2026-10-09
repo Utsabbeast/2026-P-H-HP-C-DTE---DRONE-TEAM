@@ -556,6 +556,11 @@ class PhoneLocationHistoryView(APIView):
 
 class RequestsView(TemplateView):
     template_name = 'requests.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['user_role'] = self.request.session.get('user_role', 'GUEST')
+        return context
 
 class StatusView(TemplateView):
     template_name = 'status.html'
@@ -679,7 +684,7 @@ class UserDatabaseView(TemplateView):
     template_name = 'user_database.html'
 
     def dispatch(self, request, *args, **kwargs):
-        if request.session.get('user_role') != 'ADMIN':
+        if not request.user.is_superuser and request.session.get('user_role') != 'ATC':
             return redirect('telemetry:dev-error')
         return super().dispatch(request, *args, **kwargs)
 
