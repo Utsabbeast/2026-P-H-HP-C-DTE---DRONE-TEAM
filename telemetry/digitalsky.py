@@ -275,6 +275,41 @@ TEMPORARY_RED_ZONES = [
     {"id": "DS-TFR-UP-KASHI", "name": "Kashi Vishwanath Corridor & Ganga Ghats Security Envelope", "city": "Varanasi", "state": "Uttar Pradesh", "lat": 25.3100, "lon": 83.0100, "radius_km": 3.5, "category": "TFR_HERITAGE_SECURITY", "validity": "ACTIVE_TFR", "desc": "Ganga Aarti Ghats, Kashi Vishwanath temple corridor and riverfront high-security zone."}
 ]
 
+# Continuous 25 km International Land Border Ribbon Corridors
+INTERNATIONAL_BORDER_POLYGONS = [
+    {
+        "id": "DS-CORRIDOR-WEST-IB",
+        "name": "Western International Border 25 km Red Zone Ribbon (Gujarat - Rajasthan - Punjab)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the International Border from Sir Creek/Rann of Kutch to Pathankot.",
+        "coordinates": [
+            [68.30, 23.65], [68.75, 24.35], [70.15, 25.10], [70.05, 26.50],
+            [69.95, 27.25], [71.20, 27.95], [72.30, 28.60], [73.50, 29.80],
+            [73.95, 30.40], [74.55, 31.60], [75.05, 32.15], [75.45, 32.40],
+            [75.72, 32.22], [75.32, 31.98], [74.82, 31.42], [74.28, 30.22],
+            [73.80, 29.55], [72.58, 28.38], [71.48, 27.75], [70.32, 27.05],
+            [70.42, 26.35], [70.45, 24.95], [69.05, 24.20], [68.60, 23.55],
+            [68.30, 23.65]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-NORTH-LOC-LAC",
+        "name": "Northern Frontier 25 km Red Zone Ribbon (J&K LOC - Ladakh LAC)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km defense buffer ribbon along the Line of Control (LOC) and Line of Actual Control (LAC).",
+        "coordinates": [
+            [74.75, 32.65], [74.15, 33.15], [74.05, 33.80], [74.15, 34.25],
+            [74.35, 34.65], [75.15, 34.78], [76.50, 34.85], [77.30, 35.40],
+            [78.50, 35.20], [78.95, 34.10], [79.25, 33.00],
+            [78.95, 33.10], [78.68, 34.00], [78.22, 35.00], [77.10, 35.15],
+            [76.35, 34.60], [75.08, 34.55], [74.52, 34.40], [74.32, 33.95],
+            [74.38, 33.30], [74.92, 32.80], [74.75, 32.65]
+        ]
+    }
+]
+
 # Pan-India boundary
 INDIA_AIRSPACE_BOUNDARY = [
     [74.8, 37.1], [77.8, 35.5], [80.3, 31.1], [88.2, 27.5], [97.4, 28.3],
@@ -380,7 +415,35 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
                 "geometry": {"type": "Polygon", "coordinates": [coords]}
             })
 
-    # 3. 25 km International Border Zones
+    # 3. 25 km International Border Zones (Continuous Ribbons & Strategic Border Sectors)
+    for poly_item in INTERNATIONAL_BORDER_POLYGONS:
+        features.append({
+            "type": "Feature",
+            "id": poly_item["id"],
+            "properties": {
+                "id": poly_item["id"],
+                "name": f"🛡️ {poly_item['name']}",
+                "zone_type": "RED",
+                "category": poly_item["category"],
+                "radius_km": 25.0,
+                "max_altitude_agl_ft": 0,
+                "max_altitude_agl_m": 0,
+                "permission_required": "STRICTLY PROHIBITED (25 km International Border Corridor)",
+                "authority": "MoD / MHA / DGCA India",
+                "rule_ref": poly_item["rule_ref"],
+                "description": poly_item["desc"],
+                "color": "#991b1b",
+                "fillColor": "#dc2626",
+                "fillOpacity": 0.45,
+                "strokeWeight": 2.5,
+                "zIndex": 1250
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [poly_item["coordinates"]]
+            }
+        })
+
     add_red_features(INTERNATIONAL_BORDER_RED_ZONES, "25 km International Border Corridor", "#991b1b", "#dc2626", 0.38, 2.2)
 
     # 4. Military Defense Areas

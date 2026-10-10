@@ -46,9 +46,8 @@
     let tileLayers = {
         googleStreets: null,
         googleSatellite: null,
-        digitalSkyBase: null,
-        esriStreet: null,
-        esriDark: null
+        googleHybrid: null,
+        googleTerrain: null
     };
 
     // Telemetry State
@@ -259,26 +258,56 @@
             resetTelemetryUI();
         });
 
-        // Premier Map Tile Providers
+        // Premier Map Tile Providers (4 Google Maps Modes)
         tileLayers.googleStreets = L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
             maxZoom: 22,
-            attribution: '&copy; Google Maps'
+            attribution: '&copy; Google Maps (Roadmap)'
         });
 
-        tileLayers.googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
+        tileLayers.googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}', {
             maxZoom: 22,
-            attribution: '&copy; Google Maps Satellite'
+            attribution: '&copy; Google Maps (Satellite)'
         });
 
-        // Add Default Layer (Google Streets)
+        tileLayers.googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
+            maxZoom: 22,
+            attribution: '&copy; Google Maps (Hybrid)'
+        });
+
+        tileLayers.googleTerrain = L.tileLayer('https://mt1.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}', {
+            maxZoom: 22,
+            attribution: '&copy; Google Maps (Terrain)'
+        });
+
+        // Add Default Base Layer (Google Streets)
         tileLayers.googleStreets.addTo(map);
+
+        // Custom Leaflet Panes for strictly layered Airspace visibility
+        if (!map.getPane('greenZonePane')) {
+            map.createPane('greenZonePane');
+            map.getPane('greenZonePane').style.zIndex = '405';
+        }
+        if (!map.getPane('yellowZonePane')) {
+            map.createPane('yellowZonePane');
+            map.getPane('yellowZonePane').style.zIndex = '420';
+        }
+        if (!map.getPane('redZonePane')) {
+            map.createPane('redZonePane');
+            map.getPane('redZonePane').style.zIndex = '450';
+        }
 
         // Digital Sky Airspace Feature Group (Red, Yellow, Green Zones)
         digitalSkyAirspaceGroup = L.featureGroup();
+        // Add to map by default so Red Zones are visibly highlighted immediately
+        digitalSkyAirspaceGroup.addTo(map);
+        isDigitalSkyActive = true;
+        showDigitalSkyLegend(true);
 
         const baseMaps = {
             'Google Streets': tileLayers.googleStreets,
-            'Google Satellite': tileLayers.googleSatellite
+            'Google Satellite': tileLayers.googleSatellite,
+            'Google Hybrid': tileLayers.googleHybrid,
+            'Google Terrain': tileLayers.googleTerrain
         };
 
         const overlayMaps = {
@@ -385,31 +414,39 @@
             const props = feat.properties || {};
             const zoneType = (props.zone_type || 'GREEN').toUpperCase();
             const geom = feat.geometry;
-            if (!geom || geom.type !== 'Polygon') return;
+            if (!geom || (geom.type !== 'Polygon' && geom.type !== 'MultiPolygon')) return;
 
             // Coordinates in GeoJSON are [lon, lat], Leaflet expects [lat, lon]
-            const latlngs = geom.coordinates.map(ring => ring.map(pt => [pt[1], pt[0]]));
-
-            let strokeColor = '#059669';
-            let fillColor = '#10b981';
-            let fillOpacity = 0.12;
-            let weight = 1.5;
-            let dashArray = null;
-
-            if (zoneType === 'RED') {
-                strokeColor = '#b91c1c';
-                fillColor = '#ef4444';
-                fillOpacity = 0.42;
-                weight = 2.5;
-            } else if (zoneType === 'YELLOW') {
-                strokeColor = '#d97706';
-                fillColor = '#f59e0b';
-                fillOpacity = 0.26;
-                weight = 2.0;
-                dashArray = '5, 5';
+            let latlngs;
+            if (geom.type === 'Polygon') {
+                latlngs = geom.coordinates.map(ring => ring.map(pt => [pt[1], pt[0]]));
+            } else {
+                latlngs = geom.coordinates.map(poly => poly.map(ring => ring.map(pt => [pt[1], pt[0]])));
             }
 
+            let strokeColor = props.color || '#059669';
+            let fillColor = props.fillColor || '#10b981';
+            let fillOpacity = props.fillOpacity !== undefined ? props.fillOpacity : 0.12;
+            let weight = props.strokeWeight || 1.5;
+            let dashArray = props.strokeDashArray || null;
+
+            if (zoneType === 'RED') {
+                strokeColor = props.color || '#b91c1c';
+                fillColor = props.fillColor || '#ef4444';
+                fillOpacity = props.fillOpacity !== undefined ? props.fillOpacity : 0.45;
+                weight = props.strokeWeight || 2.5;
+            } else if (zoneType === 'YELLOW') {
+                strokeColor = props.color || '#d97706';
+                fillColor = props.fillColor || '#f59e0b';
+                fillOpacity = props.fillOpacity !== undefined ? props.fillOpacity : 0.26;
+                weight = props.strokeWeight || 2.0;
+                dashArray = props.strokeDashArray || '5, 5';
+            }
+
+            const targetPane = zoneType === 'RED' ? 'redZonePane' : (zoneType === 'YELLOW' ? 'yellowZonePane' : 'greenZonePane');
+
             const polygon = L.polygon(latlngs, {
+                pane: targetPane,
                 color: strokeColor,
                 fillColor: fillColor,
                 fillOpacity: fillOpacity,
