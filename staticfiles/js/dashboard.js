@@ -37,6 +37,20 @@
     let trailCoordinates = [];
     let isTrailVisible = true;
 
+    // Digital Sky Platform Airspace State
+    let isDigitalSkyActive = false;
+    let digitalSkyAirspaceGroup = null;
+    let digitalSkyGeojsonData = null;
+    let currentAirspaceAssessment = null;
+    let baseMapsControl = null;
+    let tileLayers = {
+        googleStreets: null,
+        googleSatellite: null,
+        digitalSkyBase: null,
+        esriStreet: null,
+        esriDark: null
+    };
+
     // Telemetry State
     let lastReceivedTimestamp = null;
     let totalPacketCount = 0;
@@ -80,7 +94,7 @@
         connectionStatusPill: document.getElementById('connectionStatusPill'),
         statusDot: document.getElementById('statusDot'),
         statusLabel: document.getElementById('statusLabel'),
-        
+
         // ESP32 Hardware Banner Elements
         esp32Banner: document.getElementById('esp32Banner'),
         esp32WsInput: document.getElementById('esp32WsInput'),
@@ -90,7 +104,7 @@
         esp32WsDot: document.getElementById('esp32WsDot'),
         esp32WsStatusText: document.getElementById('esp32WsStatusText'),
         esp32HttpsTip: document.getElementById('esp32HttpsTip'),
-        
+
         // Map HUD & Header
         mapMainTitle: document.getElementById('mapMainTitle'),
         mapRouteHud: document.getElementById('mapRouteHud'),
@@ -99,7 +113,9 @@
         hudHdg: document.getElementById('hudHdg'),
         hudSpeed: document.getElementById('hudSpeed'),
         hudAccuracy: document.getElementById('hudAccuracy'),
-        
+        hudZone: document.getElementById('hudZone'),
+        hudZoneContainer: document.getElementById('hudZoneContainer'),
+
         // Buttons
         btnCenterDrone: document.getElementById('btnCenterDrone'),
         centerButtonText: document.getElementById('centerButtonText'),
@@ -107,6 +123,10 @@
         btnToggleTrail: document.getElementById('btnToggleTrail'),
         trailButtonText: document.getElementById('trailButtonText'),
         btnResetView: document.getElementById('btnResetView'),
+        btnToggleDigitalSky: document.getElementById('btnToggleDigitalSky'),
+        digitalSkyButtonText: document.getElementById('digitalSkyButtonText'),
+        digitalSkyLegend: document.getElementById('digitalSkyLegend'),
+        btnCloseLegend: document.getElementById('btnCloseLegend'),
         btnToggleTester: document.getElementById('btnToggleTester'),
         btnCloseTester: document.getElementById('btnCloseTester'),
 
@@ -147,7 +167,7 @@
         // Tester Panel
         mapStatsContainer: document.getElementById('mapStatsContainer'),
         statRegisteredDronesBox: document.getElementById('statRegisteredDronesBox'),
-          valRegisteredDrones: document.getElementById('valRegisteredDrones'),
+        valRegisteredDrones: document.getElementById('valRegisteredDrones'),
         valDronesInAir: document.getElementById('valDronesInAir'),
         testerPanel: document.getElementById('testerPanel'),
         testerForm: document.getElementById('testerForm'),
@@ -228,48 +248,61 @@
             attributionControl: true,
             maxZoom: 22
         }).setView([lastKnownLat, lastKnownLon], 16);
-        
+
         // Add zoom control to topleft (first in column)
         L.control.zoom({ position: 'topleft' }).addTo(map);
 
-    // Deselect marker and clear telemetry on map click
-    map.on('click', function(e) {
-        activeMarker = null;
-        activeTelemetryTargetId = null;
-        resetTelemetryUI();
-    });
+        // Deselect marker and clear telemetry on map click
+        map.on('click', function (e) {
+            activeMarker = null;
+            activeTelemetryTargetId = null;
+            resetTelemetryUI();
+        });
 
         // Premier Map Tile Providers
-        const googleStreets = L.tileLayer('http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
+        tileLayers.googleStreets = L.tileLayer('https://mt1.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}', {
             maxZoom: 22,
             attribution: '&copy; Google Maps'
         });
 
-        const googleSatellite = L.tileLayer('http://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}', {
+        tileLayers.googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
             maxZoom: 22,
             attribution: '&copy; Google Maps Satellite'
         });
 
-        const esriStreet = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 22,
-            attribution: '&copy; Esri World Street Map'
-        });
-
-        const esriDark = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 22,
-            attribution: '&copy; Esri Dark Tactical'
-        });
-
         // Add Default Layer (Google Streets)
-        googleStreets.addTo(map);
+        tileLayers.googleStreets.addTo(map);
+
+        // Digital Sky Airspace Feature Group (Red, Yellow, Green Zones)
+        digitalSkyAirspaceGroup = L.featureGroup();
 
         const baseMaps = {
-            'Google Streets': googleStreets,
-            'Google Satellite': googleSatellite,
-            'Esri Street': esriStreet,
-            'Esri Dark': esriDark
+            'Google Streets': tileLayers.googleStreets,
+            'Google Satellite': tileLayers.googleSatellite
         };
-        L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(map);
+
+        const overlayMaps = {
+            'Digital Sky Airspace (Zonal Overlays)': digitalSkyAirspaceGroup
+        };
+
+        baseMapsControl = L.control.layers(baseMaps, overlayMaps, { position: 'topleft' }).addTo(map);
+
+        map.on('overlayadd', function (e) {
+            if (e.layer === digitalSkyAirspaceGroup) {
+                isDigitalSkyActive = true;
+                showDigitalSkyLegend(true);
+            }
+        });
+
+        map.on('overlayremove', function (e) {
+            if (e.layer === digitalSkyAirspaceGroup) {
+                isDigitalSkyActive = false;
+                showDigitalSkyLegend(false);
+            }
+        });
+
+        // Load Digital Sky Airspace GeoJSON in background
+        loadDigitalSkyAirspaceData();
 
         // Movement trail polyline
         movementTrail = L.polyline([], {
@@ -293,6 +326,9 @@
                 <strong style="color: #059669;">📱 Phone GPS Test Mode</strong><br>
                 <span>Device: <code>${targetPhoneDeviceId}</code></span><br>
                 <span>Temporary drone GPS replacement</span>
+                <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0; font-size: 11px;">
+                    <span>Airspace: <strong id="popupAirspacePhone" style="color: #059669;">Green Zone (0-400ft)</strong></span>
+                </div>
             </div>
         `);
 
@@ -307,6 +343,9 @@
             <div style="font-family: inherit; font-size: 13px; line-height: 1.4;">
                 <strong style="color: #0284c7;">Drone 01 — Cube Orange+</strong><br>
                 <span>Target: ESP32 Wi-Fi Telemetry</span>
+                <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f0; font-size: 11px;">
+                    <span>Airspace: <strong id="popupAirspaceDrone" style="color: #0284c7;">Green Zone (0-400ft)</strong></span>
+                </div>
             </div>
         `);
 
@@ -319,6 +358,177 @@
         // Load initial trail
         loadHistoryForCurrentMode();
     }
+
+    // -------------------------------------------------------------------------
+    // Digital Sky Airspace Map Engine (DGCA India Drone Rules 2021)
+    // -------------------------------------------------------------------------
+    async function loadDigitalSkyAirspaceData() {
+        try {
+            const res = await fetch('/api/digitalsky/zones/');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            digitalSkyGeojsonData = await res.json();
+
+            if (digitalSkyGeojsonData && digitalSkyGeojsonData.features) {
+                renderDigitalSkyZones(digitalSkyGeojsonData.features);
+                console.log(`[UTM DigitalSky] Loaded ${digitalSkyGeojsonData.features.length} airspace zones.`);
+            }
+        } catch (err) {
+            console.warn('[UTM DigitalSky] Airspace zones fetch notice:', err.message);
+        }
+    }
+
+    function renderDigitalSkyZones(features) {
+        if (!digitalSkyAirspaceGroup) return;
+        digitalSkyAirspaceGroup.clearLayers();
+
+        features.forEach(feat => {
+            const props = feat.properties || {};
+            const zoneType = (props.zone_type || 'GREEN').toUpperCase();
+            const geom = feat.geometry;
+            if (!geom || geom.type !== 'Polygon') return;
+
+            // Coordinates in GeoJSON are [lon, lat], Leaflet expects [lat, lon]
+            const latlngs = geom.coordinates.map(ring => ring.map(pt => [pt[1], pt[0]]));
+
+            let strokeColor = '#059669';
+            let fillColor = '#10b981';
+            let fillOpacity = 0.12;
+            let weight = 1.5;
+            let dashArray = null;
+
+            if (zoneType === 'RED') {
+                strokeColor = '#b91c1c';
+                fillColor = '#ef4444';
+                fillOpacity = 0.42;
+                weight = 2.5;
+            } else if (zoneType === 'YELLOW') {
+                strokeColor = '#d97706';
+                fillColor = '#f59e0b';
+                fillOpacity = 0.26;
+                weight = 2.0;
+                dashArray = '5, 5';
+            }
+
+            const polygon = L.polygon(latlngs, {
+                color: strokeColor,
+                fillColor: fillColor,
+                fillOpacity: fillOpacity,
+                weight: weight,
+                dashArray: dashArray,
+                interactive: true
+            });
+
+            // Interactive popup
+            const badgeClass = zoneType === 'RED' ? 'red' : (zoneType === 'YELLOW' ? 'yellow' : 'green');
+            const badgeIcon = zoneType === 'RED' ? '🔴' : (zoneType === 'YELLOW' ? '🟡' : '🟢');
+            const catLabel = props.category ? `<span style="opacity: 0.85; font-size: 0.62rem; margin-left: 4px;">• ${props.category.replace(/_/g, ' ')}</span>` : '';
+            const popupHtml = `
+                <div class="ds-popup-card">
+                    <div class="ds-popup-badge ${badgeClass}">
+                        <span>${badgeIcon}</span>
+                        <span>${zoneType} ZONE</span>
+                        ${catLabel}
+                    </div>
+                    <div class="ds-popup-title">${props.name || 'Airspace Zone'}</div>
+                    <div class="ds-popup-desc">${props.description || ''}</div>
+                    <div class="ds-popup-meta">
+                        <div class="ds-popup-row">
+                            <span class="ds-popup-label">Max Permissible Alt:</span>
+                            <span class="ds-popup-val">${props.max_altitude_agl_ft} ft AGL (${props.max_altitude_agl_m || 0} m)</span>
+                        </div>
+                        <div class="ds-popup-row">
+                            <span class="ds-popup-label">Permission:</span>
+                            <span class="ds-popup-val" style="color: ${zoneType === 'RED' ? '#f87171' : (zoneType === 'YELLOW' ? '#fbbf24' : '#34d399')}; font-size: 0.68rem;">${props.permission_required || 'None'}</span>
+                        </div>
+                        <div class="ds-popup-row">
+                            <span class="ds-popup-label">Authority:</span>
+                            <span class="ds-popup-val">${props.authority || 'DGCA India'}</span>
+                        </div>
+                        <div class="ds-popup-row">
+                            <span class="ds-popup-label">Regulation:</span>
+                            <span class="ds-popup-val">${props.rule_ref || 'Drone Rules 2021'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            polygon.bindPopup(popupHtml, { className: 'digitalsky-popup' });
+
+            // Hover effects
+            polygon.on('mouseover', function () {
+                polygon.setStyle({
+                    weight: weight + 1.5,
+                    fillOpacity: Math.min(fillOpacity + 0.15, 0.7)
+                });
+            });
+            polygon.on('mouseout', function () {
+                polygon.setStyle({
+                    weight: weight,
+                    fillOpacity: fillOpacity
+                });
+            });
+
+            digitalSkyAirspaceGroup.addLayer(polygon);
+        });
+
+        const countEl = document.getElementById('legendZoneCount');
+        if (countEl && features.length > 0) {
+            countEl.textContent = `${features.length} Zones Active`;
+        }
+    }
+
+    function showDigitalSkyLegend(show) {
+        if (!elements.digitalSkyLegend) return;
+        elements.digitalSkyLegend.style.display = show ? 'block' : 'none';
+    }
+
+    // Real-time Airspace Zone Check
+    let lastZoneCheckTime = 0;
+    async function evaluateAirspaceZone(lat, lon, alt) {
+        if (!lat || !lon) return;
+        const now = Date.now();
+        if (now - lastZoneCheckTime < 2500) return;
+        lastZoneCheckTime = now;
+
+        try {
+            const res = await fetch(`/api/digitalsky/check/?lat=${lat}&lon=${lon}&alt=${alt || 0}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.status === 'success' && data.assessment) {
+                currentAirspaceAssessment = data.assessment;
+                updateAirspaceHud(data.assessment);
+            }
+        } catch (e) {
+            // Silently ignore
+        }
+    }
+
+    function updateAirspaceHud(assessment) {
+        if (!elements.hudZone) return;
+        const zType = assessment.zone_type;
+        if (zType === 'RED') {
+            elements.hudZone.innerHTML = '🔴 RED (No-Fly)';
+            elements.hudZone.style.color = '#ef4444';
+        } else if (zType === 'YELLOW') {
+            elements.hudZone.innerHTML = '🟡 YELLOW (ATC)';
+            elements.hudZone.style.color = '#f59e0b';
+        } else {
+            elements.hudZone.innerHTML = '🟢 GREEN (Clear)';
+            elements.hudZone.style.color = '#10b981';
+        }
+
+        const phoneAirspace = document.getElementById('popupAirspacePhone');
+        if (phoneAirspace) {
+            phoneAirspace.textContent = assessment.zone_name || `${zType} Zone`;
+            phoneAirspace.style.color = zType === 'RED' ? '#ef4444' : (zType === 'YELLOW' ? '#f59e0b' : '#059669');
+        }
+        const droneAirspace = document.getElementById('popupAirspaceDrone');
+        if (droneAirspace) {
+            droneAirspace.textContent = assessment.zone_name || `${zType} Zone`;
+            droneAirspace.style.color = zType === 'RED' ? '#ef4444' : (zType === 'YELLOW' ? '#f59e0b' : '#0284c7');
+        }
+    }
+
 
     // -------------------------------------------------------------------------
     // Mode Switcher Handler
@@ -346,10 +556,10 @@
         if (activeMode === 'main') {
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab';
             if (elements.tabDroneMode) elements.tabDroneMode.className = 'mode-tab';
-            
+
             if (phoneMarker && map.hasLayer(phoneMarker)) map.removeLayer(phoneMarker);
             if (droneMarker && map.hasLayer(droneMarker)) map.removeLayer(droneMarker);
-            
+
             if (elements.testModeBadge) elements.testModeBadge.style.display = 'none';
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'none';
@@ -358,7 +568,7 @@
                 if (elements.valRegisteredDrones) elements.valRegisteredDrones.textContent = elements.valRegisteredDrones.getAttribute('data-original') || '0';
                 // the simulation polling will update drones in air if needed
             }
-            
+
             if (elements.mapMainTitle) elements.mapMainTitle.textContent = window.MAIN_MODE_TITLE || 'Main Mode (Overview)';
             if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'flex';
             if (elements.valRegisteredDrones && elements.valDronesInAir) {
@@ -377,11 +587,11 @@
             if (elements.statusRouteName) elements.statusRouteName.textContent = 'Multi-Drone Network';
             if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Cloud Database Aggregation';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = 'Network Traffic';
-                                } else if (activeMode === 'phone') {
+        } else if (activeMode === 'phone') {
             // Update Tab styles
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab active phone-tab';
             if (elements.tabDroneMode) elements.tabDroneMode.className = 'mode-tab';
-            
+
             // Switch markers
             if (droneMarker && map.hasLayer(droneMarker)) map.removeLayer(droneMarker);
             if (phoneMarker) {
@@ -414,7 +624,7 @@
             if (elements.simFloatingBar) elements.simFloatingBar.style.display = 'none';
             if (elements.hardwareOfflineAlert) elements.hardwareOfflineAlert.style.display = 'none';
             if (elements.mapStatsContainer) elements.mapStatsContainer.style.display = 'none';
-                                    // Buttons & Headers
+            // Buttons & Headers
             if (elements.centerButtonText) elements.centerButtonText.textContent = 'Center Phone';
             if (elements.mapMainTitle) elements.mapMainTitle.textContent = 'Live Tactical Map (Phone GPS)';
             if (elements.mapRouteHud) {
@@ -433,10 +643,10 @@
             // Simulator Mode
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab';
             if (elements.tabDroneMode) elements.tabDroneMode.className = 'mode-tab';
-            
+
             if (phoneMarker && map.hasLayer(phoneMarker)) map.removeLayer(phoneMarker);
             if (droneMarker && map.hasLayer(droneMarker)) map.removeLayer(droneMarker);
-            
+
             if (elements.testModeBadge) elements.testModeBadge.style.display = 'none';
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
             if (elements.esp32Banner) elements.esp32Banner.style.display = 'none';
@@ -451,7 +661,7 @@
             if (elements.statusRouteName) elements.statusRouteName.textContent = 'Software In The Loop (SITL)';
             if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Virtual hardware simulation';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
-                                } else if (activeMode === 'drone') {
+        } else if (activeMode === 'drone') {
             // Drone Mode (ESP32 Live Hardware)
             if (elements.tabPhoneMode) elements.tabPhoneMode.className = 'mode-tab';
             if (elements.tabDroneMode) elements.tabDroneMode.className = 'mode-tab active';
@@ -508,11 +718,11 @@
             if (elements.statusRouteName) elements.statusRouteName.textContent = 'Cube Orange+ → ESP32 → Wi-Fi';
             if (elements.statusRouteHint) elements.statusRouteHint.textContent = 'Direct Hardware Stream';
             if (elements.statusHwPacketsHint) elements.statusHwPacketsHint.textContent = `Target: ${targetDroneId}`;
-                    }
+        }
 
         try {
             localStorage.setItem('utm_active_mode', newMode);
-        } catch (e) {}
+        } catch (e) { }
 
         if (newMode === 'drone' && !esp32WebSocket && location.protocol !== 'https:') {
             setTimeout(connectEsp32WebSocket, 250);
@@ -547,7 +757,7 @@
 
     let activeTelemetryTargetId = null;
 
-    
+
     function resetTelemetryUI() {
         if (elements.mapCoordinatesHud) elements.mapCoordinatesHud.textContent = 'Coordinates: --, --';
         if (elements.hudAlt) elements.hudAlt.textContent = '--';
@@ -573,7 +783,7 @@
         const hdg = telemetryData.heading !== null && telemetryData.heading !== undefined ? parseFloat(telemetryData.heading) : null;
         const speed = telemetryData.speed !== null && telemetryData.speed !== undefined ? parseFloat(telemetryData.speed) : null;
         const accuracy = telemetryData.accuracy !== null && telemetryData.accuracy !== undefined ? parseFloat(telemetryData.accuracy) : null;
-        
+
         if (elements.mapCoordinatesHud) {
             if (elements.mapCoordinatesHud) elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
         }
@@ -627,6 +837,7 @@
                 <p style="margin: 0 0 6px 0;"><b>Owner:</b> ${d.owner || 'SkyNav Systems'}</p>
                 <p style="margin: 0 0 6px 0;"><b>Purpose:</b> ${d.purpose || 'Basic maneuvers'}</p>
                 <p style="margin: 0 0 6px 0;"><b>Duration:</b> ${d.duration || '2 hrs 15 mins'}</p>
+                <p style="margin: 0 0 6px 0;"><b>Airspace:</b> <span style="color: #059669; font-weight: 600;">🟢 Green Zone (DGCA Free Flight)</span></p>
                 <p style="margin: 0;"><b>Status:</b> <span style="color: #15803d; font-weight: 600;">${d.status || 'Active - Permitted'}</span></p>
             </div>
         </div>
@@ -684,6 +895,7 @@
         if (elements.hudHdg) elements.hudHdg.textContent = hdg !== null ? `${Math.round(hdg)}°` : 'N/A';
         if (elements.hudSpeed) elements.hudSpeed.textContent = speed !== null ? `${speed.toFixed(1)} m/s` : 'N/A';
         if (elements.hudAccuracy) elements.hudAccuracy.textContent = accuracy !== null ? `${accuracy.toFixed(1)} m` : 'N/A';
+        evaluateAirspaceZone(lat, lon, alt);
 
         // 3. Update All 7 Telemetry Cards (Display N/A if null, do not invent values)
         if (elements.valLatitude) elements.valLatitude.textContent = `${lat.toFixed(6)}°`;
@@ -785,7 +997,7 @@
             hasReceivedFirstDroneFix = true;
         }
 
-        
+
         // Update Drone Marker Position & Rotator
         if (!droneMarker) {
             droneMarker = L.marker([lat, lon], {
@@ -804,7 +1016,7 @@
                 activeMarker = droneMarker;
             }
         }
-        
+
         if (droneMarker) {
 
             droneMarker.setLatLng([lat, lon]);
@@ -842,13 +1054,14 @@
 
         if (elements.hudSpeed) elements.hudSpeed.textContent = spdText;
         if (elements.hudAccuracy) elements.hudAccuracy.textContent = 'Hardware Fix';
+        evaluateAirspaceZone(lat, lon, alt);
 
         // Update Cards using unified generic function
         if (activeMarker !== null) {
             updateTelemetryCards(telemetryData);
             if (activeMarker !== null) {
-            if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
-        }
+                if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
+            }
         }
 
         const isHw = apiState ? apiState.hardware_connected : true;
@@ -974,11 +1187,11 @@
                         delete mainModeMarkers[id];
                     }
                 }
-                
+
                 data.results.forEach(telemetry => {
                     const id = telemetry.drone_id;
                     const latlng = [telemetry.latitude, telemetry.longitude];
-                    
+
                     if (!mainModeMarkers[id]) {
                         mainModeMarkers[id] = L.marker(latlng, {
                             icon: L.divIcon({
@@ -988,7 +1201,7 @@
                                 iconAnchor: [15, 15]
                             })
                         }).addTo(map);
-                        
+
                         let droneInfo = {
                             name: 'ESP32 Hardware ' + id,
                             uin: 'IND-' + id,
@@ -998,17 +1211,17 @@
                             status: 'ACTIVE',
                             color: '#0ea5e9'
                         };
-                        
+
                         mainModeMarkers[id].bindPopup(generateDronePopup(droneInfo));
-                        
-                        mainModeMarkers[id].on('click', function() {
+
+                        mainModeMarkers[id].on('click', function () {
                             activeTelemetryTargetId = id;
                             updateTelemetryCards(telemetry);
                         });
                     } else {
                         mainModeMarkers[id].setLatLng(latlng);
                     }
-                    
+
                     if (activeTelemetryTargetId === id) {
                         updateTelemetryCards(telemetry);
                     }
@@ -1285,7 +1498,7 @@
                         timestamp: telemetryObj.timestamp,
                         source: 'browser_gps'
                     })
-                }).catch(() => {});
+                }).catch(() => { });
             },
             (err) => {
                 console.warn('[UTM] Browser geolocation error:', err);
@@ -1350,10 +1563,10 @@
 
         try {
             localStorage.setItem('utm_esp32_ws_url', wsUrl);
-        } catch (e) {}
+        } catch (e) { }
 
         if (esp32WebSocket) {
-            try { esp32WebSocket.close(); } catch (e) {}
+            try { esp32WebSocket.close(); } catch (e) { }
             esp32WebSocket = null;
         }
 
@@ -1418,7 +1631,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(telemetryObj)
-                    }).catch(() => {});
+                    }).catch(() => { });
 
                 } catch (parseErr) {
                     console.warn('[UTM] Error parsing ESP32 WebSocket packet:', parseErr);
@@ -1445,7 +1658,7 @@
 
     function disconnectEsp32WebSocket() {
         if (esp32WebSocket) {
-            try { esp32WebSocket.close(); } catch (e) {}
+            try { esp32WebSocket.close(); } catch (e) { }
             esp32WebSocket = null;
         }
         updateEsp32WsStatus('disconnected', 'ESP32 Offline');
@@ -1505,6 +1718,8 @@
         if (elements.btnClearTrail) elements.btnClearTrail.addEventListener('click', clearMovementTrail);
         if (elements.btnToggleTrail) elements.btnToggleTrail.addEventListener('click', toggleTrailVisibility);
         if (elements.btnResetView) elements.btnResetView.addEventListener('click', resetMapView);
+        if (elements.btnToggleDigitalSky) elements.btnToggleDigitalSky.addEventListener('click', toggleDigitalSkyMap);
+        if (elements.btnCloseLegend) elements.btnCloseLegend.addEventListener('click', () => showDigitalSkyLegend(false));
 
         // Tester Panel
         if (elements.btnToggleTester) {
@@ -1516,7 +1731,7 @@
         }
         if (elements.btnCloseTester) {
             elements.btnCloseTester.addEventListener('click', () => {
-                            });
+            });
         }
 
         // Tester Form Submit (Supports both phone and drone test packet injection)
@@ -1587,22 +1802,22 @@
                 const skeleton = document.getElementById('qrCardSkeleton');
                 const actual = document.getElementById('qrCardActual');
                 const gradientBg = document.getElementById('qrGradientBg');
-                
+
                 // Reset initial state
-                if(skeleton) skeleton.style.opacity = '1';
-                if(actual) {
+                if (skeleton) skeleton.style.opacity = '1';
+                if (actual) {
                     actual.style.display = 'none';
                     actual.style.opacity = '0';
                 }
-                if(gradientBg) gradientBg.style.opacity = '0';
+                if (gradientBg) gradientBg.style.opacity = '0';
 
                 // Sequence
                 setTimeout(() => {
-                    if(gradientBg) gradientBg.style.opacity = '1';
+                    if (gradientBg) gradientBg.style.opacity = '1';
                     setTimeout(() => {
-                        if(skeleton) skeleton.style.opacity = '0';
+                        if (skeleton) skeleton.style.opacity = '0';
                         setTimeout(() => {
-                            if(actual) {
+                            if (actual) {
                                 actual.style.display = 'flex';
                                 // Trigger reflow
                                 void actual.offsetWidth;
@@ -1692,10 +1907,10 @@
         });
     }
 
-    window.startSimulator = function() {
+    window.startSimulator = function () {
         if (simulatorState.active) return;
         simulatorState.active = true;
-        
+
         const LegendControl = L.Control.extend({
             onAdd: function (map) {
                 let div = L.DomUtil.create('div', 'simulator-legend');
@@ -1733,9 +1948,9 @@
                 icon: createSimulatorIcon(d.color),
                 title: d.desc
             }).addTo(map);
-            
+
             let path = L.polyline([[lat, lng]], { color: d.color, weight: 3, opacity: 0.7, dashArray: '5, 5' }).addTo(map);
-            
+
             let droneInfo = {
                 name: d.name + ' Drone',
                 uin: 'SIM-' + (index + 1000),
@@ -1745,12 +1960,12 @@
                 status: 'SIMULATED',
                 color: d.color
             };
-            
+
             marker.bindPopup(generateDronePopup(droneInfo));
-            marker.on('click', function() {
+            marker.on('click', function () {
                 activeTelemetryTargetId = 'sim_' + index;
             });
-            
+
             simulatorState.markers.push({
                 id: 'sim_' + index,
                 marker: marker,
@@ -1765,7 +1980,7 @@
             });
         });
 
-        map.setView([startLat, startLng], 14, {animate: true});
+        map.setView([startLat, startLng], 14, { animate: true });
 
         if (elements.valDronesInAir) {
             elements.valDronesInAir.textContent = simulatorState.markers.length;
@@ -1777,29 +1992,29 @@
                     d.targetLat = d.lat + (Math.random() - 0.5) * 0.005;
                     d.targetLng = d.lng + (Math.random() - 0.5) * 0.005;
                 }
-                
+
                 let oldLat = d.lat;
                 let oldLng = d.lng;
-                
+
                 d.lat += (d.targetLat - d.lat) * 0.1;
                 d.lng += (d.targetLng - d.lng) * 0.1;
-                
+
                 d.marker.setLatLng([d.lat, d.lng]);
-                
+
                 if (Math.abs(d.lat - oldLat) > 0.00001 || Math.abs(d.lng - oldLng) > 0.00001) {
                     d.pathCoords.push([d.lat, d.lng]);
                     if (d.pathCoords.length > 100) d.pathCoords.shift();
                     d.path.setLatLngs(d.pathCoords);
                 }
-                
+
                 // Calculate heading and speed roughly
                 let dy = d.lat - oldLat;
                 let dx = d.lng - oldLng;
                 if (Math.abs(dy) > 0.00001 || Math.abs(dx) > 0.00001) {
                     d.heading = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
-                    d.speed = Math.sqrt(dx*dx + dy*dy) * 111320; // roughly meters/sec
+                    d.speed = Math.sqrt(dx * dx + dy * dy) * 111320; // roughly meters/sec
                 }
-                
+
                 if (activeTelemetryTargetId === d.id) {
                     updateTelemetryCards({
                         latitude: d.lat,
@@ -1814,7 +2029,7 @@
         }, 100);
     };
 
-    window.stopSimulator = function() {
+    window.stopSimulator = function () {
         if (!simulatorState.active) return;
         simulatorState.active = false;
         if (simulatorState.legend) {
@@ -1845,10 +2060,10 @@
             if (savedWsUrl && elements.esp32WsInput) {
                 elements.esp32WsInput.value = savedWsUrl;
             }
-        } catch (e) {}
+        } catch (e) { }
 
         const urlParams = new URLSearchParams(window.location.search);
-        const requestedMode = urlParams.get('mode') || (function() {
+        const requestedMode = urlParams.get('mode') || (function () {
             try { return localStorage.getItem('utm_active_mode'); } catch (e) { return null; }
         })();
 
@@ -1866,23 +2081,23 @@
         init();
     }
 
-    window.setDashboardMode = setDashboardMode; 
-    window.clearMapHistory = function() { 
-        trailCoordinates = []; 
-        if (movementTrail) movementTrail.setLatLngs([]); 
-        
+    window.setDashboardMode = setDashboardMode;
+    window.clearMapHistory = function () {
+        trailCoordinates = [];
+        if (movementTrail) movementTrail.setLatLngs([]);
+
         // Clear all main mode markers
         for (let id in mainModeMarkers) {
             if (mainModeMarkers[id]) map.removeLayer(mainModeMarkers[id]);
         }
         mainModeMarkers = {};
-        
+
         // Clear phone/drone marker
         if (droneMarker) {
             map.removeLayer(droneMarker);
             droneMarker = null;
         }
-        
+
         // Clear simulator markers
         if (typeof simulatorState !== 'undefined' && simulatorState.markers) {
             simulatorState.markers.forEach(m => {
@@ -1892,9 +2107,9 @@
             });
             simulatorState.markers = [];
         }
-        
+
         activeMarker = null;
         resetTelemetryUI();
-    }; 
+    };
 })();
 

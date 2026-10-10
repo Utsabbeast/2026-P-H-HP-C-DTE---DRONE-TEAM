@@ -38,6 +38,10 @@ urlpatterns = [
     path('nosql-admin/', views.NoSQLAdminView.as_view(), name='nosql-admin'),
     path('dev-error/', views.DevErrorView.as_view(), name='dev-error'),
     path('user-database/', views.UserDatabaseView.as_view(), name='user-database'),
+
+    # DigitalSky Airspace Map APIs (DGCA Drone Rules 2021)
+    path('api/digitalsky/zones/', views.DigitalSkyZonesApiView.as_view(), name='digitalsky-zones'),
+    path('api/digitalsky/check/', views.DigitalSkyZoneCheckApiView.as_view(), name='digitalsky-check'),
 ]
 
 

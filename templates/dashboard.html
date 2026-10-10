@@ -302,27 +302,38 @@
                 <style>
                     .map-stat-box {
                         height: 40px;
-                        max-width: 250px;
+                        max-width: 40px;
                         border-radius: 4px;
                         display: flex;
                         align-items: center;
                         cursor: pointer;
                         transition: max-width 0.4s cubic-bezier(0.25, 1, 0.5, 1);
                         overflow: hidden;
-                        box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+                        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
                         color: white;
                         pointer-events: auto;
                     }
                     .map-stat-box:hover {
                         max-width: 250px;
                     }
+                    .map-stat-box .map-stat-number {
+                        width: 36px;
+                        height: 36px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        flex-shrink: 0;
+                        font-weight: bold;
+                        font-size: 1.1rem;
+                    }
                     .map-stat-box .map-stat-text {
                         white-space: nowrap;
                         font-weight: 700;
                         font-size: 0.85rem;
-                        opacity: 1;
+                        opacity: 0;
                         transition: opacity 0.3s ease;
                         padding-right: 12px;
+                        padding-left: 2px;
                     }
                     .map-stat-box:hover .map-stat-text {
                         opacity: 1;
@@ -332,17 +343,55 @@
                 <div id="mapStatsContainer" class="map-stats-container" style="position: absolute; bottom: 20px; left: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; pointer-events: none;">
                     <!-- Registered Drones -->
                     <div class="map-stat-box" id="statRegisteredDronesBox" style="background: #002D74; border: 2px solid #001A4A;" title="Registered Drones">
-                        <div id="valRegisteredDrones" style="width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-weight: bold; font-size: 1.1rem;" data-original="{{ total_registered_drones|default:'0' }}">
+                        <div id="valRegisteredDrones" class="map-stat-number" data-original="{{ total_registered_drones|default:'0' }}">
                             {{ total_registered_drones|default:"0" }}
                         </div>
                         <div class="map-stat-text">REGISTERED DRONES</div>
                     </div>
                     <!-- Drones In Air -->
-                    <div class="map-stat-box" style="background: #0ea5e9; border: 2px solid #0284c7;" title="Drones In Air">
-                        <div id="valDronesInAir" style="width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-weight: bold; font-size: 1.1rem;" data-original="{{ total_flying_drones|default:'0' }}">
+                    <div class="map-stat-box" id="statDronesInAirBox" style="background: #0ea5e9; border: 2px solid #0284c7;" title="Drones In Air">
+                        <div id="valDronesInAir" class="map-stat-number" data-original="{{ total_flying_drones|default:'0' }}">
                             {{ total_flying_drones|default:"0" }}
                         </div>
                         <div class="map-stat-text">DRONES IN AIR</div>
+                    </div>
+                </div>
+
+                <!-- Digital Sky Airspace Zone Legend Overlay -->
+                <div id="digitalSkyLegend" class="digital-sky-legend" style="display: none;">
+                    <div class="legend-header">
+                        <div class="legend-title-badge">
+                            <span>🇮🇳</span>
+                            <strong>Digital Sky Airspace</strong>
+                        </div>
+                        <button type="button" class="legend-close-btn" id="btnCloseLegend" title="Hide Legend">&times;</button>
+                    </div>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="legend-color-box red"></span>
+                            <div class="legend-desc">
+                                <strong>Red Zone (Prohibited Airspace)</strong>
+                                <span>25 km International Land Border Corridor, Military Airbases & Cantts, 0-5 km Runways, Nuclear Plants & TFRs. Strictly prohibited.</span>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color-box yellow"></span>
+                            <div class="legend-desc">
+                                <strong>Yellow Zone (Controlled Airspace)</strong>
+                                <span>5-12 km Aerodrome controlled perimeter. ATC / AAI flight authorization required above 200 ft AGL.</span>
+                            </div>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color-box green"></span>
+                            <div class="legend-desc">
+                                <strong>Green Zone (Free Flight Envelope)</strong>
+                                <span>Pan-India airspace up to 400 ft (120m) AGL outside designated red/yellow zones. No prior clearance needed.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="legend-footer">
+                        <span>DGCA India • Drone Rules 2021</span>
+                        <span id="legendZoneCount" style="color: #38bdf8; font-weight: 700;">Active</span>
                     </div>
                 </div>
 
@@ -366,6 +415,11 @@
                     <div class="hud-item">
                         <span class="hud-label">ACC</span>
                         <span class="hud-value" id="hudAccuracy">--</span>
+                    </div>
+                    <div class="hud-divider"></div>
+                    <div class="hud-item" id="hudZoneContainer" title="Current DGCA DigitalSky Airspace Zone">
+                        <span class="hud-label">AIRSPACE</span>
+                        <span class="hud-value" id="hudZone" style="font-size: 0.8rem; font-weight: 700; color: #10b981;">🟢 GREEN</span>
                     </div>
                 </div>
 

@@ -696,3 +696,57 @@ class UserDatabaseView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['users'] = User.objects.all().order_by('-date_joined')
         return context
+
+
+class DigitalSkyZonesApiView(APIView):
+    """
+    Returns official India Airspace GeoJSON zones (Red, Yellow, Green)
+    as defined under DGCA Drone Rules 2021 & DigitalSky platform specifications.
+    """
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        from .digitalsky import build_digitalsky_geojson
+        zone_filter = request.GET.get('type', '').upper()
+        geojson_data = build_digitalsky_geojson()
+
+        if zone_filter in ['RED', 'YELLOW', 'GREEN']:
+            filtered_features = [
+                f for f in geojson_data['features']
+                if f['properties'].get('zone_type') == zone_filter
+            ]
+            geojson_data['features'] = filtered_features
+            geojson_data['metadata']['filtered_by'] = zone_filter
+            geojson_data['metadata']['filtered_count'] = len(filtered_features)
+
+        return Response(geojson_data)
+
+
+class DigitalSkyZoneCheckApiView(APIView):
+    """
+    Real-time coordinate zone assessment API.
+    Evaluates latitude, longitude, and optional altitude against DigitalSky airspace zones.
+    """
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        from .digitalsky import classify_coordinate_zone
+        try:
+            lat = float(request.GET.get('lat', 30.9010))
+            lon = float(request.GET.get('lon', 75.8573))
+            alt = float(request.GET.get('alt', 0.0))
+        except (ValueError, TypeError):
+            return Response(
+                {"status": "error", "message": "Invalid latitude or longitude parameters"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        assessment = classify_coordinate_zone(lat, lon, alt)
+        return Response({
+            "status": "success",
+            "coordinates": {"latitude": lat, "longitude": lon, "altitude_m": alt},
+            "assessment": assessment
+        })
+
