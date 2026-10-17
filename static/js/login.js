@@ -45,7 +45,7 @@ function showLogin(role) {
         loginTypeInput.value = 'atc';
         if (userInput) {
             userInput.placeholder = 'Username';
-            userInput.value = 'admin';
+            userInput.value = '';
         }
         if (subtitle) {
             subtitle.innerText = 'Authorized DGNCC Headquarters Access.';
