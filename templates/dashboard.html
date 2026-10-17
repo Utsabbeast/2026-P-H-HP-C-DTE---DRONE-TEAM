@@ -12,7 +12,7 @@
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UTM — Unified Telemetry Monitor</title>
+    <title>NCC Drone Identification & Tracking Network (NCC DITN)</title>
     <meta name="description" content="Professional real-time drone and phone GPS telemetry monitoring dashboard with interactive Leaflet mapping, heading orientation, and ESP32 hardware integration readiness.">
     
     <!-- Google Fonts for Modern Aviation Typography -->
@@ -26,7 +26,7 @@
     <!-- UTM Dashboard CSS -->
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=4.0">
 <script>
-    window.MAIN_MODE_TITLE = "{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% elif request.session.user_role == 'GUEST' %}Guest Dashboard{% else %}User Dashboard{% endif %} (Overview)";
+    window.MAIN_MODE_TITLE = "{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% elif request.session.user_role == 'GUEST' %}Guest Dashboard{% else %}Unit Dashboard{% endif %} (Overview)";
 </script>
 </head>
 <body data-simulation="{{ simulation_mode|yesno:'true,false' }}" 
@@ -43,10 +43,10 @@
             
             <!-- LEFT CORNER -->
             <div class="nav-left" style="display: flex; align-items: center; gap: 1rem; flex: 1;">
-                {% if request.session.user_role == 'GUEST' or request.user.username == 'guest' %}
-                <a href="{% url 'telemetry:logout' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; font-weight: 700; color: #002D74; border-color: #002D74; border-radius: 0;">&larr; Back</a>
+                {% if request.session.user_role == 'GUEST' %}
+                <a href="{% url 'telemetry:logout' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">&larr; Back</a>
                 {% elif request.session.user_role == 'PILOT' %}
-                <a href="{% url 'telemetry:under_construction' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">Profile</a>
+                <a href="{% url 'telemetry:profile' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">Unit Profile</a>
                 <a href="{% url 'telemetry:status' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">Status</a>
                 {% else %}
                 <a href="{% url 'telemetry:requests' %}" class="btn-underline" style="text-decoration: none; font-size: 0.9rem; color: #002D74; font-weight: 700;">Requests</a>
@@ -71,7 +71,7 @@
                         </svg>
                     </label>
                     <div id="modsDropdown" class="dropdown-content" style="display: none; position: absolute; top: 100%; left: 0; background-color: #fff; min-width: 180px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); z-index: 1000; border: 1px solid #002D74; margin-top: 5px;">
-                        <a href="#" onclick="selectMod('main', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: block; font-weight: 600; border-bottom: 1px solid #e2e8f0;">{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% elif request.session.user_role == 'GUEST' %}Guest Dashboard{% else %}User Dashboard{% endif %}</a>
+                        <a href="#" onclick="selectMod('main', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: block; font-weight: 600; border-bottom: 1px solid #e2e8f0;">{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% else %}Unit Dashboard{% endif %}</a>
                         <div class="dropdown-submenu" style="position: relative;">
                             <a href="#" onclick="toggleDropdown('testingDropdown', event)" style="color: #002D74; padding: 12px 16px; text-decoration: none; display: flex; justify-content: space-between; font-weight: 600; border-bottom: 1px solid #e2e8f0;">Testing Mode <span>▶</span></a>
                             <div id="testingDropdown" class="dropdown-content submenu-content" style="display: none; position: absolute; left: 100%; top: 0; background-color: #fff; min-width: 160px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border: 1px solid #002D74;">
@@ -95,11 +95,13 @@
                         </svg>
                     </div>
                     <div class="brand-text">
-                        <div class="brand-title" style="color: #002D74; font-weight: 800; font-size: 1.2rem; line-height: 1;">UTM</div>
-                        {% if request.session.user_role == 'PILOT' %}
-                        <div class="brand-subtitle" style="color: #002D74; font-size: 0.75rem;">{{ request.session.user_name|default:"Pilot" }}</div>
+                        <div class="brand-title" style="color: #002D74; font-weight: 800; font-size: 1.15rem; line-height: 1;">NCC DITN</div>
+                        {% if request.session.user_role == 'GUEST' %}
+                        <div class="brand-subtitle" style="color: #002D74; font-size: 0.72rem; white-space: nowrap;">Guest Dashboard (Observer)</div>
+                        {% elif request.session.user_role == 'PILOT' %}
+                        <div class="brand-subtitle" style="color: #002D74; font-size: 0.72rem; white-space: nowrap;">{{ request.session.user_name|default:"Pilot" }}</div>
                         {% else %}
-                        <div class="brand-subtitle" style="color: #002D74; font-size: 0.75rem;">Unified Telemetry Monitor</div>
+                        <div class="brand-subtitle" style="color: #002D74; font-size: 0.72rem; white-space: nowrap;">NCC Drone Identification &amp; Tracking Network</div>
                         {% endif %}
                     </div>
                 </div>
@@ -107,16 +109,13 @@
 
             <!-- RIGHT CORNER -->
             <div class="nav-right" style="display: flex; align-items: center; justify-content: flex-end; gap: 1rem; flex: 1;">
-                {% if request.session.user_role == 'GUEST' or request.user.username == 'guest' %}
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="color: #002D74; font-size: 0.8rem; font-weight: 600;">Drone</span>
-                    <a href="{% url 'telemetry:register' %}" style="color: #dc2626; text-decoration: none; font-weight: 700; font-size: 0.8rem;">Register</a>
-                </div>
+                {% if request.session.user_role == 'GUEST' %}
+                <a href="{% url 'telemetry:register' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">Drone Register</a>
                 {% else %}
                 <!-- Phone Status Indicator -->
                 <div class="connection-status disconnected" id="connectionStatusPill" style="border-radius: 0;">
                     <span class="status-indicator-dot dot-red" id="statusDot"></span>
-                    <span class="status-label" id="statusLabel">?? Phone Disconnected</span>
+                    <span class="status-label" id="statusLabel">Phone Disconnected</span>
                 </div>
                 
                 {% if request.session.user_role == 'PILOT' %}
@@ -139,6 +138,19 @@
 
     <!-- MAIN DASHBOARD CONTENT -->
     <main class="dashboard-layout">
+        
+        {% if request.session.user_role == 'PILOT' and not is_fully_registered %}
+        <div style="background: #fffbeb; border: 2px solid #f59e0b; color: #92400e; padding: 0.75rem 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.25rem;">⚠️</span>
+                <div>
+                    <strong style="color: #b45309;">Unit Verification Notice:</strong>
+                    <span>Your NCC Unit profile is awaiting Phase 2 completion or ATC Admin authorization.</span>
+                </div>
+            </div>
+            <a href="{% url 'telemetry:profile' %}" style="background: #002D74; color: white; padding: 0.4rem 0.9rem; text-decoration: none; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Complete Unit Profile &rarr;</a>
+        </div>
+        {% endif %}
         
         <!-- UNIVERSAL PHONE GPS CONNECTION BANNER (Visible in Phone Test Mode) -->
         {% if request.session.user_role == 'ATC' %}
@@ -206,32 +218,46 @@
             </div>
         </div>
 
-        <!-- ESP32 DRONE HARDWARE WEBSOCKET BRIDGE BANNER (Visible in Drone Mode) -->
+        <!-- ESP32 DRONE 4G LTE / MQTT TELEMETRY BRIDGE BANNER (Visible in Drone Mode) -->
         <div class="hotspot-info-card esp32-hardware-banner" id="esp32Banner" style="display: none; background: #f0fdf4; border-color: #bbf7d0;">
-            <div class="hotspot-info-left">
-                <div class="hotspot-icon" style="background: #dcfce7; color: #15803d;">
+            <div class="hotspot-info-left" style="align-items: flex-start;">
+                <div class="hotspot-icon" style="background: #dcfce7; color: #15803d; margin-top: 2px;">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L4 7v10l8 5 8-5V7l-8-5zm0 2.2L18.2 8 12 11.8 5.8 8 12 4.2z"/>
                     </svg>
                 </div>
                 <div>
-                    <div class="hotspot-text-title" id="esp32BannerTitle" style="color: #166534;">🛰️ ESP32 Hardware Bridge (Cube Orange+ &bull; Port 81)</div>
-                    <div class="hotspot-text-sub" id="esp32BannerSub" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                        <span>Direct WebSocket:</span> 
-                        <input type="text" id="esp32WsInput" value="ws://192.168.43.150:81" placeholder="ws://<esp32-ip>:81" style="font-family: var(--mono-font); font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; border: 1.5px solid #86efac; outline: none; width: 195px; color: #0f172a; background: #ffffff;">
-                        <button type="button" class="btn btn-sm" id="btnConnectEspWs" style="padding: 4px 12px; font-size: 0.8rem; border-radius: 6px; background: #16a34a; border: none; color: white; cursor: pointer; font-weight: 600;">⚡ Connect ESP32</button>
-                        <button type="button" class="btn btn-sm" id="btnDisconnectEspWs" style="display: none; padding: 4px 12px; font-size: 0.8rem; border-radius: 6px; background: #ffffff; border: 1.5px solid #fecaca; color: #b91c1c; cursor: pointer; font-weight: 600;">Disconnect</button>
+                    <div class="hotspot-text-title" id="esp32BannerTitle" style="color: #166534; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span>🛰️ ESP32 4G LTE Telemetry Bridge (A7670C / Cube Orange+ &bull; HiveMQ Cloud)</span>
+                        <span id="esp32BattBadge" style="display: none; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d; font-size: 0.75rem; font-weight: 700; border: 1px solid #86efac;">
+                            🔋 <span id="esp32BattText">--</span>
+                        </span>
+                        <span id="esp32AttitudeBadge" style="display: none; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; background: #eff6ff; color: #1d4ed8; font-size: 0.75rem; font-weight: 700; border: 1px solid #bfdbfe;">
+                            📐 <span id="esp32AttitudeText">--</span>
+                        </span>
                     </div>
-                    <div id="esp32HttpsTip" style="display: none; font-size: 0.76rem; color: #b45309; margin-top: 6px; background: #fef3c7; border: 1px solid #fde68a; padding: 4px 8px; border-radius: 6px;">
-                        💡 <strong>Render HTTPS Note:</strong> Browsers block direct unencrypted WebSockets (<code>ws://</code>) on HTTPS. For direct zero-latency streaming, open <a href="http://localhost:8000/dashboard/?mode=drone" target="_blank" style="color: #047857; text-decoration: underline; font-weight: 700;">http://localhost:8000/dashboard/</a> on your laptop, or enable Cloud Ingest in your ESP32 sketch.
+                    <div class="hotspot-text-sub" id="esp32BannerSub" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px;">
+                        <span>Broker: <strong>broker.hivemq.com</strong></span>
+                        <span>Topic:</span> 
+                        <input type="text" id="esp32MqttTopic" value="utm/drones/+/telemetry" placeholder="utm/drones/+/telemetry" style="font-family: var(--mono-font); font-size: 0.8rem; padding: 4px 8px; border-radius: 6px; border: 1.5px solid #86efac; outline: none; width: 250px; color: #0f172a; background: #ffffff;">
+                        <button type="button" class="btn btn-sm" id="btnConnectEspMqtt" style="padding: 4px 12px; font-size: 0.8rem; border-radius: 6px; background: #16a34a; border: none; color: white; cursor: pointer; font-weight: 600;">⚡ Connect 4G MQTT</button>
+                        <button type="button" class="btn btn-sm" id="btnDisconnectEspMqtt" style="display: none; padding: 4px 12px; font-size: 0.8rem; border-radius: 6px; background: #ffffff; border: 1.5px solid #fecaca; color: #b91c1c; cursor: pointer; font-weight: 600;">Disconnect</button>
+                        <a href="javascript:void(0)" id="toggleLegacyWs" onclick="document.getElementById('legacyWsConfig').style.display = document.getElementById('legacyWsConfig').style.display === 'none' ? 'flex' : 'none';" style="font-size: 0.75rem; color: #059669; text-decoration: underline; margin-left: 6px;">Legacy Wi-Fi WS</a>
+                    </div>
+                    <!-- Collapsible Legacy Local Wi-Fi WebSocket Section -->
+                    <div id="legacyWsConfig" style="display: none; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; padding: 6px 10px; background: #ffffff; border: 1px dashed #86efac; border-radius: 6px; font-size: 0.78rem;">
+                        <span>Wi-Fi WS:</span>
+                        <input type="text" id="esp32WsInput" value="ws://192.168.43.150:81" placeholder="ws://<esp32-ip>:81" style="font-family: var(--mono-font); font-size: 0.78rem; padding: 3px 6px; border-radius: 4px; border: 1px solid #cbd5e1; outline: none; width: 170px;">
+                        <button type="button" class="btn btn-sm" id="btnConnectEspWs" style="padding: 2px 8px; font-size: 0.78rem; border-radius: 4px; background: #0284c7; border: none; color: white; cursor: pointer; font-weight: 600;">Connect WS</button>
+                        <button type="button" class="btn btn-sm" id="btnDisconnectEspWs" style="display: none; padding: 2px 8px; font-size: 0.78rem; border-radius: 4px; background: #ffffff; border: 1px solid #fecaca; color: #b91c1c; cursor: pointer;">Disconnect WS</button>
                     </div>
                 </div>
             </div>
             
             <div class="connection-banner-actions">
-                <div id="esp32WsStatusBadge" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">
-                    <span class="status-indicator-dot dot-red" id="esp32WsDot"></span>
-                    <span id="esp32WsStatusText">ESP32 Offline</span>
+                <div id="esp32MqttStatusBadge" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">
+                    <span class="status-indicator-dot dot-red" id="esp32MqttDot"></span>
+                    <span id="esp32MqttStatusText">MQTT Offline</span>
                 </div>
             </div>
         </div>
@@ -246,16 +272,16 @@
         <section class="map-section" aria-label="Interactive Map" style="position: relative;">
             <div class="map-header">
                 <div class="map-title-area">
-                    <div class="map-title-row">
+                    <div class="map-title-row" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <h1 class="section-title" id="mapMainTitle">Live Tactical Map (Phone GPS)</h1>
                         <span class="route-badge" id="mapRouteHud" style="background: #ecfdf5; border-color: #a7f3d0; color: #047857;">Source: Android Phone</span>
-
                     </div>
-                    <span class="map-subtitle" id="mapCoordinatesHud">Coordinates: 30.901000°, 75.857300°</span>
+                    <span class="map-subtitle" id="mapCoordinatesHud">Coordinates: Awaiting Drone Connection</span>
                 </div>
 
                 <!-- Map Action Controls -->
                 <div class="map-controls-bar">
+
                     <!-- Center Phone Button -->
                     <button class="btn btn-primary btn-sm" id="btnCenterDrone" title="Center map on current position">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -421,16 +447,70 @@
                         <span class="hud-label">AIRSPACE</span>
                         <span class="hud-value" id="hudZone" style="font-size: 0.8rem; font-weight: 700; color: #10b981;">🟢 GREEN</span>
                     </div>
+                    <div class="hud-divider"></div>
+                    <div class="hud-item" title="Battery Status (Voltage & Level)">
+                        <span class="hud-label">BATT</span>
+                        <span class="hud-value" id="hudBattery" style="font-size: 0.8rem; font-weight: 700; color: #10b981;">--</span>
+                    </div>
+                    <div class="hud-divider"></div>
+                    <div class="hud-item" title="Attitude (Roll & Pitch)">
+                        <span class="hud-label">ATT</span>
+                        <span class="hud-value" id="hudAttitude" style="font-size: 0.8rem; font-weight: 700;">--</span>
+                    </div>
+                    <div class="hud-divider"></div>
+                    <div class="hud-item" title="Target Drone ID">
+                        <span class="hud-label">UAV</span>
+                        <span class="hud-value" id="hudDroneId" style="font-size: 0.75rem; font-family: monospace; font-weight: 700; color: #0284c7;">--</span>
+                    </div>
+                    <div class="hud-divider" id="hudFleetDivider" style="display: none;"></div>
+                    <div class="hud-item" id="hudFleetItem" title="Active Flying UAVs Count" style="display: none;">
+                        <span class="hud-label">FLEET</span>
+                        <span class="hud-value" id="hudFleetCount" style="font-size: 0.78rem; font-weight: 700; color: #ea580c;">2 UAVs</span>
+                    </div>
                 </div>
 
             </div>
         </section>
 
-        <!-- TELEMETRY CARDS ROW (7 REQUIRED CARDS FOR PHONE TEST MODE) -->
-        {% if request.session.user_role != 'GUEST' and request.user.username != 'guest' %}
+        <!-- TELEMETRY CARDS ROW (BATTERY FIRST, FLIGHT MODE SECOND, THEN GPS & PARAMETERS) -->
         <section class="telemetry-grid" aria-label="Live Telemetry Metrics">
             
-            <!-- 1. Latitude Card -->
+            <!-- 1. Battery Card (FIRST) -->
+            <div class="telemetry-card" id="cardBattery">
+                <div class="card-header">
+                    <span class="card-label">Battery</span>
+                    <div class="card-icon green">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="16" height="10" rx="2" ry="2"/>
+                            <line x1="22" y1="11" x2="22" y2="13"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value" id="valBattery">--</div>
+                    <div class="card-subtext" id="subBattery">4G MAVLink SYS_STATUS</div>
+                </div>
+            </div>
+
+            <!-- 2. Flight Mode Card (SECOND) -->
+            <div class="telemetry-card" id="cardFlightMode">
+                <div class="card-header">
+                    <span class="card-label">Flight Mode</span>
+                    <div class="card-icon blue">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                            <polyline points="2 17 12 22 22 17"/>
+                            <polyline points="2 12 12 17 22 12"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value font-bold" id="valFlightMode" style="color: #0284c7; font-size: 1.15rem; letter-spacing: 0.5px;">--</div>
+                    <div class="card-subtext" id="subFlightMode">Awaiting Drone Connection</div>
+                </div>
+            </div>
+
+            <!-- 3. Latitude Card -->
             <div class="telemetry-card" id="cardLatitude">
                 <div class="card-header">
                     <span class="card-label">Latitude</span>
@@ -448,7 +528,7 @@
                 </div>
             </div>
 
-            <!-- 2. Longitude Card -->
+            <!-- 4. Longitude Card -->
             <div class="telemetry-card" id="cardLongitude">
                 <div class="card-header">
                     <span class="card-label">Longitude</span>
@@ -466,7 +546,7 @@
                 </div>
             </div>
 
-            <!-- 3. Altitude Card -->
+            <!-- 5. Altitude Card -->
             <div class="telemetry-card" id="cardAltitude">
                 <div class="card-header">
                     <span class="card-label">Altitude</span>
@@ -482,7 +562,24 @@
                 </div>
             </div>
 
-            <!-- 4. Heading Card -->
+            <!-- 6. Speed Card (Calculated & Live) -->
+            <div class="telemetry-card" id="cardSpeed">
+                <div class="card-header">
+                    <span class="card-label">Speed</span>
+                    <div class="card-icon blue">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 15 15"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value" id="valSpeed">--</div>
+                    <div class="card-subtext" id="subSpeed">Movement speed (m/s)</div>
+                </div>
+            </div>
+
+            <!-- 7. Heading Card -->
             <div class="telemetry-card" id="cardHeading">
                 <div class="card-header">
                     <span class="card-label">Heading</span>
@@ -513,24 +610,25 @@
                 </div>
             </div>
 
-            <!-- 5. Speed Card (NEW) -->
-            <div class="telemetry-card" id="cardSpeed">
+            <!-- 8. Attitude Card (4G LTE ESP32 MAVLink #30) -->
+            <div class="telemetry-card" id="cardAttitude">
                 <div class="card-header">
-                    <span class="card-label">Speed</span>
-                    <div class="card-icon blue">
+                    <span class="card-label">Attitude</span>
+                    <div class="card-icon purple">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 15 15"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <line x1="12" y1="2" x2="12" y2="22"/>
                         </svg>
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="card-value" id="valSpeed">--</div>
-                    <div class="card-subtext" id="subSpeed">Movement speed (m/s)</div>
+                    <div class="card-value" id="valAttitude">--</div>
+                    <div class="card-subtext" id="subAttitude">Roll &amp; Pitch angles</div>
                 </div>
             </div>
 
-            <!-- 6. Accuracy Card (NEW) -->
+            <!-- 9. Accuracy Card -->
             <div class="telemetry-card" id="cardAccuracy">
                 <div class="card-header">
                     <span class="card-label">Accuracy</span>
@@ -548,7 +646,23 @@
                 </div>
             </div>
 
-            <!-- 7. Last Update Card -->
+            <!-- 10. Drone Identity Card (JSON: drone_id) -->
+            <div class="telemetry-card" id="cardDroneId">
+                <div class="card-header">
+                    <span class="card-label">Drone ID</span>
+                    <div class="card-icon blue">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="card-value font-mono text-sm" id="valDroneId" style="font-size: 0.95rem; word-break: break-all; color: #0284c7;">--</div>
+                    <div class="card-subtext" id="subDroneId">Hardware MAC Identity</div>
+                </div>
+            </div>
+
+            <!-- 11. Last Update Card -->
             <div class="telemetry-card" id="cardLastUpdate">
                 <div class="card-header">
                     <span class="card-label">Last Update</span>
@@ -565,7 +679,6 @@
                 </div>
             </div>
         </section>
-        {% endif %}
 
         <!-- SYSTEM & TELEMETRY STATUS OVERVIEW ROW -->
         <section class="status-section" aria-label="System and Telemetry Status">
@@ -760,11 +873,14 @@
         </div>
     </div>
 
+    <!-- MQTT Client for 4G LTE ESP32 Bridge -->
+    <script src="{% static 'js/paho-mqtt.min.js' %}"></script>
+
     <!-- Leaflet JS (Local Vendored bundle) -->
     <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
     
-    <!-- UTM Dashboard Core JavaScript (v4.0 - OpenStreetMap Only with zoom interpolation up to 22) -->
-    <script src="{% static 'js/dashboard.js' %}?v=4.0"></script>
+    <!-- UTM Dashboard Core JavaScript (v4.8 - Connected-Only Map Visibility, PHHP&C Drone Names) -->
+    <script src="{% static 'js/dashboard.js' %}?v=5.1"></script>
 
 <script>
     // State Tracking for Modes to allow Back/Forth navigation
@@ -843,10 +959,12 @@
         
         if (mode === 'main') {
             if (window.setDashboardMode) window.setDashboardMode('main');
-            if (mapTitle) mapTitle.innerText = "{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% elif request.session.user_role == 'GUEST' %}Guest Dashboard{% else %}User Dashboard{% endif %}";
+            if (mapTitle) mapTitle.innerText = "{% if request.session.user_role == 'ADMIN' or request.session.user_role == 'ATC' %}Main Mode{% elif request.session.user_role == 'GUEST' %}Guest Dashboard{% else %}Unit Dashboard{% endif %}";
             if (mapRoute) mapRoute.innerText = "Overview";
             if (centerBtnText) centerBtnText.innerText = "Center Map";
+            {% if request.session.user_role != 'GUEST' %}
             if (telemetryGrid) telemetryGrid.style.display = 'grid';
+            {% endif %}
         } else if (mode === 'simulator') {
             if (window.setDashboardMode) window.setDashboardMode('simulator');
             if (mapTitle) mapTitle.innerText = "Simulation Mode";
@@ -881,9 +999,8 @@
     document.addEventListener("DOMContentLoaded", function() {
         // Create a barrier history state so the user cannot use the back button to reach the login page
         if (!history.state || !history.state.barrier) {
-            history.replaceState({barrier: true}, '', location.pathname);
-            
             const initialMode = location.hash ? location.hash.replace('#', '') : 'main';
+            history.replaceState({barrier: true}, '', location.pathname + (location.hash || ''));
             history.pushState({mode: initialMode}, '', location.pathname + '#' + initialMode);
             selectMod(initialMode, null, true);
         } else {

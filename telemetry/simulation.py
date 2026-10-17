@@ -199,12 +199,21 @@ class SimulationEngine:
         now = timezone.now()
         self.total_generated_packets += 1
 
+        roll = round(random.uniform(-3.5, 3.5), 1)
+        pitch = round(random.uniform(-2.0, 2.0), 1)
+        batt_v = round(random.uniform(15.2, 16.4), 1)
+        batt_pct = max(15, min(100, int(92 - (self.total_generated_packets * 0.04))))
+
         return {
             'drone_id': self.drone_id,
             'latitude': current_lat,
             'longitude': current_lon,
             'altitude': current_alt,
             'heading': heading,
+            'roll': roll,
+            'pitch': pitch,
+            'batt_v': batt_v,
+            'batt_pct': batt_pct,
             'timestamp': now,
             'is_simulated': True,
             'route_name': self.route_name,
@@ -222,6 +231,10 @@ class SimulationEngine:
             longitude=telemetry_data['longitude'],
             altitude=telemetry_data['altitude'],
             heading=telemetry_data['heading'],
+            roll=telemetry_data['roll'],
+            pitch=telemetry_data['pitch'],
+            batt_v=telemetry_data['batt_v'],
+            batt_pct=telemetry_data['batt_pct'],
             timestamp=telemetry_data['timestamp'],
             is_simulated=True,
         )

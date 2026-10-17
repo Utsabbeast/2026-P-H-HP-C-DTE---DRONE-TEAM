@@ -34,6 +34,12 @@ class DroneTelemetrySerializer(serializers.ModelSerializer):
         max_value=360.0,
         help_text="Heading in degrees (0.0 to 360.0)"
     )
+    roll = serializers.FloatField(required=False, allow_null=True)
+    pitch = serializers.FloatField(required=False, allow_null=True)
+    batt_v = serializers.FloatField(required=False, allow_null=True)
+    batt_pct = serializers.IntegerField(required=False, allow_null=True)
+    speed = serializers.FloatField(required=False, allow_null=True)
+    flight_mode = serializers.CharField(required=False, default='LOITER', allow_null=True)
     timestamp = serializers.DateTimeField(
         required=False,
         default=timezone.now,
@@ -52,6 +58,12 @@ class DroneTelemetrySerializer(serializers.ModelSerializer):
             'longitude',
             'altitude',
             'heading',
+            'roll',
+            'pitch',
+            'batt_v',
+            'batt_pct',
+            'speed',
+            'flight_mode',
             'timestamp',
             'received_at',
             'seconds_since_received',
@@ -72,6 +84,10 @@ class DroneTelemetrySerializer(serializers.ModelSerializer):
             mutable_data['altitude'] = mutable_data['alt']
         if 'hdg' in mutable_data and 'heading' not in mutable_data:
             mutable_data['heading'] = mutable_data['hdg']
+        if 'spd' in mutable_data and 'speed' not in mutable_data:
+            mutable_data['speed'] = mutable_data['spd']
+        if 'mode' in mutable_data and 'flight_mode' not in mutable_data:
+            mutable_data['flight_mode'] = mutable_data['mode']
         if 'heading' in mutable_data:
             try:
                 hdg_val = float(mutable_data['heading'])
@@ -79,9 +95,17 @@ class DroneTelemetrySerializer(serializers.ModelSerializer):
                     mutable_data['heading'] = 0.0
             except (ValueError, TypeError):
                 mutable_data['heading'] = 0.0
-        if 'timestamp' not in mutable_data or not mutable_data['timestamp']:
+        ts = mutable_data.get('timestamp')
+        if not ts or isinstance(ts, (int, float)):
             from django.utils import timezone
             mutable_data['timestamp'] = timezone.now().isoformat()
+        else:
+            try:
+                from dateutil.parser import parse
+                parse(str(ts))
+            except Exception:
+                from django.utils import timezone
+                mutable_data['timestamp'] = timezone.now().isoformat()
         return super().to_internal_value(mutable_data)
 
     def validate_drone_id(self, value):

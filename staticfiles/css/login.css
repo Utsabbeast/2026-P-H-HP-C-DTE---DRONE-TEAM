@@ -91,10 +91,16 @@ body {
           --btn-bg-light: #206ab1;
         }
 
-        .btn-sky {
-          --btn-bg: #0ea5e9;
-          --btn-bg-dark: #0284c7;
-          --btn-bg-light: #38bdf8;
+        .btn-sky, .btn-lightblue {
+          --btn-bg: #00A4FF;
+          --btn-bg-dark: #0077c8;
+          --btn-bg-light: #40bfff;
+        }
+
+        .btn-gray {
+          --btn-bg: #475569;
+          --btn-bg-dark: #334155;
+          --btn-bg-light: #64748b;
         }
 
         .btn-96:hover:after {

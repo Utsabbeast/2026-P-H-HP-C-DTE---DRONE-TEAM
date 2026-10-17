@@ -11,10 +11,12 @@ urlpatterns = [
     path('quick-login/<str:role>/', auth_views.UTMQuickLoginView.as_view(), name='quick-login'),
     
     path('register/', auth_views.UTMRegisterView.as_view(), name='register'),
+    path('profile/', views.PilotProfileView.as_view(), name='profile'),
     # Dashboard views
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('mobile/', views.MobilePageView.as_view(), name='mobile'),
     path('requests/', views.RequestsView.as_view(), name='requests'),
+    path('requests/action/', views.RequestActionView.as_view(), name='request-action'),
     path('status/', views.StatusView.as_view(), name='status'),
     path('history/', views.HistoryView.as_view(), name='history'),
     path('terms/', views.TermsView.as_view(), name='terms'),

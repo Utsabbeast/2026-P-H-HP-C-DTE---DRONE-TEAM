@@ -66,6 +66,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'telemetry.middleware.VisitorIPLoggingMiddleware',
 ]
 
 
@@ -187,7 +188,7 @@ SIMULATION_MODE = os.environ.get('UTM_SIMULATION_MODE', 'False').lower() in ('tr
 
 # Telemetry timeout in seconds: if no telemetry is received within this duration,
 # the drone connection status is flagged as Disconnected.
-TELEMETRY_TIMEOUT_SECONDS = 5
+TELEMETRY_TIMEOUT_SECONDS = 15
 
 # Default identifier for the primary tracked drone
 DEFAULT_DRONE_ID = 'drone01'
@@ -195,3 +196,17 @@ DEFAULT_DRONE_ID = 'drone01'
 # Phone GPS Test Mode settings
 DEFAULT_PHONE_DEVICE_ID = 'phone_test_01'
 PHONE_TIMEOUT_SECONDS = 15
+
+# ==============================================================================
+# Email Configuration (Unit Credentials Delivery & System Notifications)
+# ==============================================================================
+EMAIL_BACKEND = os.environ.get(
+    'DJANGO_EMAIL_BACKEND',
+    'django.core.mail.backends.smtp.EmailBackend' if os.environ.get('EMAIL_HOST_USER') else 'django.core.mail.backends.console.EmailBackend'
+)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'NCC DITN Directorate <dgncc.drone.ops@gmail.com>')

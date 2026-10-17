@@ -28,6 +28,38 @@ class DroneTelemetry(models.Model):
     heading = models.FloatField(
         help_text="Flight heading in degrees (0.0 to 360.0; 0=North, 90=East, 180=South, 270=West)"
     )
+    roll = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Roll angle in degrees (-180.0 to 180.0)"
+    )
+    pitch = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Pitch angle in degrees (-90.0 to 90.0)"
+    )
+    batt_v = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Battery Voltage in Volts (e.g. 15.8V)"
+    )
+    batt_pct = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Battery Percentage (0 to 100%)"
+    )
+    speed = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Ground speed in meters per second (m/s)"
+    )
+    flight_mode = models.CharField(
+        max_length=50,
+        default='LOITER',
+        blank=True,
+        null=True,
+        help_text="Flight mode (e.g. LOITER, POSHOLD, AUTO, RTL, STABILIZE)"
+    )
     timestamp = models.DateTimeField(
         help_text="Timestamp reported by telemetry source (e.g., GPS clock via ESP32)"
     )
@@ -183,22 +215,63 @@ class FlightPermissionRequest(models.Model):
 
 
 class PilotProfile(models.Model):
+    PHASE1_STATUS_CHOICES = (
+        ('PENDING', 'Pending Phase 1 Approval'),
+        ('APPROVED', 'Phase 1 Approved'),
+        ('REJECTED', 'Phase 1 Rejected'),
+    )
+    PHASE2_STATUS_CHOICES = (
+        ('NOT_SUBMITTED', 'Not Submitted'),
+        ('PENDING', 'Pending Phase 2 Approval'),
+        ('APPROVED', 'Phase 2 Approved (Fully Verified)'),
+        ('REJECTED', 'Phase 2 Rejected'),
+    )
     STATUS_CHOICES = (
         ('PENDING', 'Pending Approval'),
         ('APPROVED', 'Approved'),
         ('REJECTED', 'Rejected'),
     )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pilot_profile')
-    license_number = models.CharField(max_length=100, blank=True, null=True)
+
+    # Two-Phase Workflow Tracking
+    phase1_status = models.CharField(max_length=20, choices=PHASE1_STATUS_CHOICES, default='PENDING')
+    phase1_reviewed_at = models.DateTimeField(blank=True, null=True)
+
+    phase2_status = models.CharField(max_length=20, choices=PHASE2_STATUS_CHOICES, default='NOT_SUBMITTED')
+    phase2_submitted_at = models.DateTimeField(blank=True, null=True)
+    phase2_reviewed_at = models.DateTimeField(blank=True, null=True)
+
+    # Overall / legacy status for backwards compatibility
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+
+    # Profile Details (Submitted in Phase 1 & Phase 2 for NCC Unit)
+    unit_name = models.CharField(max_length=200, blank=True, null=True, help_text="NCC Unit Name (e.g. 1 Punjab Bn NCC)")
+    group_name = models.CharField(max_length=200, blank=True, null=True, help_text="NCC Group HQ Name (e.g. Ludhiana Group)")
+    dte_name = models.CharField(max_length=200, blank=True, null=True, help_text="NCC Directorate Name (e.g. PHHP&C Directorate)")
+    full_name = models.CharField(max_length=150, blank=True, null=True, help_text="Unit Officer / Operator In-Charge")
+    phone_number = models.CharField(max_length=25, blank=True, null=True, help_text="Unit Contact Phone Number")
+    ncc_wing = models.CharField(max_length=50, blank=True, null=True, help_text="Army Wing / Naval Wing / Air Wing")
+    ncc_unit = models.CharField(max_length=150, blank=True, null=True, help_text="Group HQ / Directorate")
+    cadet_number = models.CharField(max_length=100, blank=True, null=True, help_text="Reference / Unit Reg. Number")
+    base_location = models.CharField(max_length=150, blank=True, null=True, help_text="Unit Station / Base Location")
+    license_number = models.CharField(max_length=100, blank=True, null=True, help_text="DGCA / Defense Remote Pilot License")
+    organization = models.CharField(max_length=150, blank=True, null=True, help_text="Group HQ / Station")
+    flying_experience_hours = models.FloatField(default=0.0, blank=True, null=True)
+    drone_model = models.CharField(max_length=150, blank=True, null=True)
+    drone_uin = models.CharField(max_length=100, blank=True, null=True)
+    admin_notes = models.TextField(blank=True, null=True)
+    initial_password = models.CharField(max_length=128, blank=True, null=True, help_text="Generated initial password sent via unit email")
+    credentials_sent_at = models.DateTimeField(blank=True, null=True, help_text="Timestamp when credentials email was dispatched")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Pilot Profile'
         verbose_name_plural = 'Pilot Profiles'
 
     def __str__(self):
-        return f"{self.user.username} - {self.get_status_display()}"
+        return f"{self.user.username} (Phase 1: {self.phase1_status}, Phase 2: {self.phase2_status})"
 
 class DroneRegistration(models.Model):
     STATUS_CHOICES = (
@@ -227,3 +300,23 @@ class DroneRegistration(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.uin}) - {self.owner.username}"
+
+
+class AccessLog(models.Model):
+    """
+    Stores visitor IP addresses and timestamps for every website access.
+    """
+    ip_address = models.CharField(max_length=64, db_index=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    path = models.CharField(max_length=255, default='/')
+    method = models.CharField(max_length=10, default='GET')
+    user_agent = models.TextField(blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='access_logs')
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = 'Website Access Log'
+        verbose_name_plural = 'Website Access Logs'
+
+    def __str__(self):
+        return f"[{self.timestamp:%Y-%m-%d %H:%M:%S}] {self.ip_address} ({self.path})"

@@ -13,7 +13,7 @@
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flight Requests — UTM</title>
+    <title>Flight Requests — NCC DITN</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -64,8 +64,8 @@
                         </svg>
                     </div>
                     <div class="brand-text">
-                        <div class="brand-title">UTM</div>
-                        <div class="brand-subtitle">Unified Telemetry Monitor</div>
+                        <div class="brand-title">NCC DITN</div>
+                        <div class="brand-subtitle" style="white-space: nowrap;">NCC Drone Identification &amp; Tracking Network</div>
                     </div>
                 </div>
             </div>
@@ -121,10 +121,20 @@
                         <td>
                             {% if req.status == 'PENDING' %}
                             <div class="action-buttons">
-                                <button class="btn-outline"
-                                    onclick="handleAction({{ req.id }}, 'approve')">Approve</button>
-                                <button class="btn-primary"
-                                    onclick="handleAction({{ req.id }}, 'reject')">Reject</button>
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="flight">
+                                    <input type="hidden" name="item_id" value="{{ req.id }}">
+                                    <input type="hidden" name="decision" value="approve">
+                                    <button type="submit" class="btn-approve">Approve</button>
+                                </form>
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="flight">
+                                    <input type="hidden" name="item_id" value="{{ req.id }}">
+                                    <input type="hidden" name="decision" value="reject">
+                                    <button type="submit" class="btn-reject">Reject</button>
+                                </form>
                             </div>
                             {% else %}
                             <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed</span>
@@ -142,10 +152,9 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-
-                <div class="requests-header" style="margin-top: 3rem;">
-            <h2 class="requests-title">Profile Acceptance</h2>
+        </div>        <!-- Phase 1: Unit Registration Profile Acceptance -->
+        <div class="requests-header" style="margin-top: 3rem;">
+            <h2 class="requests-title">Phase 1: Profile Acceptance (NCC Unit Registrations)</h2>
         </div>
 
         <div class="requests-table-container">
@@ -153,40 +162,82 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>User</th>
-                        <th>License Number</th>
-                        <th>Status</th>
-                        <th>Date</th>
+                        <th>NCC Unit Name</th>
+                        <th>Username</th>
+                        <th>Official Unit Email</th>
+                        <th>Registered Date</th>
+                        <th>Phase 1 Status</th>
                         {% if is_atc %}
-                        <th>Actions</th>
+                        <th>DGNCC Actions</th>
                         {% endif %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for profile in profile_requests %}
+                    {% for profile in phase1_requests %}
                     <tr>
                         <td style="font-family: var(--font-mono);">#{{ profile.id }}</td>
-                        <td style="font-weight: 600;">{{ profile.user.username }}</td>
-                        <td>{{ profile.license_number|default:"N/A" }}</td>
-                        <td><span class="status-badge status-{{ profile.status }}">{{ profile.get_status_display }}</span></td>
-                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ profile.created_at|date:"M d, H:i" }}</td>
+                        <td style="font-weight: 700; color: #002D74;">{{ profile.unit_name|default:profile.user.first_name|default:profile.user.username }}</td>
+                        <td>
+                            {% if profile.phase1_status == 'APPROVED' %}
+                            <span style="font-family: var(--font-mono); font-weight: 700; color: #002D74;">{{ profile.user.username }}</span>
+                            {% if profile.initial_password %}
+                            <div style="font-size: 0.72rem; color: #64748b;">Pass: <code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px;">{{ profile.initial_password }}</code></div>
+                            {% endif %}
+                            {% else %}
+                            <span style="color: #94a3b8; font-size: 0.8rem; font-style: italic;">Auto-generated on approval</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ profile.user.email }}</td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ profile.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            {% if profile.phase1_status == 'APPROVED' %}
+                            <span class="status-badge status-APPROVED">&#10003; Accepted</span>
+                            {% elif profile.phase1_status == 'REJECTED' %}
+                            <span class="status-badge status-REJECTED">&#10007; Rejected</span>
+                            {% else %}
+                            <span class="status-badge status-PENDING">&#9203; Pending Review</span>
+                            {% endif %}
+                        </td>
                         {% if is_atc %}
                         <td>
-                            {% if profile.status == 'PENDING' %}
+                            {% if profile.phase1_status == 'PENDING' %}
                             <div class="action-buttons">
-                                <button class="btn-outline" onclick="window.location.href='/telemetry/dev-error/'">Approve</button>
-                                <button class="btn-primary" onclick="window.location.href='/telemetry/dev-error/'">Reject</button>
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="phase1">
+                                    <input type="hidden" name="item_id" value="{{ profile.id }}">
+                                    <input type="hidden" name="decision" value="approve">
+                                    <button type="submit" class="btn-approve" title="Approve unit, generate random credentials and dispatch email">Accept &amp; Email Credentials</button>
+                                </form>
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="phase1">
+                                    <input type="hidden" name="item_id" value="{{ profile.id }}">
+                                    <input type="hidden" name="decision" value="reject">
+                                    <button type="submit" class="btn-reject">Reject</button>
+                                </form>
+                            </div>
+                            {% elif profile.phase1_status == 'APPROVED' %}
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="phase1">
+                                    <input type="hidden" name="item_id" value="{{ profile.id }}">
+                                    <input type="hidden" name="decision" value="resend">
+                                    <button type="submit" style="background: #0284c7; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer;" title="Resend credentials email to unit">Resend Email</button>
+                                </form>
+                                <span style="font-size: 0.72rem; color: #10b981; font-weight: 600;">Active</span>
                             </div>
                             {% else %}
-                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed</span>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Rejected</span>
                             {% endif %}
                         </td>
                         {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="{% if is_atc %}6{% else %}5{% endif %}" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                            No profile acceptance requests found.
+                        <td colspan="{% if is_atc %}7{% else %}6{% endif %}" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No Unit registration requests found.
                         </td>
                     </tr>
                     {% endfor %}
@@ -194,8 +245,9 @@
             </table>
         </div>
 
+        <!-- Phase 2: Completed Profile Acceptance -->
         <div class="requests-header" style="margin-top: 3rem;">
-            <h2 class="requests-title">Drone Registrations (UIN)</h2>
+            <h2 class="requests-title">Phase 2: Profile Completion Acceptance (Station &amp; Fleet Verification)</h2>
         </div>
 
         <div class="requests-table-container">
@@ -203,7 +255,90 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Owner</th>
+                        <th>NCC Unit</th>
+                        <th>Wing &amp; Base Station</th>
+                        <th>Officer In-Charge</th>
+                        <th>Phone</th>
+                        <th>Drone Fleet Asset &amp; UIN</th>
+                        <th>Submitted Date</th>
+                        <th>Phase 2 Status</th>
+                        {% if is_atc %}
+                        <th>ATC Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in phase2_requests %}
+                    <tr>
+                        <td style="font-family: var(--font-mono);">#{{ profile.id }}</td>
+                        <td style="font-weight: 700; color: #002D74;">{{ profile.unit_name }}</td>
+                        <td>
+                            <div><strong style="color: #002D74;">{{ profile.ncc_wing|default:"Air Wing" }}</strong></div>
+                            <div style="font-size: 0.8rem; color: #64748b;">{{ profile.base_location|default:profile.ncc_unit|default:"Station N/A" }}</div>
+                        </td>
+                        <td>{{ profile.full_name|default:"N/A" }}</td>
+                        <td style="font-family: var(--font-mono); font-size: 0.85rem;">{{ profile.phone_number|default:"N/A" }}</td>
+                        <td>
+                            <div><strong>{{ profile.drone_model|default:"No Drone" }}</strong></div>
+                            <div style="font-size: 0.75rem; font-family: var(--font-mono); color: #0284c7;">{{ profile.drone_uin|default:"UIN Pending" }}</div>
+                        </td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ profile.phase2_submitted_at|date:"M d, Y H:i"|default:profile.created_at|date:"M d, H:i" }}</td>
+                        <td>
+                            {% if profile.phase2_status == 'APPROVED' %}
+                            <span class="status-badge status-APPROVED">&#10003; Flight Ops Active</span>
+                            {% elif profile.phase2_status == 'REJECTED' %}
+                            <span class="status-badge status-REJECTED">&#10007; Rejected</span>
+                            {% else %}
+                            <span class="status-badge status-PENDING">&#9203; Pending Verification</span>
+                            {% endif %}
+                        </td>
+                        {% if is_atc %}
+                        <td>
+                            {% if profile.phase2_status == 'PENDING' %}
+                            <div class="action-buttons">
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="phase2">
+                                    <input type="hidden" name="item_id" value="{{ profile.id }}">
+                                    <input type="hidden" name="decision" value="approve">
+                                    <button type="submit" class="btn-approve" title="Authorize Flight Operations">Authorize Ops</button>
+                                </form>
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="phase2">
+                                    <input type="hidden" name="item_id" value="{{ profile.id }}">
+                                    <input type="hidden" name="decision" value="reject">
+                                    <button type="submit" class="btn-reject">Reject</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Processed</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if is_atc %}9{% else %}8{% endif %}" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No Unit profile completion requests submitted yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 3: Drone Registrations (UIN) -->
+        <div class="requests-header" style="margin-top: 3rem;">
+            <h2 class="requests-title">Drone Fleet Registrations (UIN)</h2>
+        </div>
+
+        <div class="requests-table-container">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Owner / Unit</th>
                         <th>Drone Name</th>
                         <th>UIN</th>
                         <th>Category</th>
@@ -219,35 +354,41 @@
                     {% for drone in drone_registrations %}
                     <tr>
                         <td style="font-family: var(--font-mono);">#{{ drone.id }}</td>
-                        <td style="font-weight: 600;">{{ drone.owner.username }}</td>
+                        <td style="font-weight: 600;">{{ drone.owner.first_name|default:drone.owner.username }}</td>
                         <td>{{ drone.name }}</td>
-                        <td style="font-family: var(--font-mono);">{{ drone.uin }}</td>
+                        <td style="font-family: var(--font-mono); font-weight: 700; color: #0284c7;">{{ drone.uin }}</td>
                         <td>{{ drone.get_category_display }}</td>
                         <td>{{ drone.max_altitude_m }}m</td>
-                        <td><span class="status-badge status-{{ drone.status }}">{{ drone.get_status_display }}</span>
-                        </td>
-                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ drone.created_at|date:"M d,
-                            H:i" }}</td>
-
+                        <td><span class="status-badge status-{{ drone.status }}">{{ drone.get_status_display }}</span></td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ drone.created_at|date:"M d, H:i" }}</td>
                         {% if is_atc %}
                         <td>
                             {% if drone.status == 'PENDING' %}
                             <div class="action-buttons">
-                                <button class="btn-outline"
-                                    onclick="handleDroneAction({{ drone.id }}, 'approve')">Approve</button>
-                                <button class="btn-primary"
-                                    onclick="handleDroneAction({{ drone.id }}, 'reject')">Reject</button>
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="drone">
+                                    <input type="hidden" name="item_id" value="{{ drone.id }}">
+                                    <input type="hidden" name="decision" value="approve">
+                                    <button type="submit" class="btn-approve">Approve</button>
+                                </form>
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="drone">
+                                    <input type="hidden" name="item_id" value="{{ drone.id }}">
+                                    <input type="hidden" name="decision" value="reject">
+                                    <button type="submit" class="btn-reject">Reject</button>
+                                </form>
                             </div>
                             {% else %}
-                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed</span>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Processed</span>
                             {% endif %}
                         </td>
                         {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="{% if is_atc %}9{% else %}8{% endif %}"
-                            style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <td colspan="{% if is_atc %}9{% else %}8{% endif %}" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                             No drone registrations found.
                         </td>
                     </tr>
@@ -257,7 +398,6 @@
         </div>
     </main>
 
-    <script src="{% static 'js/requests_inline.js' %}"></script>
 {% include 'messages.html' %}
 </body>
 

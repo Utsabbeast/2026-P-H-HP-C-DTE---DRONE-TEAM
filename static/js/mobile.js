@@ -182,7 +182,7 @@
         if (iconActive) iconActive.style.display = 'block';
 
         if (radarTitle) radarTitle.textContent = 'Broadcasting GPS Live';
-        if (radarSub) radarSub.textContent = 'Streaming coordinates directly to UTM Tactical Map';
+        if (radarSub) radarSub.textContent = 'Streaming coordinates directly to NCC DITN Tactical Map';
 
         if (btnStartTracking) {
             btnStartTracking.className = 'btn btn-action-stop';
@@ -259,7 +259,7 @@
         if (iconActive) iconActive.style.display = 'none';
 
         if (radarTitle) radarTitle.textContent = 'Tap to Start GPS Broadcast';
-        if (radarSub) radarSub.textContent = 'Stream high-precision smartphone GPS to the UTM live map';
+        if (radarSub) radarSub.textContent = 'Stream high-precision smartphone GPS to the NCC DITN live map';
 
         if (btnStartTracking) {
             btnStartTracking.className = 'btn btn-action-start';

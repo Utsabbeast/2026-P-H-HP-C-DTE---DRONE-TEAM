@@ -3,13 +3,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register — UTM</title>
+    <title>Register NCC Unit — NCC DITN</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
 <body>
-    <section class="bg-slate-50 min-h-screen flex box-border justify-center items-center relative overflow-hidden">
+    <section class="bg-slate-50 min-h-screen flex box-border justify-center items-center relative overflow-y-auto pt-14 pb-8 md:pt-16 md:pb-10">
         
         <!-- Left Side Background -->
         <div class="absolute left-0 top-0 bottom-0 w-1/4 z-0 shadow-2xl border-r border-white/20" style="background-image: url('{% static 'img/left side.png' %}'); background-size: 105% 100%; background-position: left center; background-repeat: no-repeat;"></div>
@@ -37,34 +37,74 @@
             </div>
         </div>
 
-        <div class="bg-white border border-gray-200 flex w-full max-w-6xl mx-4 md:mx-12 p-6 items-center relative z-10 shadow-2xl rounded-sm">
-            <div class="md:w-1/2 px-8 min-h-[400px] flex flex-col justify-center">
+        <div class="bg-white border border-gray-200 flex flex-col md:flex-row w-full max-w-5xl mx-4 md:mx-8 p-5 md:p-6 items-center relative z-10 shadow-2xl rounded-sm my-auto">
+            <div class="w-full md:w-7/12 px-4 md:px-6 flex flex-col justify-center">
                 
-                <a href="{% url 'telemetry:login' %}" class="text-[#002D74] text-sm mb-4 font-semibold flex items-center hover:text-[#206ab1] transition-colors inline-block w-fit">
+                <a href="{% url 'telemetry:login' %}" class="text-[#002D74] text-xs md:text-sm mb-3 font-semibold flex items-center hover:text-[#206ab1] transition-colors inline-block w-fit">
                     <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     Back to Login
                 </a>
                 
                 <div class="flex items-center gap-3">
-                    <img src="{% static 'img/login img.png' %}" alt="Register Icon" class="w-8 h-8 object-contain">
-                    <h2 class="font-bold text-3xl text-[#002D74] tracking-tight">Profile Registration</h2>
+                    <img src="{% static 'img/login img.png' %}" alt="Register Icon" class="w-7 h-7 md:w-8 md:h-8 object-contain">
+                    <h2 class="font-bold text-2xl md:text-3xl text-[#002D74] tracking-tight">NCC Unit Registration</h2>
                 </div>
-                <p class="text-sm mt-2 mb-6 text-[#002D74]/80 font-medium">Create your pilot account to access the UTM network.</p>
+                <p class="text-xs md:text-sm mt-1 mb-2.5 text-[#002D74]/80 font-medium">Phase 1: Register NCC Unit for DGNCC Admin Profile Acceptance.</p>
 
+                <!-- Information Card -->
+                <div class="flex items-center gap-2 mb-3 p-2 bg-blue-50 border-l-4 border-[#002D74] text-[#002D74] text-xs font-semibold rounded-r">
+                    <svg class="w-4 h-4 text-[#002D74] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Remember Unit Account Credentials &amp; After approval it will be accessible</span>
+                </div>
                 
-<form method="POST" action="{% url 'telemetry:register' %}" class="flex flex-col gap-4 mt-8">
+                <form method="POST" action="{% url 'telemetry:register' %}" class="flex flex-col gap-3 mt-1">
                     {% csrf_token %}
-                    <input class="p-3 border border-gray-300 bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 shadow-sm transition-all font-medium" type="text" name="username" placeholder="Username" required>
-                    <input class="p-3 border border-gray-300 bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 shadow-sm transition-all font-medium" type="email" name="email" placeholder="Email Address" required>
-                    <input class="p-3 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 shadow-sm transition-all font-medium" type="password" name="password" placeholder="Password" required>
-                    <input class="p-3 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400 shadow-sm transition-all font-medium" type="password" name="confirm_password" placeholder="Confirm Password" required>
-                    <button class="btn-96 btn-navy shadow-lg border border-gray-300 mt-2" type="submit"><span>Create Account</span></button>
+                    <div>
+                        <label class="block text-xs font-bold text-[#002D74] uppercase tracking-wider mb-1">NCC Unit Name</label>
+                        <input class="p-2.5 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#002D74] shadow-sm transition-all font-medium text-sm" type="text" name="unit_name" placeholder="e.g. 1 Punjab Battalion NCC" value="{{ unit_name|default:'' }}" required>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-[#002D74] uppercase tracking-wider mb-1">Group HQ Name</label>
+                            <input class="p-2.5 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#002D74] shadow-sm transition-all font-medium text-sm" type="text" name="group_name" placeholder="e.g. Ludhiana Group HQ" value="{{ group_name|default:'' }}" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#002D74] uppercase tracking-wider mb-1">Directorate (DTE) Name</label>
+                            <input class="p-2.5 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#002D74] shadow-sm transition-all font-medium text-sm" type="text" name="dte_name" placeholder="e.g. PHHP&amp;C Directorate" value="{{ dte_name|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#002D74] uppercase tracking-wider mb-1">Official Unit Email</label>
+                        <input class="p-2.5 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#002D74] shadow-sm transition-all font-medium text-sm" type="email" name="email" placeholder="e.g. 1pbbn.ncc@nic.in" value="{{ email|default:'' }}" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#002D74] uppercase tracking-wider mb-1">Unit Login Username</label>
+                        <input class="p-2.5 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#002D74] shadow-sm transition-all font-medium text-sm" type="text" name="username" placeholder="e.g. 1punjabbn" value="{{ username|default:'' }}" required autocomplete="username">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-[#002D74] uppercase tracking-wider mb-1">Password</label>
+                            <input class="p-2.5 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#002D74] shadow-sm transition-all font-medium text-sm" type="password" name="password" placeholder="Create Password" required autocomplete="new-password">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#002D74] uppercase tracking-wider mb-1">Confirm Password</label>
+                            <input class="p-2.5 border border-gray-300 w-full bg-white text-[#002D74] placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#002D74] shadow-sm transition-all font-medium text-sm" type="password" name="confirm_password" placeholder="Repeat Password" required autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <button class="btn-96 btn-navy shadow-lg border border-gray-300 mt-3" type="submit">
+                        <span>Register Unit Account</span>
+                    </button>
                 </form>
 
             </div>
             
-            <div class="md:block hidden w-1/2 p-2">
-                <div class="relative w-full h-[500px] border border-gray-200 shadow-inner bg-slate-100 flex items-center justify-center rounded-sm overflow-hidden">
+            <div class="md:block hidden md:w-5/12 p-2 self-stretch flex items-center justify-center">
+                <div class="relative w-full h-full min-h-[380px] max-h-[500px] border border-gray-200 shadow-inner bg-slate-100 flex items-center justify-center rounded-sm overflow-hidden">
                     <img src="{% static 'img/Image 1.jpeg' %}" alt="Drone" class="absolute w-full h-full object-cover opacity-80 mix-blend-multiply">
                     <div class="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent z-10"></div>
                 </div>
@@ -99,11 +139,10 @@
           }
         });
       }
+
       function onPlayerReady(event) {
         event.target.playVideo();
       }
     </script>
-    
-    {% include 'messages.html' %}
 </body>
 </html>

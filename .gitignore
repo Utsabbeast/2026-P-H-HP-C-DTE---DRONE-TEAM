@@ -29,4 +29,5 @@ ssl/
 gh
 cloudflared*
 ngrok*
+scratch/
 

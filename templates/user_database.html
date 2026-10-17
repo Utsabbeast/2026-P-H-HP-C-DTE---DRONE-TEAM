@@ -3,50 +3,136 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>User Database</title>
+    <title>Database & Access Logs — NCC DITN</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
-<body class="bg-gray-50 font-['Outfit'] h-screen w-screen relative overflow-hidden flex items-center justify-center">
+<body class="bg-gray-100 font-['Outfit'] min-h-screen w-screen relative overflow-y-auto flex items-center justify-center p-4">
 
-    <div class="bg-white border border-gray-200 flex flex-col w-full max-w-5xl max-h-[85vh] mx-4 md:mx-12 p-8 items-center relative z-10 shadow-2xl rounded-sm overflow-hidden">
+    <div class="bg-white border border-gray-200 flex flex-col w-full max-w-6xl my-6 p-8 items-center relative z-10 shadow-2xl rounded-sm">
         
-        <h1 class="text-3xl font-bold text-[#002D74] mb-6 tracking-tight uppercase text-center w-full border-b pb-4">User Database (Admin Only)</h1>
+        <div class="flex items-center justify-between w-full border-b pb-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-[#002D74] tracking-tight uppercase">System Database & Access Logs</h1>
+                <p class="text-xs text-gray-500 font-medium mt-1">Admin Access Only &bull; IP & Timestamp Tracking Enabled</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="switchTab('users')" id="tab-btn-users" class="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-[#002D74] text-white border border-[#002D74] shadow-sm">
+                    Units ({{ users|length }})
+                </button>
+                <button onclick="switchTab('logs')" id="tab-btn-logs" class="px-4 py-2 text-xs font-bold uppercase tracking-wider bg-white text-[#002D74] border border-gray-300 hover:bg-gray-50 shadow-sm">
+                    Visitor IP Logs ({{ access_logs|length }})
+                </button>
+            </div>
+        </div>
         
-        <div class="w-full overflow-y-auto mb-8 border border-gray-200">
+        <!-- Tab 1: Units -->
+        <div id="tab-users" class="w-full overflow-x-auto mb-6 border border-gray-200">
             <table class="min-w-full divide-y divide-gray-200 text-left text-sm">
                 <thead class="bg-gray-50 text-[#002D74]">
                     <tr>
-                        <th class="px-6 py-3 font-bold uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 font-bold uppercase tracking-wider">Username</th>
-                        <th class="px-6 py-3 font-bold uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 font-bold uppercase tracking-wider">Date Joined</th>
-                        <th class="px-6 py-3 font-bold uppercase tracking-wider">Password (Hash)</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">ID</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">Username</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">NCC Unit Name</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">Email</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">Role</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">Date Registered</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200 text-gray-700">
                     {% for u in users %}
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap">{{ u.id }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-semibold">{{ u.username }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ u.email }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">{{ u.date_joined|date:"M d, Y" }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400 max-w-[200px] overflow-hidden text-ellipsis">{{ u.password }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-xs font-mono font-bold text-[#002D74]">{{ forloop.counter }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap font-semibold text-[#002D74]">{{ u.username }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-xs font-medium">{{ u.pilot_profile.unit_name|default:u.first_name|default:"--" }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-xs">{{ u.email|default:"--" }}</td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-800 rounded border border-blue-300">Unit</span>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500">{{ u.date_joined|date:"Y-m-d H:i:s" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">No users found.</td>
+                        <td colspan="6" class="px-6 py-6 text-center text-gray-500 text-sm">No registered units found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab 2: Visitor IP Access Logs -->
+        <div id="tab-logs" class="w-full overflow-x-auto mb-6 border border-gray-200 hidden">
+            <div class="p-3 bg-slate-50 border-b border-gray-200 flex justify-between items-center text-xs text-gray-600">
+                <span>Displaying latest website visitor connections recorded with IP address &amp; timestamp.</span>
+                <span class="font-mono text-gray-500">{{ access_logs|length }} entries</span>
+            </div>
+            <table class="min-w-full divide-y divide-gray-200 text-left text-sm">
+                <thead class="bg-gray-50 text-[#002D74]">
+                    <tr>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">Timestamp</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">Visitor IP Address</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">Method &amp; Path</th>
+                        <th class="px-4 py-3 font-bold uppercase tracking-wider text-xs">User / Visitor</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 text-gray-700">
+                    {% for log in access_logs %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-2.5 whitespace-nowrap text-xs font-mono text-gray-600">{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        <td class="px-4 py-2.5 whitespace-nowrap font-mono font-bold text-xs text-[#002D74]">
+                            <span class="px-2 py-1 bg-gray-100 rounded border border-gray-300">{{ log.ip_address }}</span>
+                        </td>
+                        <td class="px-4 py-2.5 whitespace-nowrap text-xs">
+                            <span class="font-semibold text-gray-500 text-[11px]">{{ log.method }}</span>
+                            <span class="font-mono text-gray-700 ml-1">{{ log.path }}</span>
+                        </td>
+                        <td class="px-4 py-2.5 whitespace-nowrap text-xs">
+                            {% if log.user %}
+                            <span class="font-semibold text-[#002D74]">{{ log.user.username }}</span>
+                            {% else %}
+                            <span class="text-gray-400 italic">Visitor</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-6 text-center text-gray-500 text-sm">No visitor IP access logs recorded yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         
-        <button onclick="window.history.back()" class="btn-96 btn-navy shadow-lg border border-gray-300 max-w-xs w-full mt-auto">
-            <span>Return</span>
-        </button>
+        <div class="flex justify-between w-full items-center mt-2">
+            <button onclick="window.history.back()" class="btn-96 btn-navy shadow-lg border border-gray-300 max-w-xs w-full">
+                <span>Return to Dashboard</span>
+            </button>
+            <a href="{% url 'telemetry:dashboard' %}" class="text-xs text-[#002D74] font-bold hover:underline">
+                Dashboard Overview &rarr;
+            </a>
+        </div>
     </div>
 
+    <script>
+        function switchTab(tab) {
+            const usersTab = document.getElementById('tab-users');
+            const logsTab = document.getElementById('tab-logs');
+            const btnUsers = document.getElementById('tab-btn-users');
+            const btnLogs = document.getElementById('tab-btn-logs');
+
+            if (tab === 'users') {
+                usersTab.classList.remove('hidden');
+                logsTab.classList.add('hidden');
+                btnUsers.className = 'px-4 py-2 text-xs font-bold uppercase tracking-wider bg-[#002D74] text-white border border-[#002D74] shadow-sm';
+                btnLogs.className = 'px-4 py-2 text-xs font-bold uppercase tracking-wider bg-white text-[#002D74] border border-gray-300 hover:bg-gray-50 shadow-sm';
+            } else {
+                usersTab.classList.add('hidden');
+                logsTab.classList.remove('hidden');
+                btnLogs.className = 'px-4 py-2 text-xs font-bold uppercase tracking-wider bg-[#002D74] text-white border border-[#002D74] shadow-sm';
+                btnUsers.className = 'px-4 py-2 text-xs font-bold uppercase tracking-wider bg-white text-[#002D74] border border-gray-300 hover:bg-gray-50 shadow-sm';
+            }
+        }
+    </script>
 </body>
 </html>

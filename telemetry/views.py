@@ -3,6 +3,7 @@ from django.conf import settings
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.generic import TemplateView
+from django.views import View
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -47,8 +48,8 @@ class DashboardView(TemplateView):
         context = super().get_context_data(**kwargs)
         host = self.request.get_host()
         
-        # Add requested counters
-        context['total_registered_drones'] = User.objects.count()
+        # Add requested counters (units count)
+        context['total_registered_drones'] = User.objects.filter(is_superuser=False, is_staff=False).count()
         recent_time = timezone.now() - timedelta(seconds=15)
         # Note: In a real system, you might count unique drone_ids from recent DroneTelemetry
         # We can pass 0 or a query if there are records
@@ -57,10 +58,10 @@ class DashboardView(TemplateView):
         
         # Check registration status for pilots
         if self.request.session.get('user_role') == 'PILOT' and self.request.user.is_authenticated:
-            from .models import PilotProfile, DroneRegistration
-            profile = PilotProfile.objects.filter(user=self.request.user, status='APPROVED').exists()
-            drone = DroneRegistration.objects.filter(owner=self.request.user, status='APPROVED').exists()
-            context['is_fully_registered'] = profile and drone
+            from .models import PilotProfile
+            p_prof = PilotProfile.objects.filter(user=self.request.user).first()
+            context['pilot_profile'] = p_prof
+            context['is_fully_registered'] = (p_prof is not None and p_prof.phase2_status == 'APPROVED')
         else:
             context['is_fully_registered'] = True
         context['simulation_mode'] = getattr(settings, 'SIMULATION_MODE', True)
@@ -89,8 +90,8 @@ class MobilePageView(TemplateView):
         context = super().get_context_data(**kwargs)
         host = self.request.get_host()
         
-        # Add requested counters
-        context['total_registered_drones'] = User.objects.count()
+        # Add requested counters (units count)
+        context['total_registered_drones'] = User.objects.filter(is_superuser=False, is_staff=False).count()
         recent_time = timezone.now() - timedelta(seconds=15)
         # Note: In a real system, you might count unique drone_ids from recent DroneTelemetry
         # We can pass 0 or a query if there are records
@@ -178,7 +179,7 @@ class TelemetryLatestView(APIView):
             # Live Hardware Mode: only show real packets from ESP32
             latest = latest_hw
 
-        if not latest:
+        if not latest or (not sim_mode and not hw_connected):
             return Response(
                 {
                     "status": "waiting",
@@ -187,8 +188,10 @@ class TelemetryLatestView(APIView):
                     "is_connected": False,
                     "hardware_connected": False,
                     "status_label": "Drone Not Connected (Hardware Offline)",
-                    "hardware_status": "Hardware Offline (ESP32 Not Connected)",
+                    "hardware_status": "Hardware Offline (ESP32 Disconnected)",
                     "drone_id": drone_id,
+                    "seconds_since_update": round(latest_hw.seconds_since_received, 1) if latest_hw else None,
+                    "gps_fix": False,
                     "telemetry": None,
                 },
                 status=status.HTTP_200_OK
@@ -251,6 +254,21 @@ class TelemetryHistoryView(APIView):
                 if first_hw:
                     drone_id = first_hw.drone_id
 
+            # If physical drone is offline / disconnected, do not return old trail
+            latest_check = qs.first()
+            timeout = getattr(settings, 'TELEMETRY_TIMEOUT_SECONDS', 15)
+            if not latest_check or latest_check.seconds_since_received > timeout:
+                return Response(
+                    {
+                        "status": "disconnected",
+                        "drone_id": drone_id,
+                        "simulation_mode": sim_mode,
+                        "count": 0,
+                        "results": []
+                    },
+                    status=status.HTTP_200_OK
+                )
+
         records = list(qs.order_by('-received_at')[:limit])
         records.reverse()  # Chronological order
 
@@ -275,7 +293,7 @@ class DroneStatusView(APIView):
     def get(self, request, *args, **kwargs):
         drone_id = request.query_params.get('drone_id', getattr(settings, 'DEFAULT_DRONE_ID', 'drone01'))
         sim_mode = getattr(settings, 'SIMULATION_MODE', True)
-        timeout = getattr(settings, 'TELEMETRY_TIMEOUT_SECONDS', 5)
+        timeout = getattr(settings, 'TELEMETRY_TIMEOUT_SECONDS', 15)
 
         latest_all = DroneTelemetry.objects.filter(drone_id=drone_id).first()
         latest_hw = DroneTelemetry.objects.filter(drone_id=drone_id, is_simulated=False).first()
@@ -291,7 +309,7 @@ class DroneStatusView(APIView):
         hw_connected = bool(latest_hw and latest_hw.seconds_since_received <= timeout)
         hw_seconds_ago = latest_hw.seconds_since_received if latest_hw else None
 
-        active_record = latest_all if sim_mode else latest_hw
+        active_record = latest_all if sim_mode else (latest_hw if hw_connected else None)
 
         if active_record:
             seconds_ago = active_record.seconds_since_received
@@ -558,13 +576,251 @@ class PhoneLocationHistoryView(APIView):
 
 
 
+class PilotProfileView(View):
+    """
+    Renders and handles Phase 2 Profile Completion for pilot operators.
+    Requires Phase 1 approval before submission is permitted.
+    """
+    template_name = 'profile.html'
+
+    def get(self, request):
+        if not request.user.is_authenticated or request.user.username == 'guest':
+            messages.warning(request, 'Please log in with a registered pilot account to access your profile.')
+            return redirect('telemetry:login')
+
+        from .models import PilotProfile, DroneRegistration
+        profile, _ = PilotProfile.objects.get_or_create(user=request.user)
+        drone = DroneRegistration.objects.filter(owner=request.user).first()
+
+        context = {
+            'profile': profile,
+            'drone': drone,
+            'user_role': request.session.get('user_role', 'PILOT'),
+            'user_role_label': request.session.get('user_role_label', 'Pilot Operator'),
+            'category_choices': DroneRegistration.CATEGORY_CHOICES,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        if not request.user.is_authenticated or request.user.username == 'guest':
+            return redirect('telemetry:login')
+
+        from .models import PilotProfile, DroneRegistration
+        profile, _ = PilotProfile.objects.get_or_create(user=request.user)
+
+        # Ensure Phase 1 registration has been approved by Admin
+        if profile.phase1_status != 'APPROVED':
+            messages.warning(request, 'Your account is still pending Phase 1 approval by ATC Admin. Please wait for acceptance before submitting profile completion.')
+            return redirect('telemetry:profile')
+
+        # Read submitted profile fields
+        profile.unit_name = request.POST.get('unit_name', '').strip() or profile.unit_name
+        profile.full_name = request.POST.get('full_name', '').strip() or profile.full_name
+        profile.base_location = request.POST.get('base_location', '').strip() or profile.base_location
+        profile.phone_number = request.POST.get('phone_number', '').strip()
+        profile.ncc_wing = request.POST.get('ncc_wing', '').strip()
+        profile.ncc_unit = request.POST.get('ncc_unit', '').strip()
+        profile.license_number = request.POST.get('license_number', '').strip()
+        profile.organization = request.POST.get('organization', '').strip()
+
+        try:
+            profile.flying_experience_hours = float(request.POST.get('flying_experience_hours', 0.0) or 0.0)
+        except (ValueError, TypeError):
+            profile.flying_experience_hours = 0.0
+
+        drone_model = request.POST.get('drone_model', '').strip()
+        drone_uin = request.POST.get('drone_uin', '').strip()
+        drone_category = request.POST.get('drone_category', 'MICRO')
+
+        try:
+            drone_max_alt = float(request.POST.get('drone_max_alt', 120.0) or 120.0)
+        except (ValueError, TypeError):
+            drone_max_alt = 120.0
+
+        profile.drone_model = drone_model
+        profile.drone_uin = drone_uin
+        profile.phase2_status = 'PENDING'
+        profile.phase2_submitted_at = timezone.now()
+        profile.status = 'PENDING'
+        profile.save()
+
+        # Update or register Drone if model details provided
+        if drone_model:
+            DroneRegistration.objects.update_or_create(
+                owner=request.user,
+                defaults={
+                    'name': drone_model,
+                    'uin': drone_uin or None,
+                    'category': drone_category,
+                    'max_altitude_m': drone_max_alt,
+                    'status': 'PENDING'
+                }
+            )
+
+        if profile.full_name:
+            request.session['user_name'] = profile.full_name
+
+        messages.success(
+            request,
+            'Profile Completion details submitted successfully! Your submission is now awaiting final Phase 2 verification by ATC Admin.'
+        )
+        return redirect('telemetry:profile')
+
+
 class RequestsView(TemplateView):
+    """
+    Renders ATC Admin operational requests management console:
+    1. Phase 1 Profile Acceptance (User Registrations)
+    2. Phase 2 Profile Completion Acceptance (Full Pilot & Drone Verifications)
+    3. Flight Permission Requests
+    4. Drone Registrations (UIN)
+    """
     template_name = 'requests.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['user_role'] = self.request.session.get('user_role', 'GUEST')
+        from .models import FlightPermissionRequest, DroneRegistration, PilotProfile
+        is_atc = bool(
+            self.request.session.get('user_role') == 'ATC'
+            or (self.request.user.is_authenticated and (self.request.user.is_superuser or self.request.user.is_staff))
+        )
+        context['is_atc'] = is_atc
+        context['user_role'] = 'ATC' if is_atc else self.request.session.get('user_role', 'GUEST')
+        context['user_role_label'] = 'ATC Controller (All Access)' if is_atc else self.request.session.get('user_role_label', 'Guest Observer (Read-Only)')
+
+        # Phase 1: User Registrations for Profile Acceptance
+        context['phase1_requests'] = PilotProfile.objects.all().order_by('-created_at')
+
+        # Phase 2: Completed Profiles submitted for final verification
+        context['phase2_requests'] = PilotProfile.objects.exclude(phase2_status='NOT_SUBMITTED').order_by('-phase2_submitted_at')
+
+        # For backwards compatibility in template
+        context['profile_requests'] = PilotProfile.objects.all().order_by('-created_at')
+
+        # Flight permission requests & Drone registrations
+        context['flight_requests'] = FlightPermissionRequest.objects.all().order_by('-created_at')
+        context['drone_registrations'] = DroneRegistration.objects.all().order_by('-created_at')
         return context
+
+
+class RequestActionView(View):
+    """
+    Handles ATC Admin Approve / Reject actions for:
+    - Phase 1: User Registration Acceptance
+    - Phase 2: Completed Profile Acceptance
+    - Flight Requests
+    - Drone Registrations
+    """
+    def post(self, request):
+        is_atc = bool(
+            request.session.get('user_role') == 'ATC'
+            or (request.user.is_authenticated and (request.user.is_superuser or request.user.is_staff))
+        )
+        if not is_atc:
+            messages.error(request, 'Unauthorized. ATC Admin credentials required.')
+            return redirect('telemetry:dev-error')
+
+        from .models import PilotProfile, FlightPermissionRequest, DroneRegistration
+        from django.http import JsonResponse
+
+        action_type = request.POST.get('action_type') # 'phase1', 'phase2', 'flight', 'drone'
+        item_id = request.POST.get('item_id')
+        decision = request.POST.get('decision', '').lower() # 'approve', 'reject', 'resend'
+
+        if not action_type or not item_id or decision not in ['approve', 'reject', 'resend']:
+            messages.error(request, 'Invalid action parameters.')
+            return redirect('telemetry:requests')
+
+        is_approve = (decision == 'approve')
+
+        try:
+            if action_type == 'phase1':
+                profile = PilotProfile.objects.get(id=item_id)
+                from .email_service import generate_random_username, generate_secure_password, send_unit_credentials_email
+
+                if decision == 'approve':
+                    # Generate random Username for unit if not already set or was pending placeholder
+                    if not profile.user.username or profile.user.username.startswith('pending_'):
+                        assigned_username = generate_random_username('unit_')
+                        profile.user.username = assigned_username
+                    else:
+                        assigned_username = profile.user.username
+
+                    profile.phase1_status = 'APPROVED'
+                    profile.phase1_reviewed_at = timezone.now()
+                    profile.save()
+
+                    unit_display = profile.unit_name or profile.user.username
+                    messages.success(
+                        request,
+                        f'Phase 1 Registration for NCC Unit "{unit_display}" APPROVED! '
+                        f'Unit Username: {profile.user.username}. Account is active.'
+                    )
+
+                elif decision == 'resend':
+                    if profile.phase1_status != 'APPROVED':
+                        messages.warning(request, 'Unit must be approved before resending credentials.')
+                    else:
+                        assigned_username = profile.user.username
+                        assigned_password = profile.initial_password or generate_secure_password(9)
+                        profile.user.set_password(assigned_password)
+                        profile.user.save()
+                        profile.initial_password = assigned_password
+                        profile.credentials_sent_at = timezone.now()
+                        profile.save()
+
+                        email_ok, email_msg = send_unit_credentials_email(
+                            profile, assigned_username, assigned_password, request=request
+                        )
+                        if email_ok:
+                            messages.success(request, f'Credentials re-dispatched to {profile.user.email} (Username: {assigned_username}).')
+                        else:
+                            messages.warning(request, f'Notice: {email_msg}')
+
+                else:
+                    profile.phase1_status = 'REJECTED'
+                    profile.phase1_reviewed_at = timezone.now()
+                    profile.save()
+                    messages.error(request, f'Phase 1 Registration for "{profile.unit_name or profile.user.username}" REJECTED.')
+
+            elif action_type == 'phase2':
+                profile = PilotProfile.objects.get(id=item_id)
+                profile.phase2_status = 'APPROVED' if is_approve else 'REJECTED'
+                profile.phase2_reviewed_at = timezone.now()
+                profile.status = 'APPROVED' if is_approve else 'REJECTED'
+                profile.save()
+
+                # Synchronize DroneRegistration approval status
+                DroneRegistration.objects.filter(owner=profile.user).update(
+                    status='APPROVED' if is_approve else 'REJECTED'
+                )
+
+                if is_approve:
+                    messages.success(request, f'Phase 2 Profile for pilot "{profile.user.username}" APPROVED! Full flight operations authorized.')
+                else:
+                    messages.error(request, f'Phase 2 Profile for pilot "{profile.user.username}" REJECTED.')
+
+            elif action_type == 'flight':
+                freq = FlightPermissionRequest.objects.get(id=item_id)
+                freq.status = 'APPROVED' if is_approve else 'REJECTED'
+                freq.save()
+                messages.success(request, f'Flight request #{freq.id} {freq.status.lower()}.')
+
+            elif action_type == 'drone':
+                dreg = DroneRegistration.objects.get(id=item_id)
+                dreg.status = 'APPROVED' if is_approve else 'REJECTED'
+                dreg.save()
+                messages.success(request, f'Drone registration #{dreg.id} ({dreg.name}) {dreg.status.lower()}.')
+
+        except Exception as e:
+            messages.error(request, f'Action failed: {str(e)}')
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
+            from django.http import JsonResponse
+            return JsonResponse({'status': 'ok', 'decision': decision})
+
+        return redirect('telemetry:requests')
+
 
 class StatusView(TemplateView):
     template_name = 'status.html'
@@ -574,48 +830,87 @@ class StatusView(TemplateView):
         from .models import FlightPermissionRequest, DroneRegistration, PilotProfile
         context['user_role'] = self.request.session.get('user_role', 'GUEST')
         context['user_role_label'] = self.request.session.get('user_role_label', 'Guest Observer (Read-Only)')
-        
+
         if self.request.user.is_authenticated:
-            context['pilot_profile'] = PilotProfile.objects.filter(user=self.request.user).first()
-            context['drone_registration'] = DroneRegistration.objects.filter(owner=self.request.user).first()
-            context['flight_requests'] = FlightPermissionRequest.objects.filter(pilot=self.request.user).order_by('-created_at')
+            user_role = self.request.session.get('user_role', 'GUEST')
+            if user_role in ['ATC', 'ADMIN']:
+                context['pilot_profile'] = PilotProfile.objects.filter(user=self.request.user).first() or PilotProfile.objects.first()
+                context['drone_registration'] = DroneRegistration.objects.filter(owner=self.request.user).first() or DroneRegistration.objects.first()
+                context['flight_requests'] = FlightPermissionRequest.objects.all().order_by('-created_at')
+                context['latest_request'] = FlightPermissionRequest.objects.all().order_by('-created_at').first()
+            else:
+                context['pilot_profile'] = PilotProfile.objects.filter(user=self.request.user).first()
+                context['drone_registration'] = DroneRegistration.objects.filter(owner=self.request.user).first()
+                context['flight_requests'] = FlightPermissionRequest.objects.filter(pilot=self.request.user).order_by('-created_at')
+                context['latest_request'] = FlightPermissionRequest.objects.filter(pilot=self.request.user).order_by('-created_at').first()
         return context
 
     def post(self, request, *args, **kwargs):
         from .models import FlightPermissionRequest, DroneRegistration, PilotProfile
         form_type = request.POST.get('form_type')
-        
+
         if form_type == 'profile':
-            PilotProfile.objects.create(
-                user=request.user,
-                license_number=request.POST.get('license', ''),
-                status='PENDING'
-            )
-            messages.success(request, 'Profile submitted for ATC approval.')
-            
+            profile, _ = PilotProfile.objects.get_or_create(user=request.user)
+            license_num = request.POST.get('license', '').strip()
+            if license_num:
+                profile.license_number = license_num
+            profile.phase2_status = 'PENDING'
+            profile.phase2_submitted_at = timezone.now()
+            profile.status = 'PENDING'
+            profile.save()
+            messages.success(request, 'Profile details submitted for Phase 2 ATC approval.')
+
         elif form_type == 'drone':
-            DroneRegistration.objects.create(
+            drone_name = request.POST.get('drone_name', '').strip()
+            uin = request.POST.get('uin', '').strip()
+            category = request.POST.get('category', 'MICRO')
+            try:
+                max_alt = float(request.POST.get('max_alt', 120.0) or 120.0)
+            except (ValueError, TypeError):
+                max_alt = 120.0
+
+            DroneRegistration.objects.update_or_create(
                 owner=request.user,
-                name=request.POST.get('drone_name', ''),
-                uin=request.POST.get('uin', ''),
-                category=request.POST.get('category', 'MICRO'),
-                max_altitude_m=float(request.POST.get('max_alt', 120.0)),
-                status='PENDING'
+                defaults={
+                    'name': drone_name or 'My Drone',
+                    'uin': uin or None,
+                    'category': category,
+                    'max_altitude_m': max_alt,
+                    'status': 'PENDING'
+                }
             )
             messages.success(request, 'Drone registration submitted for ATC approval.')
-            
+
         elif form_type == 'flight':
+            try:
+                lat = float(request.POST.get('locLat', 0.0) or 0.0)
+                lon = float(request.POST.get('locLon', 0.0) or 0.0)
+                max_alt = float(request.POST.get('maxAlt', 0.0) or 0.0)
+            except (ValueError, TypeError):
+                lat, lon, max_alt = 0.0, 0.0, 0.0
+
+            drone_id = request.POST.get('drone_identifier', '').strip()
+            if not drone_id:
+                profile = PilotProfile.objects.filter(user=request.user).first()
+                if profile and profile.drone_uin:
+                    drone_id = profile.drone_uin
+                elif profile and profile.drone_model:
+                    drone_id = profile.drone_model
+                else:
+                    drone_id = 'NCC-DRONE-01'
+
             FlightPermissionRequest.objects.create(
                 pilot=request.user if request.user.is_authenticated else None,
+                drone_identifier=drone_id,
                 location_name=request.POST.get('locName', 'Unknown'),
-                latitude=request.POST.get('locLat', 0.0) or 0.0,
-                longitude=request.POST.get('locLon', 0.0) or 0.0,
-                max_altitude=request.POST.get('maxAlt', 0.0) or 0.0,
-                purpose=request.POST.get('purpose', ''),
+                latitude=lat,
+                longitude=lon,
+                max_altitude=max_alt,
+                purpose=request.POST.get('purpose', 'Training Flight'),
                 status='PENDING'
             )
-            messages.error(request, 'We are not accepting any request right now because website is under development.')
-            
+            messages.success(request, 'Flight permission request submitted for ATC approval.')
+
         return redirect('telemetry:status')
 
 class TermsView(TemplateView):
@@ -662,23 +957,59 @@ class AllDronesLatestView(APIView):
     permission_classes = []
     
     def get(self, request, *args, **kwargs):
-        from .models import DroneTelemetry
+        from .models import DroneTelemetry, DroneRegistration, PilotProfile
         from .serializers import DroneTelemetrySerializer
+        from django.db.models import Q
         
-        # Get distinct drone IDs that are not simulated
-        drone_ids = DroneTelemetry.objects.filter(is_simulated=False).values_list('drone_id', flat=True).distinct()
-        
+        # Get distinct drone IDs (calling order_by() clears Meta.ordering to ensure true distinct on SQLite)
+        hw_ids = list(DroneTelemetry.objects.filter(is_simulated=False).order_by().values_list('drone_id', flat=True).distinct())
+        all_ids = list(DroneTelemetry.objects.order_by().values_list('drone_id', flat=True).distinct())
+        target_ids = list(dict.fromkeys(hw_ids if hw_ids else all_ids))
+        timeout = getattr(settings, 'TELEMETRY_TIMEOUT_SECONDS', 15)
+        include_offline = request.query_params.get('include_offline', 'false').lower() == 'true'
+
         latest_records = []
-        for d_id in drone_ids:
-            latest = DroneTelemetry.objects.filter(drone_id=d_id, is_simulated=False).order_by('-received_at').first()
+        for d_id in target_ids:
+            latest = DroneTelemetry.objects.filter(drone_id=d_id).order_by('-received_at').first()
             if latest:
-                latest_records.append(latest)
+                if include_offline or latest.seconds_since_received <= timeout:
+                    if abs(latest.latitude) < 0.0001 and abs(latest.longitude) < 0.0001:
+                        prev = DroneTelemetry.objects.filter(drone_id=d_id).exclude(latitude=0.0, longitude=0.0).order_by('-received_at').first()
+                        if prev:
+                            latest.latitude = prev.latitude
+                            latest.longitude = prev.longitude
+                        else:
+                            latest.latitude = 30.9010
+                            latest.longitude = 75.8573
+                    latest_records.append(latest)
                 
         serializer = DroneTelemetrySerializer(latest_records, many=True)
+        results = []
+        for item in serializer.data:
+            d_id = item.get('drone_id')
+            # Look up registration and unit profile in database
+            reg = DroneRegistration.objects.filter(Q(uin__iexact=d_id) | Q(name__iexact=d_id)).first()
+            pilot = PilotProfile.objects.filter(Q(drone_uin__iexact=d_id) | Q(drone_model__iexact=d_id)).first()
+            if not pilot and reg and hasattr(reg.owner, 'pilot_profile'):
+                pilot = reg.owner.pilot_profile
+
+            item['registered_name'] = reg.name if reg else d_id
+            item['uin'] = reg.uin if reg and reg.uin else (pilot.drone_uin if pilot and pilot.drone_uin else d_id)
+            item['category'] = reg.get_category_display() if reg else 'MICRO'
+            item['unit_name'] = pilot.unit_name if pilot and pilot.unit_name else 'NCC Unit'
+            item['group_name'] = pilot.group_name if pilot and pilot.group_name else 'Group HQ'
+            item['dte_name'] = pilot.dte_name if pilot and pilot.dte_name else 'PHHP&C DTE'
+            item['owner_name'] = pilot.full_name if pilot and pilot.full_name else (reg.owner.username if reg else 'Unit Pilot')
+            if item.get('speed') is None:
+                item['speed'] = 0.0
+            if not item.get('flight_mode'):
+                item['flight_mode'] = 'POSHOLD'
+            results.append(item)
+
         return Response({
             "status": "success",
-            "count": len(latest_records),
-            "results": serializer.data
+            "count": len(results),
+            "results": results
         })
 from django.views.generic import TemplateView
 from django.contrib.auth.models import User
@@ -694,7 +1025,13 @@ class UserDatabaseView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['users'] = User.objects.all().order_by('-date_joined')
+        from .models import AccessLog
+        from django.db.models import Q
+        # Only units are shown in System Database & Access Logs (admin entries excluded)
+        context['users'] = User.objects.filter(is_superuser=False, is_staff=False).order_by('date_joined')
+        context['access_logs'] = AccessLog.objects.exclude(
+            Q(user__is_superuser=True) | Q(user__is_staff=True) | Q(user__username__iexact='admin')
+        ).order_by('-timestamp')[:200]
         return context
 
 

@@ -1,0 +1,346 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Profile Completion — NCC DITN</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+    <!-- Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}?v=4.0">
+    <style>
+        body { background-color: #f8fafc; font-family: 'Outfit', sans-serif; color: #1e293b; }
+        .profile-container { max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem 3rem 1.5rem; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002D74; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .page-title { color: #002D74; font-size: 1.8rem; font-weight: 800; margin: 0; }
+        .page-subtitle { color: #64748b; font-size: 0.9rem; margin-top: 0.25rem; font-weight: 500; }
+        
+        /* Stepper */
+        .stepper { display: flex; justify-content: space-between; position: relative; margin-bottom: 2.5rem; background: #fff; padding: 1.25rem 2rem; border: 1px solid #e2e8f0; }
+        .step-item { display: flex; align-items: center; gap: 0.75rem; flex: 1; position: relative; }
+        .step-badge { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; }
+        .step-success { background: #dcfce7; color: #15803d; border: 2px solid #22c55e; }
+        .step-pending { background: #fef3c7; color: #d97706; border: 2px solid #f59e0b; }
+        .step-idle { background: #f1f5f9; color: #64748b; border: 2px solid #cbd5e1; }
+        .step-label { font-size: 0.85rem; font-weight: 700; color: #002D74; }
+        .step-sub { font-size: 0.75rem; color: #64748b; font-weight: 500; }
+
+        /* Card styles */
+        .card { background: #fff; border: 1px solid #e2e8f0; padding: 2rem; margin-bottom: 2rem; }
+        .card-title { color: #002D74; font-size: 1.25rem; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.75rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-label { font-size: 0.8rem; font-weight: 700; color: #002D74; text-transform: uppercase; letter-spacing: 0.04em; }
+        .form-input { padding: 0.75rem 1rem; border: 1px solid #cbd5e1; background: #fff; font-size: 0.9rem; font-family: inherit; color: #002D74; transition: border-color 0.2s; }
+        .form-input:focus { outline: none; border-color: #002D74; }
+        .form-input:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
+        
+        .btn-submit { background: #002D74; color: #fff; border: none; padding: 0.9rem 2rem; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; }
+        .btn-submit:hover { background: #001a4a; }
+
+        .status-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 1rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; }
+        .pill-pending { background: #fef3c7; color: #b45309; border: 1px solid #f59e0b; }
+        .pill-approved { background: #dcfce7; color: #15803d; border: 1px solid #22c55e; }
+        .pill-rejected { background: #fee2e2; color: #b91c1c; border: 1px solid #ef4444; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        .info-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; }
+        .info-label { font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .info-val { font-size: 1rem; color: #002D74; font-weight: 700; margin-top: 0.25rem; font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="navbar" role="banner">
+        <div class="nav-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="nav-left" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                <a href="{% url 'telemetry:dashboard' %}" class="btn-underline">&larr; Back to Tactical Map</a>
+            </div>
+
+            <div class="nav-center" style="display: flex; align-items: center; justify-content: center; flex: 2;">
+                <div class="nav-brand" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="brand-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" />
+                            <circle cx="12" cy="12" r="3" fill="#002D74" stroke="none" />
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <div class="brand-title">NCC DITN</div>
+                        <div class="brand-subtitle" style="white-space: nowrap;">NCC Drone Identification &amp; Tracking Network</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-status" style="display: flex; align-items: center; justify-content: flex-end; flex: 1; gap: 1rem;">
+                <span style="font-weight: 600; font-size: 0.875rem;">{{ user_role_label }}</span>
+                <img src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" alt="India" style="height: 18px; width: auto; border: 1px solid #e2e8f0;">
+            </div>
+        </div>
+    </header>
+
+    <main class="profile-container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">NCC Unit Profile &amp; Asset Completion</h1>
+                <div class="page-subtitle">Phase 2: Comprehensive Unit Station Verification &amp; Drone Fleet Registration</div>
+            </div>
+            <div>
+                {% if profile.phase2_status == 'APPROVED' %}
+                <span class="status-pill pill-approved">&#10003; Full Operations Authorized</span>
+                {% elif profile.phase2_status == 'PENDING' %}
+                <span class="status-pill pill-pending">&#9203; Phase 2 Under ATC Review</span>
+                {% elif profile.phase2_status == 'REJECTED' %}
+                <span class="status-pill pill-rejected">&#10007; Phase 2 Details Rejected</span>
+                {% else %}
+                <span class="status-pill pill-pending">Phase 2 Awaiting Submission</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 2-Phase Status Stepper -->
+        <div class="stepper">
+            <div class="step-item">
+                <div class="step-badge {% if profile.phase1_status == 'APPROVED' %}step-success{% elif profile.phase1_status == 'REJECTED' %}step-idle{% else %}step-pending{% endif %}">
+                    {% if profile.phase1_status == 'APPROVED' %}&#10003;{% else %}1{% endif %}
+                </div>
+                <div>
+                    <div class="step-label">Phase 1: Unit Registration</div>
+                    <div class="step-sub">
+                        {% if profile.phase1_status == 'APPROVED' %}
+                        Accepted by ATC Admin
+                        {% elif profile.phase1_status == 'REJECTED' %}
+                        Rejected by ATC
+                        {% else %}
+                        Pending ATC Acceptance
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-item" style="border-left: 2px dashed #cbd5e1; padding-left: 1.5rem;">
+                <div class="step-badge {% if profile.phase2_status == 'APPROVED' %}step-success{% elif profile.phase2_status == 'PENDING' %}step-pending{% else %}step-idle{% endif %}">
+                    {% if profile.phase2_status == 'APPROVED' %}&#10003;{% else %}2{% endif %}
+                </div>
+                <div>
+                    <div class="step-label">Phase 2: Station &amp; Fleet Details</div>
+                    <div class="step-sub">
+                        {% if profile.phase2_status == 'APPROVED' %}
+                        Verified &amp; Active
+                        {% elif profile.phase2_status == 'PENDING' %}
+                        Submitted &bull; Pending ATC Approval
+                        {% else %}
+                        Complete form below
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if profile.phase2_status == 'APPROVED' %}
+        <!-- Verified State Card -->
+        <div class="card" style="border-left: 6px solid #16a34a; background: #f0fdf4;">
+            <div class="card-title" style="color: #15803d; border-bottom-color: #bbf7d0;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>ATC Verified Operational Unit</span>
+            </div>
+            <p style="color: #166534; font-size: 0.95rem; margin-bottom: 1.5rem;">
+                This NCC Unit profile and assigned drone fleet assets are fully authorized by Air Traffic Control (ATC). You may submit flight permission requests and stream live telemetry.
+            </p>
+
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-label">NCC Unit</div>
+                    <div class="info-val">{{ profile.unit_name|default:request.user.first_name }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Wing</div>
+                    <div class="info-val">{{ profile.ncc_wing|default:"Air Wing" }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Group HQ / Directorate</div>
+                    <div class="info-val">{{ profile.ncc_unit|default:"N/A" }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Officer In-Charge</div>
+                    <div class="info-val">{{ profile.full_name|default:request.user.username }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Contact Phone</div>
+                    <div class="info-val">{{ profile.phone_number|default:"N/A" }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Base Location</div>
+                    <div class="info-val">{{ profile.base_location|default:"N/A" }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Active Drone</div>
+                    <div class="info-val">{{ profile.drone_model|default:"Not Configured" }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Drone UIN</div>
+                    <div class="info-val">{{ profile.drone_uin|default:"N/A" }}</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                <a href="{% url 'telemetry:dashboard' %}" class="btn-submit" style="text-decoration: none;">Go to Tactical Map &rarr;</a>
+                <a href="{% url 'telemetry:status' %}" class="btn-submit" style="text-decoration: none; background: #475569;">Flight Permission Status &rarr;</a>
+            </div>
+        </div>
+        {% elif profile.phase2_status == 'PENDING' %}
+        <!-- Pending State Card -->
+        <div class="card" style="border-left: 6px solid #f59e0b; background: #fffbeb;">
+            <div class="card-title" style="color: #b45309; border-bottom-color: #fde68a;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>Phase 2 Verification Under ATC Review</span>
+            </div>
+            <p style="color: #92400e; font-size: 0.95rem; margin-bottom: 1rem;">
+                Your completed Unit details and drone asset specifications have been submitted to Air Traffic Control (ATC). Please wait for the admin to review and authorize full operational access.
+            </p>
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-label">Unit Name</div>
+                    <div class="info-val">{{ profile.unit_name }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Wing</div>
+                    <div class="info-val">{{ profile.ncc_wing|default:"N/A" }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Base Location</div>
+                    <div class="info-val">{{ profile.base_location|default:"N/A" }}</div>
+                </div>
+                <div class="info-box">
+                    <div class="info-label">Drone Asset</div>
+                    <div class="info-val">{{ profile.drone_model|default:"N/A" }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Profile Completion Form (shown for not submitted, rejected, or for editing) -->
+        {% if profile.phase2_status != 'APPROVED' %}
+        <form method="POST" action="{% url 'telemetry:profile' %}">
+            {% csrf_token %}
+            
+            <!-- Section 1: NCC Unit Information -->
+            <div class="card">
+                <div class="card-title">
+                    <span>1. NCC Unit Station &amp; Wing Information</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">NCC Unit Name *</label>
+                        <input type="text" name="unit_name" class="form-input" placeholder="e.g. 1 Punjab Battalion NCC" value="{{ profile.unit_name|default:request.user.first_name }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">NCC Wing *</label>
+                        <select name="ncc_wing" class="form-input" required>
+                            <option value="Army Wing" {% if profile.ncc_wing == 'Army Wing' %}selected{% endif %}>Army Wing</option>
+                            <option value="Air Wing" {% if profile.ncc_wing == 'Air Wing' or not profile.ncc_wing %}selected{% endif %}>Air Wing (Drone Squadron)</option>
+                            <option value="Naval Wing" {% if profile.ncc_wing == 'Naval Wing' %}selected{% endif %}>Naval Wing</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Directorate &amp; Group HQ *</label>
+                        <input type="text" name="ncc_unit" class="form-input" placeholder="e.g. PHHP&amp;C Directorate / Ludhiana Group" value="{{ profile.ncc_unit|default:'' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Base Location / Station *</label>
+                        <input type="text" name="base_location" class="form-input" placeholder="e.g. Ludhiana Base / Halwara AF Station" value="{{ profile.base_location|default:'' }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Officer In-Charge Details -->
+            <div class="card">
+                <div class="card-title">
+                    <span>2. Unit Officer In-Charge &amp; Certifications</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Commanding Officer / In-Charge Name &amp; Rank *</label>
+                        <input type="text" name="full_name" class="form-input" placeholder="e.g. Col. A. Sharma / Lt. Cdr. R. Singh" value="{{ profile.full_name|default:'' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Unit Contact Phone *</label>
+                        <input type="text" name="phone_number" class="form-input" placeholder="e.g. +91 98765 43210" value="{{ profile.phone_number|default:'' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Remote Pilot / DGCA License No. (If applicable)</label>
+                        <input type="text" name="license_number" class="form-input" placeholder="e.g. DGCA-RPC-2026-0042" value="{{ profile.license_number|default:'' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Institution / College Station Attached</label>
+                        <input type="text" name="organization" class="form-input" placeholder="e.g. Government College Station" value="{{ profile.organization|default:'' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Drone Flying Experience (Hours)</label>
+                        <input type="number" step="0.5" name="flying_experience_hours" class="form-input" placeholder="e.g. 25.0" value="{{ profile.flying_experience_hours|default:'0.0' }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Drone Fleet Asset -->
+            <div class="card">
+                <div class="card-title">
+                    <span>3. Unit Drone Fleet Asset Specifications</span>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Drone Model / Make *</label>
+                        <input type="text" name="drone_model" class="form-input" placeholder="e.g. Quadcopter Scout 4G / ESP32 Bridge" value="{{ profile.drone_model|default:'' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Drone Unique Identification Number (UIN) *</label>
+                        <input type="text" name="drone_uin" class="form-input" placeholder="e.g. UIN-NCC-PB-001" value="{{ profile.drone_uin|default:'' }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Drone Weight Category</label>
+                        <select name="drone_category" class="form-input">
+                            {% for cat_val, cat_label in category_choices %}
+                            <option value="{{ cat_val }}" {% if drone and drone.category == cat_val %}selected{% endif %}>{{ cat_label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Max Authorized Altitude (Meters AGL)</label>
+                        <input type="number" step="1" name="drone_max_alt" class="form-input" placeholder="e.g. 120" value="{% if drone and drone.max_altitude_m %}{{ drone.max_altitude_m }}{% else %}120{% endif %}">
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <button type="submit" class="btn-submit">
+                        <span>Submit Unit Profile &amp; Assets for Phase 2 ATC Verification</span>
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+            </div>
+        </form>
+        {% endif %}
+
+    </main>
+
+    {% include 'messages.html' %}
+</body>
+</html>
