@@ -1389,14 +1389,18 @@
             if (elements.subAccuracy) elements.subAccuracy.textContent = `Hardware Connected (${droneId} Bench Test)`;
         }
 
-        // Auto-center map on first valid drone GPS fix
-        if (!hasReceivedFirstDroneFix && map) {
-            map.setView([effectiveLat, effectiveLon], 16, { animate: true });
-            hasReceivedFirstDroneFix = true;
-        }
-
         // 1. Manage Multi-Drone Marker & Trail
         const hasValidCoord = (!isBenchTest && lat !== 0 && lon !== 0 && !(Math.abs(lat - 30.9010) < 0.0001 && Math.abs(lon - 75.8573) < 0.0001));
+
+        // Auto-center map on first valid non-default drone GPS fix, or if currently at default fallback position
+        if (hasValidCoord && map) {
+            const center = map.getCenter();
+            const isAtDefault = center && (Math.abs(center.lat - 30.9010) < 0.01 && Math.abs(center.lng - 75.8573) < 0.01);
+            if (!hasReceivedFirstDroneFix || isAtDefault) {
+                map.setView([lat, lon], 17, { animate: true });
+                hasReceivedFirstDroneFix = true;
+            }
+        }
 
         if (!activeDrones[droneId]) {
             const marker = L.marker([effectiveLat, effectiveLon], {

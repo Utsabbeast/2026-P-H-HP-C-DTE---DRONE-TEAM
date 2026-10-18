@@ -554,6 +554,12 @@ body {
 /* ==============================================================================
    CUSTOM DRONE MARKER WITH HEADING ROTATION
    ============================================================================== */
+.drone-custom-marker-wrapper,
+.phone-custom-marker-wrapper {
+    background: transparent !important;
+    border: none !important;
+}
+
 .drone-marker-container {
     position: relative;
     width: 48px;
