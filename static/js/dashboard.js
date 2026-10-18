@@ -659,7 +659,37 @@
             if (elements.tabDroneMode) elements.tabDroneMode.className = 'mode-tab';
 
             if (phoneMarker && map.hasLayer(phoneMarker)) map.removeLayer(phoneMarker);
-            if (droneMarker && map.hasLayer(droneMarker)) map.removeLayer(droneMarker);
+
+            // In main mode, ensure all live active drone fleet markers and trails are displayed
+            Object.values(activeDrones).forEach(d => {
+                if (map && d.marker && !map.hasLayer(d.marker)) {
+                    d.marker.addTo(map);
+                }
+                if (map && d.trail && isTrailVisible && !map.hasLayer(d.trail)) {
+                    d.trail.addTo(map);
+                }
+            });
+
+            // Focus on active drone if available and auto-fit or center
+            const liveDroneList = Object.values(activeDrones);
+            if (liveDroneList.length > 0) {
+                const focusId = activeDroneFocusId || liveDroneList[0].id;
+                if (activeDrones[focusId]) {
+                    activeMarker = activeDrones[focusId].marker;
+                    if (activeDrones[focusId].lastTelemetry) {
+                        updateTelemetryCards(activeDrones[focusId].lastTelemetry);
+                    }
+                }
+                if (map) {
+                    if (liveDroneList.length === 1 && liveDroneList[0].marker) {
+                        map.setView(liveDroneList[0].marker.getLatLng(), 16, { animate: true });
+                    } else if (liveDroneList.length > 1) {
+                        const group = L.featureGroup(liveDroneList.map(d => d.marker));
+                        map.fitBounds(group.getBounds().pad(0.2), { animate: true });
+                    }
+                }
+                if (elements.hardwareOfflineAlert) elements.hardwareOfflineAlert.style.display = 'none';
+            }
 
             if (elements.testModeBadge) elements.testModeBadge.style.display = 'none';
             if (elements.hotspotBanner) elements.hotspotBanner.style.display = 'none';
@@ -1366,6 +1396,8 @@
         }
 
         // 1. Manage Multi-Drone Marker & Trail
+        const hasValidCoord = (!isBenchTest && lat !== 0 && lon !== 0 && !(Math.abs(lat - 30.9010) < 0.0001 && Math.abs(lon - 75.8573) < 0.0001));
+
         if (!activeDrones[droneId]) {
             const marker = L.marker([effectiveLat, effectiveLon], {
                 icon: createMultiDroneIcon(hdg, droneId, color, alt),
@@ -1373,7 +1405,8 @@
                 zIndexOffset: 1000
             });
 
-            const trail = L.polyline([[effectiveLat, effectiveLon]], {
+            const initialTrailCoords = hasValidCoord ? [[lat, lon]] : [];
+            const trail = L.polyline(initialTrailCoords, {
                 color: color,
                 weight: 3.5,
                 opacity: 0.85,
@@ -1382,7 +1415,7 @@
 
             if (map && (activeMode === 'drone' || activeMode === 'main')) {
                 marker.addTo(map);
-                if (isTrailVisible && !isBenchTest) trail.addTo(map);
+                if (isTrailVisible && initialTrailCoords.length > 0) trail.addTo(map);
             }
 
             marker.on('click', () => {
@@ -1393,7 +1426,7 @@
                 id: droneId,
                 marker: marker,
                 trail: trail,
-                trailCoords: [[effectiveLat, effectiveLon]],
+                trailCoords: initialTrailCoords,
                 color: color,
                 lastTelemetry: telemetryData,
                 lastSeen: Date.now()
@@ -1420,10 +1453,20 @@
                 drone.marker.setIcon(createMultiDroneIcon(hdg, droneId, color, alt));
             }
 
-            if (!isBenchTest) {
-                drone.trailCoords.push([effectiveLat, effectiveLon]);
+            if (hasValidCoord) {
+                // Remove any accidental (0,0) or bench test default coordinates
+                drone.trailCoords = drone.trailCoords.filter(pt => {
+                    const ptLat = Array.isArray(pt) ? pt[0] : pt.lat;
+                    const ptLon = Array.isArray(pt) ? pt[1] : pt.lng;
+                    return Math.abs(ptLat) > 0.01 && Math.abs(ptLon) > 0.01 && !(Math.abs(ptLat - 30.9010) < 0.0001 && Math.abs(ptLon - 75.8573) < 0.0001);
+                });
+
+                drone.trailCoords.push([lat, lon]);
                 if (drone.trailCoords.length > 300) drone.trailCoords.shift();
-                if (drone.trail && isTrailVisible) {
+                if (drone.trail) {
+                    if (isTrailVisible && !map.hasLayer(drone.trail) && map && (activeMode === 'drone' || activeMode === 'main')) {
+                        drone.trail.addTo(map);
+                    }
                     drone.trail.setLatLngs(drone.trailCoords);
                 }
             }
@@ -1662,11 +1705,12 @@
                 }
             });
 
-            if (activeIds.size > 0) {
-                totalPacketCount += activeIds.size;
+            if (activeIds.size > 0 || Object.keys(activeDrones).length > 0) {
+                if (activeIds.size > 0) totalPacketCount += activeIds.size;
                 if (elements.statusMetaPkt) elements.statusMetaPkt.textContent = `Packets Received: ${totalPacketCount}`;
                 lastReceivedTimestamp = Date.now();
                 if (elements.hardwareOfflineAlert) elements.hardwareOfflineAlert.style.display = 'none';
+                updateConnectionStatus(true, 0.1, 'Drone Connected (4G LTE Live)');
             } else {
                 if (Object.keys(activeDrones).length === 0) {
                     resetTelemetryUI();
@@ -1790,7 +1834,9 @@
                 if (response.ok) {
                     const data = await response.json();
                     if (data.results && data.results.length > 0) {
-                        trailCoordinates = data.results.map(r => [r.latitude, r.longitude]);
+                        trailCoordinates = data.results
+                            .filter(r => r.latitude && r.longitude && Math.abs(r.latitude) > 0.01 && Math.abs(r.longitude) > 0.01 && !(Math.abs(r.latitude - 30.9010) < 0.0001 && Math.abs(r.longitude - 75.8573) < 0.0001))
+                            .map(r => [r.latitude, r.longitude]);
                         if (movementTrail) movementTrail.setLatLngs(trailCoordinates);
                     }
                 }
@@ -1806,8 +1852,16 @@
     function centerCurrentMarker() {
         if (!map) return;
         if (activeMode === 'main') {
-            if (activeTelemetryTargetId && mainModeMarkers[activeTelemetryTargetId]) {
-                map.panTo(mainModeMarkers[activeTelemetryTargetId].getLatLng(), { animate: true, duration: 0.8 });
+            const droneList = Object.values(activeDrones);
+            if (droneList.length === 1 && droneList[0].marker) {
+                map.setView(droneList[0].marker.getLatLng(), 16, { animate: true });
+            } else if (droneList.length > 1) {
+                const group = L.featureGroup(droneList.map(d => d.marker));
+                map.fitBounds(group.getBounds().pad(0.2), { animate: true });
+            } else if (activeMarker) {
+                map.setView(activeMarker.getLatLng(), 16, { animate: true });
+            } else if (lastKnownLat && lastKnownLon) {
+                map.setView([lastKnownLat, lastKnownLon], 16, { animate: true });
             }
         } else if (activeMode === 'simulator') {
             if (activeTelemetryTargetId && typeof simulatorState !== 'undefined' && simulatorState.markers) {
@@ -1824,31 +1878,30 @@
     }
 
     function clearMovementTrail() {
-        if (activeMode === 'simulator') {
-            if (typeof simulatorState !== 'undefined' && simulatorState.markers) {
-                simulatorState.markers.forEach(d => {
-                    d.pathCoords = [[d.lat, d.lng]];
-                    d.path.setLatLngs(d.pathCoords);
-                });
+        // Clear global movement trail
+        trailCoordinates = [];
+        if (movementTrail) {
+            movementTrail.setLatLngs([]);
+        }
+
+        // Clear trails for all active drones in fleet completely
+        Object.values(activeDrones).forEach(d => {
+            d.trailCoords = [];
+            if (d.trail) {
+                d.trail.setLatLngs([]);
             }
-        } else {
-            trailCoordinates = [];
-            if (activeMarker) {
-                const curPos = activeMarker.getLatLng();
-                trailCoordinates.push([curPos.lat, curPos.lng]);
-            }
-            if (movementTrail) {
-                movementTrail.setLatLngs(trailCoordinates);
-            }
-            // Clear trails for all active drones in fleet
-            Object.values(activeDrones).forEach(d => {
-                if (d.trail) {
-                    d.trailCoords = d.marker ? [d.marker.getLatLng()] : [];
-                    d.trail.setLatLngs(d.trailCoords);
+        });
+
+        // Clear simulator paths if in simulator mode
+        if (typeof simulatorState !== 'undefined' && simulatorState.markers) {
+            simulatorState.markers.forEach(d => {
+                d.pathCoords = [];
+                if (d.path) {
+                    d.path.setLatLngs([]);
                 }
             });
         }
-        console.log('[UTM] Movement trail cleared visually.');
+        console.log('[UTM] Movement trail cleared completely.');
     }
 
     function toggleTrailVisibility() {
@@ -2922,12 +2975,6 @@
         }
         mainModeMarkers = {};
 
-        // Clear phone/drone marker
-        if (droneMarker) {
-            map.removeLayer(droneMarker);
-            droneMarker = null;
-        }
-
         // Clear simulator markers
         if (typeof simulatorState !== 'undefined' && simulatorState.markers) {
             simulatorState.markers.forEach(m => {
@@ -2938,8 +2985,11 @@
             simulatorState.markers = [];
         }
 
-        activeMarker = null;
-        resetTelemetryUI();
+        // Only reset telemetry UI and active marker if in simulator or phone mode
+        if (activeMode === 'simulator' || activeMode === 'phone') {
+            activeMarker = null;
+            resetTelemetryUI();
+        }
     };
 })();
 

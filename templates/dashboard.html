@@ -863,7 +863,7 @@
     <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
     
     <!-- UTM Dashboard Core JavaScript (v4.8 - Connected-Only Map Visibility, PHHP&C Drone Names) -->
-    <script src="{% static 'js/dashboard.js' %}?v=5.1"></script>
+    <script src="{% static 'js/dashboard.js' %}?v=5.3"></script>
 
 <script>
     // State Tracking for Modes to allow Back/Forth navigation
@@ -937,7 +937,7 @@
         if (statusSection) statusSection.style.display = 'none';
         if (testerPanel) testerPanel.style.display = 'none';
         
-        if (window.clearMapHistory) window.clearMapHistory();
+        if (mode === 'simulator' && window.clearMapHistory) window.clearMapHistory();
         if (window.stopSimulator) window.stopSimulator();
         
         if (mode === 'main') {
@@ -948,6 +948,7 @@
             {% if request.session.user_role != 'GUEST' %}
             if (telemetryGrid) telemetryGrid.style.display = 'grid';
             {% endif %}
+            if (statusSection) statusSection.style.display = 'block';
         } else if (mode === 'simulator') {
             if (window.setDashboardMode) window.setDashboardMode('simulator');
             if (mapTitle) mapTitle.innerText = "Simulation Mode";

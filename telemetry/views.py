@@ -246,10 +246,10 @@ class TelemetryHistoryView(APIView):
         if sim_mode:
             qs = qs.filter(is_simulated=True)
         else:
-            qs = qs.filter(is_simulated=False)
+            qs = qs.filter(is_simulated=False).exclude(latitude=0.0, longitude=0.0)
             if not qs.exists():
                 # Fallback to any hardware drone stream (e.g. DRONE-ALPHA)
-                qs = DroneTelemetry.objects.filter(is_simulated=False)
+                qs = DroneTelemetry.objects.filter(is_simulated=False).exclude(latitude=0.0, longitude=0.0)
                 first_hw = qs.first()
                 if first_hw:
                     drone_id = first_hw.drone_id
