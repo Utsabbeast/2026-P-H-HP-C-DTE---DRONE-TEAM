@@ -663,6 +663,7 @@
             </div>
         </section>
 
+        {% if request.session.user_role != 'GUEST' and request.session.user_role != 'PILOT' %}
         <!-- SYSTEM & TELEMETRY STATUS OVERVIEW ROW -->
         <section class="status-section" aria-label="System and Telemetry Status">
             
@@ -735,6 +736,7 @@
                 </div>
             </div>
         </section>
+        {% endif %}
 
         <!-- ESP32 HARDWARE INTEGRATION & INJECTOR MODAL / PANEL (HIDDEN BY DEFAULT) -->
         <section class="tester-panel" id="testerPanel" style="display: none;" aria-label="ESP32 API Test Panel">
@@ -948,14 +950,18 @@
             {% if request.session.user_role != 'GUEST' %}
             if (telemetryGrid) telemetryGrid.style.display = 'grid';
             {% endif %}
+            {% if request.session.user_role != 'GUEST' and request.session.user_role != 'PILOT' %}
             if (statusSection) statusSection.style.display = 'block';
+            {% endif %}
         } else if (mode === 'simulator') {
             if (window.setDashboardMode) window.setDashboardMode('simulator');
             if (mapTitle) mapTitle.innerText = "Simulation Mode";
             if (mapRoute) mapRoute.innerText = "Simulator";
             if (centerBtnText) centerBtnText.innerText = "Center Drone";
             if (telemetryGrid) telemetryGrid.style.display = 'grid';
+            {% if request.session.user_role != 'GUEST' and request.session.user_role != 'PILOT' %}
             if (statusSection) statusSection.style.display = 'block';
+            {% endif %}
             if (window.startSimulator) window.startSimulator();
         } else if (mode === 'test_phone') {
             if (window.setDashboardMode) window.setDashboardMode('phone');
@@ -964,14 +970,18 @@
             if (centerBtnText) centerBtnText.innerText = "Center Phone";
             if (hotspotBanner) hotspotBanner.style.display = 'flex';
             if (telemetryGrid) telemetryGrid.style.display = 'grid';
+            {% if request.session.user_role != 'GUEST' and request.session.user_role != 'PILOT' %}
             if (statusSection) statusSection.style.display = 'block';
+            {% endif %}
         } else if (mode === 'test_drone') {
             if (window.setDashboardMode) window.setDashboardMode('drone');
             if (mapTitle) mapTitle.innerText = "Live Tactical Map";
             if (mapRoute) mapRoute.innerText = "Source: Drone ESP32";
             if (esp32Banner) esp32Banner.style.display = 'flex';
             if (telemetryGrid) telemetryGrid.style.display = 'grid';
+            {% if request.session.user_role != 'GUEST' and request.session.user_role != 'PILOT' %}
             if (statusSection) statusSection.style.display = 'block';
+            {% endif %}
         }
 
         if (!isPopState) {

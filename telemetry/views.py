@@ -756,13 +756,16 @@ class RequestActionView(View):
                         assigned_username = profile.user.username
 
                     profile.phase1_status = 'APPROVED'
+                    profile.status = 'ACTIVE'
+                    profile.user.is_active = True
+                    profile.user.save()
                     profile.phase1_reviewed_at = timezone.now()
                     profile.save()
 
                     unit_display = profile.unit_name or profile.user.username
                     messages.success(
                         request,
-                        f'Phase 1 Registration for NCC Unit "{unit_display}" APPROVED! '
+                        f'Phase 1 Registration for NCC Unit "{unit_display}" ACCEPTED! '
                         f'Unit Username: {profile.user.username}. Account is active.'
                     )
 
@@ -788,9 +791,12 @@ class RequestActionView(View):
 
                 else:
                     profile.phase1_status = 'REJECTED'
+                    profile.status = 'SUSPENDED'
+                    profile.user.is_active = False
+                    profile.user.save()
                     profile.phase1_reviewed_at = timezone.now()
                     profile.save()
-                    messages.error(request, f'Phase 1 Registration for "{profile.unit_name or profile.user.username}" REJECTED.')
+                    messages.error(request, f'Phase 1 Registration for "{profile.unit_name or profile.user.username}" DENIED.')
 
             elif action_type == 'phase2':
                 profile = PilotProfile.objects.get(id=item_id)

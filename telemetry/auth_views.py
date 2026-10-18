@@ -264,14 +264,15 @@ class UTMRegisterView(View):
                 full_name=unit_name,
                 ncc_unit=f"{group_name} / {dte_name}",
                 initial_password=password,
-                phase1_status='APPROVED',
+                phase1_status='PENDING',
                 phase2_status='NOT_SUBMITTED',
-                status='ACTIVE'
+                status='PENDING'
             )
-            messages.success(
+            messages.info(
                 request,
-                f'Registration successful for NCC Unit "{unit_name}"! '
-                f'You can now log in directly using your Username ({username}) and Password.'
+                f'Registration submitted for NCC Unit "{unit_name}". '
+                f'Your request has been submitted for authorization by DGNCC Admin in the Requests tab. '
+                f'Once accepted, your account will be activated for login.'
             )
             return redirect('telemetry:login')
         except Exception as err:

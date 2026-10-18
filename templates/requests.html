@@ -178,7 +178,7 @@
                         <td style="font-family: var(--font-mono);">#{{ profile.id }}</td>
                         <td style="font-weight: 700; color: #002D74;">{{ profile.unit_name|default:profile.user.first_name|default:profile.user.username }}</td>
                         <td>
-                            {% if profile.phase1_status == 'APPROVED' %}
+                            {% if profile.user.username and not profile.user.username|slice:":8" == "pending_" %}
                             <span style="font-family: var(--font-mono); font-weight: 700; color: #002D74;">{{ profile.user.username }}</span>
                             {% if profile.initial_password %}
                             <div style="font-size: 0.72rem; color: #64748b;">Pass: <code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px;">{{ profile.initial_password }}</code></div>
@@ -193,7 +193,7 @@
                             {% if profile.phase1_status == 'APPROVED' %}
                             <span class="status-badge status-APPROVED">&#10003; Accepted</span>
                             {% elif profile.phase1_status == 'REJECTED' %}
-                            <span class="status-badge status-REJECTED">&#10007; Rejected</span>
+                            <span class="status-badge status-REJECTED">&#10007; Denied</span>
                             {% else %}
                             <span class="status-badge status-PENDING">&#9203; Pending Review</span>
                             {% endif %}
@@ -207,14 +207,14 @@
                                     <input type="hidden" name="action_type" value="phase1">
                                     <input type="hidden" name="item_id" value="{{ profile.id }}">
                                     <input type="hidden" name="decision" value="approve">
-                                    <button type="submit" class="btn-approve" title="Approve unit, generate random credentials and dispatch email">Accept &amp; Email Credentials</button>
+                                    <button type="submit" class="btn-approve" title="Accept unit registration request">Accept</button>
                                 </form>
                                 <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action_type" value="phase1">
                                     <input type="hidden" name="item_id" value="{{ profile.id }}">
                                     <input type="hidden" name="decision" value="reject">
-                                    <button type="submit" class="btn-reject">Reject</button>
+                                    <button type="submit" class="btn-reject" title="Deny unit registration request">Deny</button>
                                 </form>
                             </div>
                             {% elif profile.phase1_status == 'APPROVED' %}
@@ -229,7 +229,7 @@
                                 <span style="font-size: 0.72rem; color: #10b981; font-weight: 600;">Active</span>
                             </div>
                             {% else %}
-                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Rejected</span>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Denied</span>
                             {% endif %}
                         </td>
                         {% endif %}
