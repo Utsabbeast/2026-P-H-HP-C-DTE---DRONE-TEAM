@@ -19,6 +19,7 @@
     // Application Configuration from Body Data Attributes
     const bodyEl = document.body;
     const targetDroneId = bodyEl.getAttribute('data-drone-id') || 'drone01';
+    const targetPhoneDeviceId = bodyEl.getAttribute('data-phone-device-id') || 'phone_test_01';
     const droneTimeoutSeconds = 15.0; // Strictly show only packets from the last 15 seconds
     const phoneTimeoutSeconds = 15.0;
     const localIp = bodyEl.getAttribute('data-local-ip') || window.location.hostname;
@@ -1377,16 +1378,35 @@
 
         // Handle indoor bench test GPS fix (0, 0) gracefully
         const isBenchTest = (lat === 0 && lon === 0);
-        const effectiveLat = isBenchTest ? lastKnownLat : lat;
-        const effectiveLon = isBenchTest ? lastKnownLon : lon;
+        let effectiveLat = lat;
+        let effectiveLon = lon;
 
         if (isBenchTest) {
+            // If this drone or fleet already has a valid GPS fix, hold the last valid position!
+            if (activeDrones[droneId] && activeDrones[droneId].lastValidLat) {
+                effectiveLat = activeDrones[droneId].lastValidLat;
+                effectiveLon = activeDrones[droneId].lastValidLon;
+            } else if (lastKnownLat && lastKnownLon && !(Math.abs(lastKnownLat - 30.9010) < 0.0001 && Math.abs(lastKnownLon - 75.8573) < 0.0001)) {
+                effectiveLat = lastKnownLat;
+                effectiveLon = lastKnownLon;
+            } else {
+                effectiveLat = 30.976946;
+                effectiveLon = 76.524879;
+            }
+
             if (elements.mapCoordinatesHud) {
-                elements.mapCoordinatesHud.textContent = `Coordinates: Bench Test (${droneId}) - Indoors / Acquiring Sats`;
+                elements.mapCoordinatesHud.textContent = `Coordinates: ${effectiveLat.toFixed(6)}°, ${effectiveLon.toFixed(6)}° (Acquiring Sats)`;
             }
             if (elements.hudAccuracy) elements.hudAccuracy.textContent = 'Indoors (Fix Pending)';
             if (elements.valAccuracy) elements.valAccuracy.innerHTML = '<span style="color: #f59e0b; font-weight: 700;">Acquiring Sats</span>';
             if (elements.subAccuracy) elements.subAccuracy.textContent = `Hardware Connected (${droneId} Bench Test)`;
+        } else {
+            lastKnownLat = lat;
+            lastKnownLon = lon;
+            if (activeDrones[droneId]) {
+                activeDrones[droneId].lastValidLat = lat;
+                activeDrones[droneId].lastValidLon = lon;
+            }
         }
 
         // 1. Manage Multi-Drone Marker & Trail
