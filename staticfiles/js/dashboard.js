@@ -1537,13 +1537,13 @@
         const isFocused = (activeDroneFocusId === droneId || Object.keys(activeDrones).length === 1);
         if (isFocused) {
             activeMarker = activeDrones[droneId].marker;
-            lastKnownLat = lat;
-            lastKnownLon = lon;
+            lastKnownLat = effectiveLat;
+            lastKnownLon = effectiveLon;
             lastKnownHeading = hdg;
 
             // Update Map HUD
             if (elements.mapCoordinatesHud) {
-                elements.mapCoordinatesHud.textContent = `Coordinates: ${lat.toFixed(6)}°, ${lon.toFixed(6)}°`;
+                elements.mapCoordinatesHud.textContent = `Coordinates: ${effectiveLat.toFixed(6)}°, ${effectiveLon.toFixed(6)}°`;
             }
             if (elements.mapRouteHud) {
                 elements.mapRouteHud.textContent = `Target: ${droneId}`;
@@ -1558,10 +1558,16 @@
             const spdText = (rawSpeed !== null && !isNaN(rawSpeed)) ? `${rawSpeed.toFixed(1)} m/s` : 'Stationary';
             if (elements.hudSpeed) elements.hudSpeed.textContent = spdText;
             if (elements.hudAccuracy) elements.hudAccuracy.textContent = 'Hardware Fix';
-            evaluateAirspaceZone(lat, lon, alt);
+            evaluateAirspaceZone(effectiveLat, effectiveLon, alt);
 
-            // Update Telemetry Cards
-            updateTelemetryCards(telemetryData);
+            // Update Telemetry Cards with effective non-zero coordinates
+            updateTelemetryCards({
+                ...telemetryData,
+                latitude: effectiveLat,
+                longitude: effectiveLon,
+                lat: effectiveLat,
+                lon: effectiveLon
+            });
             if (elements.valLastUpdate) elements.valLastUpdate.textContent = timeStr;
 
             // Update banner badges
