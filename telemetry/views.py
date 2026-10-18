@@ -123,6 +123,9 @@ class TelemetryIngestView(APIView):
     Accepts HTTP POST with JSON payload containing drone GPS telemetry.
     Flags all packets received here as real hardware telemetry (is_simulated=False).
     """
+    authentication_classes = []
+    permission_classes = []
+
     def post(self, request, *args, **kwargs):
         serializer = DroneTelemetrySerializer(data=request.data)
         if serializer.is_valid():
@@ -153,6 +156,9 @@ class TelemetryLatestView(APIView):
     When in simulation mode, reports physical drone as Not Connected and generates
     procedurally randomized flight paths.
     """
+    authentication_classes = []
+    permission_classes = []
+
     def get(self, request, *args, **kwargs):
         drone_id = request.query_params.get('drone_id', getattr(settings, 'DEFAULT_DRONE_ID', 'drone01'))
         sim_mode = getattr(settings, 'SIMULATION_MODE', True)
@@ -236,6 +242,9 @@ class TelemetryHistoryView(APIView):
     Returns recent telemetry records to plot the drone's flight trail/breadcrumb path.
     Filters by the active mode (simulated vs hardware) to avoid mixing trails.
     """
+    authentication_classes = []
+    permission_classes = []
+
     def get(self, request, *args, **kwargs):
         drone_id = request.query_params.get('drone_id', getattr(settings, 'DEFAULT_DRONE_ID', 'drone01'))
         limit = min(int(request.query_params.get('limit', 100)), 500)
