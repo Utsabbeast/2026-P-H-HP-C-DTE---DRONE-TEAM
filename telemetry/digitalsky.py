@@ -278,6 +278,35 @@ def _get_corridor_coords(key: str, fallback: List[List[float]]) -> List[List[flo
         return _BORDER_CORRIDORS_DATA[key]
     return fallback
 
+def _get_northern_frontier_red_zone_coords() -> List[List[float]]:
+    if _INDIA_BOUNDARY_DATA and "mainland" in _INDIA_BOUNDARY_DATA:
+        mainland_pts = _INDIA_BOUNDARY_DATA["mainland"]
+        if len(mainland_pts) >= 1500:
+            outer = mainland_pts[1496:] + mainland_pts[:71]
+            cutline = [
+                [79.22, 33.24],
+                [79.00, 33.20],
+                [78.70, 33.60],
+                [78.30, 33.95],
+                [77.95, 34.20],
+                [77.60, 34.45],
+                [77.10, 34.45],
+                [76.15, 34.40],
+                [75.80, 34.45],
+                [75.05, 34.25],
+                [74.75, 34.25],
+                [74.40, 34.25],
+                [73.5946, 33.8916]
+            ]
+            return outer + cutline
+    return [
+        [73.60, 33.90], [73.40, 34.80], [73.10, 35.50], [73.00, 36.30], [73.50, 36.80],
+        [74.20, 37.05], [74.80, 37.12], [75.60, 36.95], [76.50, 36.50],
+        [77.20, 36.10], [77.80, 35.70], [78.50, 35.60], [79.20, 35.30],
+        [79.80, 34.80], [80.30, 34.20], [79.80, 33.70], [79.30, 33.00], [79.22, 33.24],
+        [78.70, 33.60], [77.60, 34.45], [76.15, 34.40], [74.75, 34.25], [73.60, 33.90]
+    ]
+
 INTERNATIONAL_BORDER_POLYGONS = [
     {
         "id": "DS-CORRIDOR-WEST-IB",
@@ -297,64 +326,18 @@ INTERNATIONAL_BORDER_POLYGONS = [
     },
     {
         "id": "DS-CORRIDOR-NORTH-LOC-LAC-OUTER",
-        "name": "Northern Frontier 25 km International Boundary Ribbon (J&K LOC - Ladakh LAC)",
+        "name": "Northern Frontier 25 km International Boundary Ribbon (J&K LOC - Gilgit - Ladakh LAC)",
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km statutory defense buffer ribbon along the Line of Control (LOC) and Line of Actual Control (LAC) covering Northern J&K, Gilgit, Hunza, Baltistan, Siachen, and Eastern Ladakh.",
-        "coordinates": [
-            [73.80, 34.20], [73.40, 34.80], [73.10, 35.50], [73.00, 36.30], [73.50, 36.80],
-            [74.20, 37.05], [74.80, 37.12], [75.60, 36.95], [76.50, 36.50],
-            [77.20, 36.10], [77.80, 35.70], [78.50, 35.60], [79.20, 35.30],
-            [79.80, 34.80], [80.30, 34.20], [79.80, 33.70], [79.30, 33.00], [78.90, 32.60],
-            [78.65, 32.75], [79.05, 33.15], [79.50, 33.70], [79.95, 34.25],
-            [79.50, 34.85], [78.95, 35.35], [78.30, 35.40], [77.65, 35.50],
-            [77.05, 35.85], [76.35, 36.25], [75.50, 36.70], [74.70, 36.85],
-            [74.15, 36.80], [73.70, 36.50], [73.25, 36.10], [73.35, 35.40],
-            [73.65, 34.75], [73.80, 34.20]
-        ]
-    },
-    {
-        "id": "DS-ZONE-NORTHERN-FRONTIER-KASHMIR-LADAKH",
-        "name": "Northern Kashmir & Ladakh Strategic Defense Red Zone",
-        "category": "High-Security Defense Frontier",
-        "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Solid high-altitude strategic defense frontier covering entire Northern Kashmir LOC, Gilgit, Hunza, Nagar, Skardu, Siachen, Nubra Valley, Galwan, Aksai Chin, and Pangong Tso up to international boundary. Civilian drone operations strictly prohibited.",
-        "coordinates": [
-            [73.80, 34.20],
-            [73.40, 34.80], [73.10, 35.50], [73.00, 36.30], [73.50, 36.80],
-            [74.20, 37.05], [74.80, 37.12], [75.60, 36.95], [76.50, 36.50],
-            [77.20, 36.10], [77.80, 35.70], [78.50, 35.60], [79.20, 35.30],
-            [79.80, 34.80], [80.30, 34.20], [79.80, 33.70], [79.30, 33.00], [78.90, 32.60],
-            [78.40, 32.80], [78.60, 33.40], [78.20, 33.70],
-            [77.65, 34.30], [77.10, 34.35],
-            [76.30, 34.40], [75.60, 34.35], [75.10, 34.30],
-            [74.70, 34.30], [74.25, 34.20],
-            [73.80, 34.20]
-        ]
-    },
-    {
-        "id": "DS-CORRIDOR-WEST-JK-LOC",
-        "name": "Western Jammu & Kashmir LOC 25 km Red Zone Ribbon (Poonch - Rajouri - Jammu)",
-        "category": "25 km International Border Corridor",
-        "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km statutory defense ribbon along the Line of Control (LOC) covering Poonch, Rajouri, Akhnoor, Samba and Jammu IB.",
-        "coordinates": [
-            [73.95, 34.15], [73.90, 33.80], [74.10, 33.40], [74.25, 33.00],
-            [74.60, 32.75], [75.05, 32.50], [75.45, 32.40],
-            [75.25, 32.65], [74.85, 32.90], [74.55, 33.25], [74.40, 33.60],
-            [74.20, 33.95], [74.15, 34.15],
-            [73.95, 34.15]
-        ]
-    },
-    {
-        "id": "DS-POLY-SE-LADAKH-DEFENSE",
-        "name": "South-Eastern Ladakh Strategic Defense Red Zone (Hanle / Chumar / Nyoma)",
-        "category": "Strategic Defense Red Zone",
-        "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "High-altitude eastern Ladakh military defense zone covering Nyoma airbase, Hanle observatory security envelope, and Chumar LAC frontier.",
-        "coordinates": [
-            [78.40, 32.60], [79.05, 32.50], [79.20, 33.15], [78.45, 33.25], [78.40, 32.60]
-        ]
+        "desc": "Continuous 25 km statutory defense buffer ribbon along the Line of Control (LOC) and Line of Actual Control (LAC) covering Kathua, Jammu, Poonch, Uri, Kupwara, Gilgit, Hunza, Baltistan, Siachen, Aksai Chin, and Eastern Ladakh.",
+        "coordinates": _get_corridor_coords("north_jk_ladakh", [
+            [75.32, 32.30], [74.70, 32.66], [73.82, 33.01], [73.45, 34.57],
+            [74.13, 35.12], [73.13, 35.72], [72.52, 36.08], [73.85, 36.72],
+            [74.56, 36.97], [75.42, 36.96], [76.39, 36.31], [77.47, 35.65],
+            [78.18, 35.67], [79.27, 35.93], [80.28, 35.20], [79.79, 34.63],
+            [78.99, 34.04], [79.22, 33.24], [79.28, 32.56], [79.20, 32.34],
+            [75.05, 32.30], [75.32, 32.30]
+        ])
     },
     {
         "id": "DS-CORRIDOR-CHINA-LAC-HIMALAYAS",
@@ -371,29 +354,35 @@ INTERNATIONAL_BORDER_POLYGONS = [
     },
     {
         "id": "DS-CORRIDOR-NEPAL-BORDER",
-        "name": "Indo-Nepal International Border 25 km Red Zone Ribbon (Uttarakhand - UP - Bihar - Bengal - Sikkim)",
+        "name": "Indo-Nepal International Border 25 km Red Zone Ribbon (Uttarakhand - UP - Bihar - Bengal)",
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the entire Indo-Nepal international land border across Uttarakhand, Uttar Pradesh, Bihar, North Bengal and West Sikkim.",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the entire Indo-Nepal international land border across Uttarakhand, Uttar Pradesh, Bihar, and North Bengal.",
         "coordinates": _get_corridor_coords("nepal", [
             [80.50, 30.25], [80.12, 29.05], [80.20, 28.70], [80.65, 28.35],
             [81.60, 27.80], [82.25, 27.70], [82.80, 27.50], [83.45, 27.45],
             [83.95, 27.40], [84.85, 26.98], [85.50, 26.75], [86.15, 26.60],
             [87.00, 26.50], [87.30, 26.40], [88.05, 26.35], [88.15, 26.70],
-            [88.02, 27.20], [88.15, 27.70],
-            [88.35, 27.65], [88.25, 27.05], [88.30, 26.60], [88.00, 26.15],
-            [87.35, 26.20], [87.00, 26.30], [86.15, 26.40], [85.50, 26.55],
-            [84.85, 26.75], [84.00, 27.18], [83.50, 27.22], [82.85, 27.28],
-            [82.25, 27.48], [81.60, 27.58], [80.65, 28.12], [80.15, 28.48],
-            [79.90, 28.90], [80.25, 30.10], [80.50, 30.25]
+            [88.04, 27.04]
+        ])
+    },
+    {
+        "id": "DS-CORRIDOR-SIKKIM-BORDER",
+        "name": "Sikkim International Border 25 km Red Zone Ribbon (Nepal - Tibet - Bhutan Perimeters)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km statutory defense buffer ribbon wrapping around the international borders of Sikkim with Nepal, Tibet/China and Bhutan, preserving central Sikkim and Pakyong civil airspace.",
+        "coordinates": _get_corridor_coords("sikkim", [
+            [88.04, 27.04], [88.20, 27.75], [88.75, 28.10], [88.90, 27.50], [88.87, 27.11],
+            [88.65, 27.25], [88.40, 27.50], [88.25, 27.20], [88.04, 27.04]
         ])
     },
     {
         "id": "DS-CORRIDOR-BHUTAN-BORDER",
-        "name": "Indo-Bhutan International Border 25 km Red Zone Ribbon (Sikkim - Bengal - Assam - Arunachal)",
+        "name": "Indo-Bhutan International Border 25 km Red Zone Ribbon (Bengal - Assam - Arunachal)",
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the India-Bhutan international border across East Sikkim, North Bengal (Jaigaon), Western/Central Assam, and West Kameng.",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the India-Bhutan international border across East Sikkim, North Bengal (Jaigaon), Western/Central Assam (Alipurduar, Kokrajhar, Chirang, Baksa, Udalguri), and West Kameng.",
         "coordinates": _get_corridor_coords("bhutan", [
             [88.90, 27.15], [89.40, 26.85], [89.70, 26.75], [90.25, 26.85],
             [90.55, 26.88], [91.50, 26.82], [92.10, 26.90], [91.80, 27.35],
@@ -581,6 +570,78 @@ STRATEGIC_DEFENSE_POLYGONS = [
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Jaguar fighter base, INS Sardar Patel, and Indian Coast Guard western air command security envelope.",
         "coordinates": [[69.45, 21.60], [69.45, 22.50], [70.15, 22.50], [70.15, 21.60], [69.45, 21.60]]
+    },
+    {
+        "id": "DS-ZONE-NORTHERN-FRONTIER-KASHMIR-LADAKH",
+        "name": "Northern Kashmir & Ladakh Strategic Defense Red Zone",
+        "category": "High-Security Defense Frontier",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Solid high-altitude strategic defense frontier covering entire Northern Kashmir LOC, Gilgit, Hunza, Nagar, Skardu, Siachen, Nubra Valley, Galwan, Aksai Chin, and Pangong Tso up to sovereign boundary, leaving civil airspace pockets around Leh and Srinagar.",
+        "coordinates": _get_northern_frontier_red_zone_coords()
+    },
+    {
+        "id": "DS-POLY-SE-LADAKH-DEFENSE",
+        "name": "South-Eastern Ladakh Strategic Defense Red Zone (Hanle / Chumar / Nyoma)",
+        "category": "Strategic Defense Red Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "High-altitude eastern Ladakh military defense zone covering Nyoma airbase, Hanle observatory security envelope, and Chumar LAC frontier.",
+        "coordinates": [[78.40, 32.60], [79.05, 32.50], [79.20, 33.15], [78.45, 33.25], [78.40, 32.60]]
+    },
+    {
+        "id": "DS-POLY-KISHANGANJ-PURNEA",
+        "name": "Kishanganj - Purnia Strategic Defense Red Zone (Bihar - Bengal Border)",
+        "category": "Border Strategic Defense Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Siliguri neck strategic southern flank defense corridor and military logistical transit security envelope spanning Kishanganj and Purnia districts.",
+        "coordinates": [[87.70, 26.35], [88.25, 26.40], [88.20, 26.05], [87.80, 25.95], [87.70, 26.35]]
+    },
+    {
+        "id": "DS-POLY-ASSAM-BONGAIGAON-SRIJANG",
+        "name": "Lower Assam Bongaigaon - Srijang Strategic Defense Enclave",
+        "category": "Military Strategic Area",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Brahmaputra northern corridor defense armament installation and army transit staging complex across Bongaigaon, Srijang and Chirang.",
+        "coordinates": [[89.95, 26.45], [90.80, 26.40], [90.75, 26.15], [89.90, 26.25], [89.95, 26.45]]
+    },
+    {
+        "id": "DS-POLY-ASSAM-RUPSI-DEFENSE",
+        "name": "Rupsi - Dhubri Defense Enclave & Airfield Security Zone",
+        "category": "Military Armament & Air Defense Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Rupsi air station and western Brahmaputra border tactical defense envelope.",
+        "coordinates": [[89.65, 26.20], [90.10, 26.20], [90.05, 25.95], [89.60, 26.00], [89.65, 26.20]]
+    },
+    {
+        "id": "DS-POLY-OFFSHORE-PRAKASAM",
+        "name": "Prakasam & Nellore Coastal Missile & Rocket Hazard Area (Bay of Bengal)",
+        "category": "Offshore Strategic Missile Hazard Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Eastern Naval Command and defense launch trajectory hazard envelope extending eastward into the Bay of Bengal off Prakasam and Nellore coast.",
+        "coordinates": [[80.05, 15.65], [80.70, 15.75], [81.50, 15.45], [80.15, 15.15], [80.05, 15.65]]
+    },
+    {
+        "id": "DS-POLY-OFFSHORE-GOA-SINDHUDURG",
+        "name": "Goa - Sindhudurg - Karwar Naval Exercise & Firing Range (Arabian Sea)",
+        "category": "Offshore Naval Exercise Area",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "INS Hansa naval air station and INS Kadamba Karwar naval base maritime gunnery and anti-submarine exercise exclusion zone.",
+        "coordinates": [[73.10, 16.05], [73.55, 15.75], [73.35, 15.30], [72.90, 15.60], [73.10, 16.05]]
+    },
+    {
+        "id": "DS-POLY-OFFSHORE-SRIHARIKOTA-HAZARD",
+        "name": "Sriharikota Space Launch Offshore Hazard Envelope (Bay of Bengal)",
+        "category": "Offshore Space Launch Hazard Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Downrange rocket launch safety corridor and maritime exclusion zone off Satish Dhawan Space Centre (SHAR).",
+        "coordinates": [[80.20, 14.15], [80.50, 14.05], [80.45, 13.65], [80.22, 13.70], [80.20, 14.15]]
+    },
+    {
+        "id": "DS-POLY-KUDANKULAM-KANYAKUMARI",
+        "name": "Kudankulam Nuclear Complex & Cape Comorin Defense Zone",
+        "category": "Nuclear Installation & Coastal Defense",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Kudankulam Nuclear Power Plant (KKNPP) statutory safety perimeter and southern tip naval coastal monitoring envelope.",
+        "coordinates": [[77.55, 8.40], [78.00, 8.45], [77.90, 8.10], [77.50, 8.12], [77.55, 8.40]]
     }
 ]
 
