@@ -25,8 +25,30 @@ Airspace Zone Classifications under Drone Rules 2021:
    - Drone operations strictly prohibited unless exempted by Central Government.
 """
 
+import os
+import json
+import logging
 import math
 from typing import Dict, List, Any, Optional, Tuple
+
+logger = logging.getLogger(__name__)
+
+_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+_BOUNDARY_FILE = os.path.join(_DATA_DIR, "india_boundary.json")
+_CORRIDORS_FILE = os.path.join(_DATA_DIR, "border_corridors.json")
+
+def _load_json_data(file_path: str) -> Optional[Any]:
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning("Could not load %s: %s", file_path, e)
+    return None
+
+_INDIA_BOUNDARY_DATA = _load_json_data(_BOUNDARY_FILE)
+_BORDER_CORRIDORS_DATA = _load_json_data(_CORRIDORS_FILE)
+
 
 
 def generate_circle_polygon(lat: float, lon: float, radius_km: float, num_points: int = 36) -> List[List[float]]:
@@ -251,6 +273,11 @@ INDIAN_AERODROMES = [
 # ==============================================================================
 # 2. CONTINUOUS 25 KM INTERNATIONAL LAND BORDER RIBBON CORRIDORS & DEFENSE ZONES
 # ==============================================================================
+def _get_corridor_coords(key: str, fallback: List[List[float]]) -> List[List[float]]:
+    if _BORDER_CORRIDORS_DATA and key in _BORDER_CORRIDORS_DATA:
+        return _BORDER_CORRIDORS_DATA[key]
+    return fallback
+
 INTERNATIONAL_BORDER_POLYGONS = [
     {
         "id": "DS-CORRIDOR-WEST-IB",
@@ -258,7 +285,7 @@ INTERNATIONAL_BORDER_POLYGONS = [
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Continuous 25 km DGCA Red Zone security ribbon along the International Border from Sir Creek/Rann of Kutch to Pathankot.",
-        "coordinates": [
+        "coordinates": _get_corridor_coords("west_ib", [
             [68.20, 23.65], [68.75, 24.35], [70.15, 25.10], [70.05, 26.50],
             [69.95, 27.25], [71.20, 27.95], [72.30, 28.60], [73.50, 29.80],
             [73.95, 30.40], [74.55, 31.60], [75.05, 32.15], [75.45, 32.40],
@@ -266,34 +293,67 @@ INTERNATIONAL_BORDER_POLYGONS = [
             [73.80, 29.55], [72.58, 28.38], [71.48, 27.75], [70.32, 27.05],
             [70.42, 26.35], [70.45, 24.95], [69.05, 24.20], [68.60, 23.55],
             [68.20, 23.65]
-        ]
+        ])
     },
     {
-        "id": "DS-CORRIDOR-NORTH-LOC-LAC",
-        "name": "Northern Frontier 25 km Red Zone Ribbon (J&K LOC - Ladakh LAC)",
+        "id": "DS-CORRIDOR-NORTH-LOC-LAC-OUTER",
+        "name": "Northern Frontier 25 km International Boundary Ribbon (J&K LOC - Ladakh LAC)",
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km defense buffer ribbon along the Line of Control (LOC) and Line of Actual Control (LAC) covering Jammu, Kashmir, Kargil, and Eastern Ladakh.",
+        "desc": "Continuous 25 km statutory defense buffer ribbon along the Line of Control (LOC) and Line of Actual Control (LAC) covering Northern J&K, Kargil, and Eastern Ladakh.",
         "coordinates": [
-            [74.75, 32.65], [74.15, 33.15], [74.05, 33.80], [74.15, 34.25],
-            [74.35, 34.65], [75.15, 34.78], [76.50, 34.85], [77.30, 35.40],
-            [78.50, 35.20], [78.95, 34.10], [79.25, 33.00],
-            [78.95, 33.10], [78.68, 34.00], [78.22, 35.00], [77.10, 35.15],
-            [76.35, 34.60], [75.08, 34.55], [74.52, 34.40], [74.32, 33.95],
-            [74.38, 33.30], [74.92, 32.80], [74.75, 32.65]
+            [73.95, 34.15], [73.70, 34.60], [73.75, 35.00], [74.20, 35.35],
+            [74.70, 35.65], [75.40, 35.95], [76.20, 36.25], [76.90, 36.15],
+            [77.70, 35.95], [78.20, 35.75], [78.90, 35.55], [79.50, 35.05],
+            [79.75, 34.20], [79.60, 33.60], [79.35, 33.10], [79.15, 32.65],
+            [78.85, 32.75], [79.15, 33.15], [79.35, 33.70], [79.50, 34.25],
+            [79.25, 34.90], [78.70, 35.35], [78.05, 35.55], [77.55, 35.75],
+            [76.75, 35.95], [76.05, 36.05], [75.25, 35.75], [74.55, 35.45],
+            [74.10, 35.15], [73.95, 34.75], [73.90, 34.30], [73.95, 34.15]
         ]
     },
     {
-        "id": "DS-ZONE-KASHMIR-SECURITY",
-        "name": "Northern Kashmir & LOC High-Security Defense Red Zone",
+        "id": "DS-ZONE-NORTHERN-FRONTIER-KASHMIR-LADAKH",
+        "name": "Northern Kashmir & Ladakh Strategic Defense Red Zone",
         "category": "High-Security Defense Frontier",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "High-altitude strategic defense frontier covering Kashmir Line of Control sectors, Kupwara, Uri, Gurez, Dras, Kargil, and Siachen frontier. Civilian drone flights strictly prohibited.",
+        "desc": "Solid high-altitude strategic defense frontier covering Kashmir LOC, Kupwara, Gurez, Kargil, Dras, Siachen, Nubra Valley, Galwan, Aksai Chin, and Pangong Tso. Civilian drone operations strictly prohibited.",
         "coordinates": [
-            [73.80, 34.30], [74.00, 34.75], [74.65, 34.80], [75.50, 34.75],
-            [76.30, 34.90], [77.10, 35.50], [77.90, 35.60], [78.30, 35.10],
-            [77.70, 34.60], [76.80, 34.30], [75.80, 34.20], [75.00, 34.25],
-            [74.30, 34.10], [73.90, 34.05], [73.80, 34.30]
+            [73.95, 34.15],
+            [73.75, 34.50], [73.80, 34.90], [74.20, 35.20],
+            [74.70, 35.50], [75.40, 35.80], [76.20, 36.10], [76.90, 36.00],
+            [77.70, 35.80], [78.20, 35.60],
+            [78.85, 35.40], [79.40, 34.90], [79.60, 34.10], [79.45, 33.60],
+            [79.25, 33.10], [79.05, 32.70],
+            [78.50, 32.85], [78.65, 33.35], [78.20, 33.70],
+            [77.65, 34.30], [77.10, 34.35],
+            [76.30, 34.40], [75.60, 34.35], [75.10, 34.30],
+            [74.70, 34.30], [74.25, 34.20],
+            [73.95, 34.15]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-WEST-JK-LOC",
+        "name": "Western Jammu & Kashmir LOC 25 km Red Zone Ribbon (Poonch - Rajouri - Jammu)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km statutory defense ribbon along the Line of Control (LOC) covering Poonch, Rajouri, Akhnoor, Samba and Jammu IB.",
+        "coordinates": [
+            [73.95, 34.15], [73.90, 33.80], [74.10, 33.40], [74.25, 33.00],
+            [74.60, 32.75], [75.05, 32.50], [75.45, 32.40],
+            [75.25, 32.65], [74.85, 32.90], [74.55, 33.25], [74.40, 33.60],
+            [74.20, 33.95], [74.15, 34.15],
+            [73.95, 34.15]
+        ]
+    },
+    {
+        "id": "DS-POLY-SE-LADAKH-DEFENSE",
+        "name": "South-Eastern Ladakh Strategic Defense Red Zone (Hanle / Chumar / Nyoma)",
+        "category": "Strategic Defense Red Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "High-altitude eastern Ladakh military defense zone covering Nyoma airbase, Hanle observatory security envelope, and Chumar LAC frontier.",
+        "coordinates": [
+            [78.40, 32.60], [79.05, 32.50], [79.20, 33.15], [78.45, 33.25], [78.40, 32.60]
         ]
     },
     {
@@ -302,12 +362,12 @@ INTERNATIONAL_BORDER_POLYGONS = [
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Continuous 25 km Line of Actual Control (LAC) Red Zone across Himachal Pradesh (Kinnaur/Spiti) and Uttarakhand (Uttarkashi, Chamoli/Mana, Pithoragarh/Lipulekh).",
-        "coordinates": [
+        "coordinates": _get_corridor_coords("middle_lac", [
             [78.50, 32.05], [78.85, 31.60], [79.25, 31.25], [79.75, 30.95],
             [80.35, 30.45], [80.70, 30.15],
             [80.45, 29.95], [80.10, 30.25], [79.55, 30.70], [79.05, 31.05],
             [78.60, 31.40], [78.25, 31.85], [78.50, 32.05]
-        ]
+        ])
     },
     {
         "id": "DS-CORRIDOR-NEPAL-BORDER",
@@ -315,7 +375,7 @@ INTERNATIONAL_BORDER_POLYGONS = [
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Continuous 25 km DGCA Red Zone security ribbon along the entire Indo-Nepal international land border across Uttarakhand, Uttar Pradesh, Bihar, North Bengal and West Sikkim.",
-        "coordinates": [
+        "coordinates": _get_corridor_coords("nepal", [
             [80.50, 30.25], [80.12, 29.05], [80.20, 28.70], [80.65, 28.35],
             [81.60, 27.80], [82.25, 27.70], [82.80, 27.50], [83.45, 27.45],
             [83.95, 27.40], [84.85, 26.98], [85.50, 26.75], [86.15, 26.60],
@@ -326,7 +386,7 @@ INTERNATIONAL_BORDER_POLYGONS = [
             [84.85, 26.75], [84.00, 27.18], [83.50, 27.22], [82.85, 27.28],
             [82.25, 27.48], [81.60, 27.58], [80.65, 28.12], [80.15, 28.48],
             [79.90, 28.90], [80.25, 30.10], [80.50, 30.25]
-        ]
+        ])
     },
     {
         "id": "DS-CORRIDOR-BHUTAN-BORDER",
@@ -334,25 +394,14 @@ INTERNATIONAL_BORDER_POLYGONS = [
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Continuous 25 km DGCA Red Zone security ribbon along the India-Bhutan international border across East Sikkim, North Bengal (Jaigaon), Western/Central Assam, and West Kameng.",
-        "coordinates": [
+        "coordinates": _get_corridor_coords("bhutan", [
             [88.90, 27.15], [89.40, 26.85], [89.70, 26.75], [90.25, 26.85],
             [90.55, 26.88], [91.50, 26.82], [92.10, 26.90], [91.80, 27.35],
             [91.50, 27.55],
             [91.75, 27.45], [91.95, 27.15], [92.15, 26.68], [91.50, 26.60],
             [90.55, 26.65], [90.25, 26.62], [89.40, 26.62], [88.95, 26.92],
             [88.90, 27.15]
-        ]
-    },
-    {
-        "id": "DS-CORRIDOR-CHINA-SIKKIM-LAC",
-        "name": "Sikkim China LAC 25 km Red Zone Ribbon (Nathu La - Doklam - Cho Lhamo)",
-        "category": "25 km International Border Corridor",
-        "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km Line of Actual Control (LAC) Red Zone across North and East Sikkim along the Tibetan frontier.",
-        "coordinates": [
-            [88.55, 28.08], [88.95, 27.45], [88.95, 27.25], [88.65, 27.20],
-            [88.35, 27.85], [88.55, 28.08]
-        ]
+        ])
     },
     {
         "id": "DS-CORRIDOR-CHINA-ARUNACHAL-MCMAHON",
@@ -360,45 +409,13 @@ INTERNATIONAL_BORDER_POLYGONS = [
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Continuous 25 km Line of Actual Control (LAC) McMahon Line Red Zone covering Arunachal Pradesh frontier from Tawang and Bum La to Kibithu and Walong.",
-        "coordinates": [
+        "coordinates": _get_corridor_coords("mcmahon", [
             [91.85, 27.70], [92.80, 27.85], [93.50, 28.15], [94.20, 28.35],
             [95.00, 28.95], [95.80, 28.85], [96.50, 28.45], [97.05, 28.25],
             [96.95, 28.00], [96.35, 28.20], [95.65, 28.60], [94.95, 28.70],
             [94.15, 28.10], [93.45, 27.90], [92.75, 27.60], [91.95, 27.45],
             [91.85, 27.70]
-        ]
-    },
-    {
-        "id": "DS-CORRIDOR-BANGLADESH-BORDER-WEST",
-        "name": "Indo-Bangladesh Border 25 km Red Zone Ribbon (West Bengal & Assam Dhubri Sector)",
-        "category": "25 km International Border Corridor",
-        "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the India-Bangladesh border from the Sundarbans coastal frontier through Petrapole, Nadia, Murshidabad, Malda, Dinajpur, Cooch Behar, to Assam Dhubri.",
-        "coordinates": [
-            [89.15, 21.65], [88.95, 22.20], [88.88, 23.05], [88.65, 23.75],
-            [88.35, 24.45], [88.25, 25.10], [88.98, 25.28], [88.25, 26.20],
-            [88.90, 26.35], [89.85, 26.30], [89.95, 26.00], [89.85, 25.75],
-            [90.15, 25.90], [89.65, 26.45], [88.80, 26.50], [88.10, 26.15],
-            [88.75, 25.25], [88.05, 25.00], [88.15, 24.30], [88.45, 23.60],
-            [88.65, 22.85], [88.75, 22.15], [88.90, 21.65], [89.15, 21.65]
-        ]
-    },
-    {
-        "id": "DS-CORRIDOR-BANGLADESH-BORDER-EAST",
-        "name": "Indo-Bangladesh Border 25 km Red Zone Ribbon (Meghalaya - Assam - Tripura - Mizoram)",
-        "category": "25 km International Border Corridor",
-        "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the eastern Indo-Bangladesh international border across Meghalaya (Garo/Khasi/Dawki), Barak Valley, Tripura perimeter (Agartala, Belonia, Sabroom) and Western Mizoram.",
-        "coordinates": [
-            [89.85, 25.30], [90.65, 25.20], [91.30, 25.18], [92.05, 25.18],
-            [92.35, 25.10], [92.35, 24.85], [92.30, 24.60], [92.05, 24.40],
-            [91.80, 24.15], [91.60, 23.95], [91.27, 23.85], [91.25, 23.48],
-            [91.45, 23.25], [91.70, 23.00], [92.30, 23.40], [92.50, 22.90],
-            [92.75, 22.00],
-            [92.95, 22.10], [92.70, 22.95], [91.85, 23.20], [91.45, 23.85],
-            [91.90, 24.05], [92.55, 24.65], [92.25, 25.35], [91.85, 25.38],
-            [91.20, 25.40], [90.25, 25.45], [89.85, 25.30]
-        ]
+        ])
     },
     {
         "id": "DS-CORRIDOR-MYANMAR-BORDER",
@@ -406,7 +423,7 @@ INTERNATIONAL_BORDER_POLYGONS = [
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Continuous 25 km DGCA Red Zone security ribbon along the India-Myanmar international border across Eastern Arunachal (Pangsau Pass), Nagaland (Mon/Kiphire), Manipur (Moreh/Chandel) and Mizoram (Zokhawthar/Champhai/Parva).",
-        "coordinates": [
+        "coordinates": _get_corridor_coords("myanmar", [
             [97.20, 28.00], [96.25, 27.25], [95.55, 26.85], [95.15, 26.50],
             [94.90, 25.70], [94.80, 25.50], [94.55, 25.10], [94.40, 24.25],
             [94.00, 23.90], [93.45, 23.50], [93.38, 23.05], [93.18, 22.40],
@@ -414,7 +431,22 @@ INTERNATIONAL_BORDER_POLYGONS = [
             [92.60, 22.10], [92.90, 22.50], [93.10, 23.25], [93.65, 24.00],
             [94.05, 24.45], [94.20, 25.00], [94.50, 25.60], [94.85, 26.30],
             [95.30, 27.00], [95.90, 27.35], [96.95, 27.85], [97.20, 28.00]
-        ]
+        ])
+    },
+    {
+        "id": "DS-CORRIDOR-BANGLADESH-BORDER",
+        "name": "Indo-Bangladesh International Border 25 km Red Zone Ribbon",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the entire India-Bangladesh border across West Bengal, Meghalaya, Assam, Tripura, and Mizoram.",
+        "coordinates": _get_corridor_coords("bangladesh", [
+            [89.15, 21.65], [88.95, 22.20], [88.88, 23.05], [88.65, 23.75],
+            [88.35, 24.45], [88.25, 25.10], [88.98, 25.28], [88.25, 26.20],
+            [88.90, 26.35], [89.85, 26.30], [89.95, 26.00], [89.85, 25.75],
+            [90.15, 25.90], [89.65, 26.45], [88.80, 26.50], [88.10, 26.15],
+            [88.75, 25.25], [88.05, 25.00], [88.15, 24.30], [88.45, 23.60],
+            [88.65, 22.85], [88.75, 22.15], [88.90, 21.65], [89.15, 21.65]
+        ])
     }
 ]
 
@@ -704,6 +736,7 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
     features = []
 
     # 1. GREEN ZONE
+    mainland_coords = _INDIA_BOUNDARY_DATA["mainland"] if (_INDIA_BOUNDARY_DATA and "mainland" in _INDIA_BOUNDARY_DATA) else INDIA_AIRSPACE_BOUNDARY
     features.append({
         "type": "Feature",
         "id": "DS-GREEN-PAN-INDIA",
@@ -711,24 +744,54 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
             "id": "DS-GREEN-PAN-INDIA",
             "name": "Pan-India Airspace (Green Zone)",
             "zone_type": "GREEN",
+            "layer_group": "green_zone",
             "category": "Open Airspace",
             "max_altitude_agl_ft": 400,
             "max_altitude_agl_m": 120,
             "permission_required": "NONE (Up to 400 ft AGL)",
             "authority": "DGCA — No prior flight approval needed",
             "rule_ref": "Drone Rules 2021, Rule 22(1)",
-            "description": "Standard green airspace zone covering India territory outside designated red and yellow zones. Autonomous & manual flights up to 400 ft AGL freely permitted.",
+            "description": "Standard green airspace zone covering sovereign Indian territory outside designated red and yellow zones. Autonomous & manual flights up to 400 ft AGL freely permitted.",
             "color": "#059669",
             "fillColor": "#10b981",
-            "fillOpacity": 0.10,
+            "fillOpacity": 0.12,
             "strokeWeight": 1.5,
             "zIndex": 100
         },
         "geometry": {
             "type": "Polygon",
-            "coordinates": [INDIA_AIRSPACE_BOUNDARY]
+            "coordinates": [mainland_coords]
         }
     })
+
+    # Island chains (Andaman & Nicobar, Lakshadweep, Sagar Island)
+    if _INDIA_BOUNDARY_DATA and "islands" in _INDIA_BOUNDARY_DATA:
+        for idx, island_ring in enumerate(_INDIA_BOUNDARY_DATA["islands"]):
+            features.append({
+                "type": "Feature",
+                "id": f"DS-GREEN-ISLAND-{idx}",
+                "properties": {
+                    "id": f"DS-GREEN-ISLAND-{idx}",
+                    "name": "Indian Island Territory Airspace (Green Zone)",
+                    "zone_type": "GREEN",
+                    "layer_group": "green_zone",
+                    "category": "Open Airspace",
+                    "max_altitude_agl_ft": 400,
+                    "max_altitude_agl_m": 120,
+                    "permission_required": "NONE (Up to 400 ft AGL)",
+                    "authority": "DGCA",
+                    "rule_ref": "Drone Rules 2021, Rule 22(1)",
+                    "color": "#059669",
+                    "fillColor": "#10b981",
+                    "fillOpacity": 0.12,
+                    "strokeWeight": 1.5,
+                    "zIndex": 100
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [island_ring]
+                }
+            })
 
     # 2. YELLOW ZONES (5-12 km around aerodromes)
     for aero in INDIAN_AERODROMES:
@@ -844,10 +907,10 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
                 "authority": "MoD / MHA / DGCA India",
                 "rule_ref": poly_item["rule_ref"],
                 "description": poly_item["desc"],
-                "color": "#991b1b",
-                "fillColor": "#dc2626",
+                "color": "#dc2626",
+                "fillColor": "#ef4444",
                 "fillOpacity": 0.45,
-                "strokeWeight": 2.5,
+                "strokeWeight": 1.8,
                 "zIndex": 1250
             },
             "geometry": {
@@ -856,8 +919,8 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
             }
         })
 
-    # 4. 25 km International Border Sector Checkpoint Circles
-    add_red_features(INTERNATIONAL_BORDER_RED_ZONES, "25 km International Border Corridor", "#991b1b", "#dc2626", 0.38, 2.2, layer_group="boundary_25km")
+    # Note: Circular checkpoint overlays along international borders removed per DGCA DigitalSky specifications;
+    # continuous 25 km statutory boundary ribbons are used instead. INTERNATIONAL_BORDER_RED_ZONES is retained for backend classification.
 
     # 5. Military Defense Areas
     add_red_features(MILITARY_DEFENSE_RED_ZONES, "Military Defense Airspace", "#7f1d1d", "#b91c1c", 0.44, 2.2, layer_group="red_zone")
