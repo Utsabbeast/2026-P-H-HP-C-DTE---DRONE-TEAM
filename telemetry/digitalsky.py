@@ -13,7 +13,9 @@ Airspace Zone Classifications under Drone Rules 2021:
    - Requires prior Air Traffic Control (ATC / AAI / MoD) clearance via DigitalSky.
 3. RED ZONE (Strictly Prohibited Airspace - No-Fly Zone):
    - 0 to 5 km perimeter around operational civil/defense airport runways.
-   - 25 km buffer zone along International Land Borders (LOC / LAC / IB).
+   - 25 km buffer zone along ALL International Land Borders (LOC / LAC / IB).
+     Includes: India-Pakistan, India-China, India-Nepal, India-Bhutan, India-Bangladesh, India-Myanmar.
+   - Entire northern frontier / Kashmir Line of Control & high-altitude defense corridors.
    - Military defense areas, IAF airbases, Naval stations, Army Cantonments & Firing ranges.
    - Defense factories & Ordnance manufacturing production facilities.
    - Hazardous petrochemical refineries & industrial mega-complexes.
@@ -53,6 +55,23 @@ def haversine_distance_km(lat1: float, lon1: float, lat2: float, lon2: float) ->
     a = math.sin(dlat / 2.0) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2.0) ** 2
     c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
     return R * c
+
+
+def is_point_in_polygon(lat: float, lon: float, polygon_coords: List[List[float]]) -> bool:
+    """Ray casting algorithm to determine if (lat, lon) is inside a polygon with [lon, lat] coordinates."""
+    inside = False
+    n = len(polygon_coords)
+    if n < 3:
+        return False
+    j = n - 1
+    for i in range(n):
+        xi, yi = polygon_coords[i][0], polygon_coords[i][1]  # xi=lon, yi=lat
+        xj, yj = polygon_coords[j][0], polygon_coords[j][1]
+        intersect = ((yi > lat) != (yj > lat)) and (lon < (xj - xi) * (lat - yi) / (yj - yi + 1e-12) + xi)
+        if intersect:
+            inside = not inside
+        j = i
+    return inside
 
 
 # ==============================================================================
@@ -142,33 +161,263 @@ INDIAN_AERODROMES = [
 ]
 
 # ==============================================================================
-# 2. 25 KM INTERNATIONAL BORDER BUFFER ZONES (RED ZONES)
+# 2. CONTINUOUS 25 KM INTERNATIONAL LAND BORDER RIBBON CORRIDORS & DEFENSE ZONES
+# ==============================================================================
+INTERNATIONAL_BORDER_POLYGONS = [
+    {
+        "id": "DS-CORRIDOR-WEST-IB",
+        "name": "Western International Border 25 km Red Zone Ribbon (Gujarat - Rajasthan - Punjab)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the International Border from Sir Creek/Rann of Kutch to Pathankot.",
+        "coordinates": [
+            [68.20, 23.65], [68.75, 24.35], [70.15, 25.10], [70.05, 26.50],
+            [69.95, 27.25], [71.20, 27.95], [72.30, 28.60], [73.50, 29.80],
+            [73.95, 30.40], [74.55, 31.60], [75.05, 32.15], [75.45, 32.40],
+            [75.72, 32.22], [75.32, 31.98], [74.82, 31.42], [74.28, 30.22],
+            [73.80, 29.55], [72.58, 28.38], [71.48, 27.75], [70.32, 27.05],
+            [70.42, 26.35], [70.45, 24.95], [69.05, 24.20], [68.60, 23.55],
+            [68.20, 23.65]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-NORTH-LOC-LAC",
+        "name": "Northern Frontier 25 km Red Zone Ribbon (J&K LOC - Ladakh LAC)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km defense buffer ribbon along the Line of Control (LOC) and Line of Actual Control (LAC) covering Jammu, Kashmir, Kargil, and Eastern Ladakh.",
+        "coordinates": [
+            [74.75, 32.65], [74.15, 33.15], [74.05, 33.80], [74.15, 34.25],
+            [74.35, 34.65], [75.15, 34.78], [76.50, 34.85], [77.30, 35.40],
+            [78.50, 35.20], [78.95, 34.10], [79.25, 33.00],
+            [78.95, 33.10], [78.68, 34.00], [78.22, 35.00], [77.10, 35.15],
+            [76.35, 34.60], [75.08, 34.55], [74.52, 34.40], [74.32, 33.95],
+            [74.38, 33.30], [74.92, 32.80], [74.75, 32.65]
+        ]
+    },
+    {
+        "id": "DS-ZONE-KASHMIR-SECURITY",
+        "name": "Northern Kashmir & LOC High-Security Defense Red Zone",
+        "category": "High-Security Defense Frontier",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "High-altitude strategic defense frontier covering Kashmir Line of Control sectors, Kupwara, Uri, Gurez, Dras, Kargil, and Siachen frontier. Civilian drone flights strictly prohibited.",
+        "coordinates": [
+            [73.80, 34.30], [74.00, 34.75], [74.65, 34.80], [75.50, 34.75],
+            [76.30, 34.90], [77.10, 35.50], [77.90, 35.60], [78.30, 35.10],
+            [77.70, 34.60], [76.80, 34.30], [75.80, 34.20], [75.00, 34.25],
+            [74.30, 34.10], [73.90, 34.05], [73.80, 34.30]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-CHINA-LAC-HIMALAYAS",
+        "name": "Middle Sector China LAC 25 km Red Zone Ribbon (Himachal - Uttarakhand)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km Line of Actual Control (LAC) Red Zone across Himachal Pradesh (Kinnaur/Spiti) and Uttarakhand (Uttarkashi, Chamoli/Mana, Pithoragarh/Lipulekh).",
+        "coordinates": [
+            [78.50, 32.05], [78.85, 31.60], [79.25, 31.25], [79.75, 30.95],
+            [80.35, 30.45], [80.70, 30.15],
+            [80.45, 29.95], [80.10, 30.25], [79.55, 30.70], [79.05, 31.05],
+            [78.60, 31.40], [78.25, 31.85], [78.50, 32.05]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-NEPAL-BORDER",
+        "name": "Indo-Nepal International Border 25 km Red Zone Ribbon (Uttarakhand - UP - Bihar - Bengal - Sikkim)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the entire Indo-Nepal international land border across Uttarakhand, Uttar Pradesh, Bihar, North Bengal and West Sikkim.",
+        "coordinates": [
+            [80.50, 30.25], [80.12, 29.05], [80.20, 28.70], [80.65, 28.35],
+            [81.60, 27.80], [82.25, 27.70], [82.80, 27.50], [83.45, 27.45],
+            [83.95, 27.40], [84.85, 26.98], [85.50, 26.75], [86.15, 26.60],
+            [87.00, 26.50], [87.30, 26.40], [88.05, 26.35], [88.15, 26.70],
+            [88.02, 27.20], [88.15, 27.70],
+            [88.35, 27.65], [88.25, 27.05], [88.30, 26.60], [88.00, 26.15],
+            [87.35, 26.20], [87.00, 26.30], [86.15, 26.40], [85.50, 26.55],
+            [84.85, 26.75], [84.00, 27.18], [83.50, 27.22], [82.85, 27.28],
+            [82.25, 27.48], [81.60, 27.58], [80.65, 28.12], [80.15, 28.48],
+            [79.90, 28.90], [80.25, 30.10], [80.50, 30.25]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-BHUTAN-BORDER",
+        "name": "Indo-Bhutan International Border 25 km Red Zone Ribbon (Sikkim - Bengal - Assam - Arunachal)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the India-Bhutan international border across East Sikkim, North Bengal (Jaigaon), Western/Central Assam, and West Kameng.",
+        "coordinates": [
+            [88.90, 27.15], [89.40, 26.85], [89.70, 26.75], [90.25, 26.85],
+            [90.55, 26.88], [91.50, 26.82], [92.10, 26.90], [91.80, 27.35],
+            [91.50, 27.55],
+            [91.75, 27.45], [91.95, 27.15], [92.15, 26.68], [91.50, 26.60],
+            [90.55, 26.65], [90.25, 26.62], [89.40, 26.62], [88.95, 26.92],
+            [88.90, 27.15]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-CHINA-SIKKIM-LAC",
+        "name": "Sikkim China LAC 25 km Red Zone Ribbon (Nathu La - Doklam - Cho Lhamo)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km Line of Actual Control (LAC) Red Zone across North and East Sikkim along the Tibetan frontier.",
+        "coordinates": [
+            [88.55, 28.08], [88.95, 27.45], [88.95, 27.25], [88.65, 27.20],
+            [88.35, 27.85], [88.55, 28.08]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-CHINA-ARUNACHAL-MCMAHON",
+        "name": "Arunachal McMahon Line 25 km Red Zone Ribbon (Tawang to Kibithu/Walong)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km Line of Actual Control (LAC) McMahon Line Red Zone covering Arunachal Pradesh frontier from Tawang and Bum La to Kibithu and Walong.",
+        "coordinates": [
+            [91.85, 27.70], [92.80, 27.85], [93.50, 28.15], [94.20, 28.35],
+            [95.00, 28.95], [95.80, 28.85], [96.50, 28.45], [97.05, 28.25],
+            [96.95, 28.00], [96.35, 28.20], [95.65, 28.60], [94.95, 28.70],
+            [94.15, 28.10], [93.45, 27.90], [92.75, 27.60], [91.95, 27.45],
+            [91.85, 27.70]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-BANGLADESH-BORDER-WEST",
+        "name": "Indo-Bangladesh Border 25 km Red Zone Ribbon (West Bengal & Assam Dhubri Sector)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the India-Bangladesh border from the Sundarbans coastal frontier through Petrapole, Nadia, Murshidabad, Malda, Dinajpur, Cooch Behar, to Assam Dhubri.",
+        "coordinates": [
+            [89.15, 21.65], [88.95, 22.20], [88.88, 23.05], [88.65, 23.75],
+            [88.35, 24.45], [88.25, 25.10], [88.98, 25.28], [88.25, 26.20],
+            [88.90, 26.35], [89.85, 26.30], [89.95, 26.00], [89.85, 25.75],
+            [90.15, 25.90], [89.65, 26.45], [88.80, 26.50], [88.10, 26.15],
+            [88.75, 25.25], [88.05, 25.00], [88.15, 24.30], [88.45, 23.60],
+            [88.65, 22.85], [88.75, 22.15], [88.90, 21.65], [89.15, 21.65]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-BANGLADESH-BORDER-EAST",
+        "name": "Indo-Bangladesh Border 25 km Red Zone Ribbon (Meghalaya - Assam - Tripura - Mizoram)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the eastern Indo-Bangladesh international border across Meghalaya (Garo/Khasi/Dawki), Barak Valley, Tripura perimeter (Agartala, Belonia, Sabroom) and Western Mizoram.",
+        "coordinates": [
+            [89.85, 25.30], [90.65, 25.20], [91.30, 25.18], [92.05, 25.18],
+            [92.35, 25.10], [92.35, 24.85], [92.30, 24.60], [92.05, 24.40],
+            [91.80, 24.15], [91.60, 23.95], [91.27, 23.85], [91.25, 23.48],
+            [91.45, 23.25], [91.70, 23.00], [92.30, 23.40], [92.50, 22.90],
+            [92.75, 22.00],
+            [92.95, 22.10], [92.70, 22.95], [91.85, 23.20], [91.45, 23.85],
+            [91.90, 24.05], [92.55, 24.65], [92.25, 25.35], [91.85, 25.38],
+            [91.20, 25.40], [90.25, 25.45], [89.85, 25.30]
+        ]
+    },
+    {
+        "id": "DS-CORRIDOR-MYANMAR-BORDER",
+        "name": "Indo-Myanmar International Border 25 km Red Zone Ribbon (Arunachal - Nagaland - Manipur - Mizoram)",
+        "category": "25 km International Border Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the India-Myanmar international border across Eastern Arunachal (Pangsau Pass), Nagaland (Mon/Kiphire), Manipur (Moreh/Chandel) and Mizoram (Zokhawthar/Champhai/Parva).",
+        "coordinates": [
+            [97.20, 28.00], [96.25, 27.25], [95.55, 26.85], [95.15, 26.50],
+            [94.90, 25.70], [94.80, 25.50], [94.55, 25.10], [94.40, 24.25],
+            [94.00, 23.90], [93.45, 23.50], [93.38, 23.05], [93.18, 22.40],
+            [92.88, 21.95],
+            [92.60, 22.10], [92.90, 22.50], [93.10, 23.25], [93.65, 24.00],
+            [94.05, 24.45], [94.20, 25.00], [94.50, 25.60], [94.85, 26.30],
+            [95.30, 27.00], [95.90, 27.35], [96.95, 27.85], [97.20, 28.00]
+        ]
+    }
+]
+
+# ==============================================================================
+# 3. 25 KM INTERNATIONAL BORDER BUFFER ZONES (CHECKPOINT & SECTOR CIRCLES)
 # ==============================================================================
 INTERNATIONAL_BORDER_RED_ZONES = [
+    # --- INDIA - PAKISTAN BORDER & LOC ---
     {"id": "DS-BORDER-PB-AMRITSAR", "name": "Punjab Border 25 km Red Zone (Amritsar / Attari / Wagah Sector)", "lat": 31.6046, "lon": 74.5750, "radius_km": 25.0, "sector": "PUNJAB_IB", "desc": "DGCA 25 km International Land Border Red Zone along India-Pakistan IB (Amritsar/Tarn Taran)."},
     {"id": "DS-BORDER-PB-FEROZEPUR", "name": "Punjab Border 25 km Red Zone (Ferozepur / Hussainiwala Sector)", "lat": 30.9500, "lon": 74.5200, "radius_km": 25.0, "sector": "PUNJAB_IB", "desc": "DGCA 25 km International Border buffer covering Ferozepur & Hussainiwala frontier."},
     {"id": "DS-BORDER-PB-FAZILKA", "name": "Punjab Border 25 km Red Zone (Fazilka / Sadiqi Sector)", "lat": 30.4000, "lon": 74.0200, "radius_km": 25.0, "sector": "PUNJAB_IB", "desc": "DGCA 25 km International Border security envelope along Fazilka/Abohar corridor."},
     {"id": "DS-BORDER-PB-GURDASPUR", "name": "Punjab Border 25 km Red Zone (Gurdaspur / Dera Baba Nanak Sector)", "lat": 31.9800, "lon": 75.0500, "radius_km": 25.0, "sector": "PUNJAB_IB", "desc": "DGCA 25 km International Border Corridor near Kartarpur/Dera Baba Nanak frontier."},
+    {"id": "DS-BORDER-PB-PATHANKOT", "name": "Punjab Border 25 km Red Zone (Pathankot / Narot Jaimal Singh Sector)", "lat": 32.2800, "lon": 75.4800, "radius_km": 25.0, "sector": "PUNJAB_IB", "desc": "DGCA 25 km International Border security zone covering Ravi river and frontier."},
     {"id": "DS-BORDER-RJ-JAISALMER", "name": "Rajasthan Border 25 km Red Zone (Jaisalmer / Tanot / Longewala Sector)", "lat": 27.2000, "lon": 70.4000, "radius_km": 25.0, "sector": "RAJASTHAN_IB", "desc": "DGCA 25 km International Border Red Zone along Thar Desert / Longewala defense frontier."},
     {"id": "DS-BORDER-RJ-BARMER", "name": "Rajasthan Border 25 km Red Zone (Barmer / Munabao Sector)", "lat": 25.7500, "lon": 70.3000, "radius_km": 25.0, "sector": "RAJASTHAN_IB", "desc": "DGCA 25 km Border buffer covering Munabao / Gadra Road border corridor."},
     {"id": "DS-BORDER-RJ-BIKANER", "name": "Rajasthan Border 25 km Red Zone (Bikaner / Khajuwala Sector)", "lat": 28.3000, "lon": 72.5000, "radius_km": 25.0, "sector": "RAJASTHAN_IB", "desc": "DGCA 25 km International Border security zone covering Khajuwala / Pugal corridor."},
     {"id": "DS-BORDER-RJ-GANGANAGAR", "name": "Rajasthan Border 25 km Red Zone (Sri Ganganagar / Hindumalkot Sector)", "lat": 29.9500, "lon": 73.8800, "radius_km": 25.0, "sector": "RAJASTHAN_IB", "desc": "DGCA 25 km Border Corridor along Hindumalkot and Anupgarh frontier."},
     {"id": "DS-BORDER-GJ-KUTCH", "name": "Gujarat Border 25 km Red Zone (Rann of Kutch & Sir Creek Sector)", "lat": 23.8500, "lon": 68.7500, "radius_km": 25.0, "sector": "GUJARAT_IB", "desc": "DGCA 25 km International Land Border & Sir Creek maritime corridor. Strictly Prohibited."},
     {"id": "DS-BORDER-JK-SAMBA-KATHUA", "name": "Jammu Border 25 km Red Zone (Jammu / Samba / Kathua IB Sector)", "lat": 32.5500, "lon": 75.1000, "radius_km": 25.0, "sector": "JK_IB", "desc": "DGCA 25 km International Border buffer across Jammu, Samba, and Hiranagar."},
+    {"id": "DS-BORDER-JK-RS-PURA", "name": "Jammu Border 25 km Red Zone (RS Pura / Suchetgarh Sector)", "lat": 32.6200, "lon": 74.7200, "radius_km": 25.0, "sector": "JK_IB", "desc": "DGCA 25 km International Border buffer along Suchetgarh border crossing."},
     {"id": "DS-BORDER-JK-POONCH-RAJOURI", "name": "Line of Control 25 km Red Zone (Rajouri / Poonch LOC Sector)", "lat": 33.7700, "lon": 74.1000, "radius_km": 25.0, "sector": "JK_LOC", "desc": "DGCA 25 km Line of Control (LOC) strict defense Red Zone."},
     {"id": "DS-BORDER-JK-KUPWARA-URI", "name": "Line of Control 25 km Red Zone (Kupwara / Uri / Tangdhar Sector)", "lat": 34.3500, "lon": 74.0500, "radius_km": 25.0, "sector": "JK_LOC", "desc": "DGCA 25 km LOC high-altitude defense corridor."},
-    {"id": "DS-BORDER-LADAKH-EAST", "name": "Ladakh LAC 25 km Red Zone (Pangong Tso / Chushul / Galwan Sector)", "lat": 33.7500, "lon": 78.7000, "radius_km": 25.0, "sector": "LADAKH_LAC", "desc": "DGCA 25 km Line of Actual Control (LAC) high-security border corridor."},
+    {"id": "DS-BORDER-JK-GUREZ", "name": "Line of Control 25 km Red Zone (Gurez / Bandipora Sector)", "lat": 34.6500, "lon": 74.8500, "radius_km": 25.0, "sector": "JK_LOC", "desc": "DGCA 25 km northern Kashmir LOC high-altitude defense corridor."},
+    {"id": "DS-BORDER-LADAKH-KARGIL", "name": "Line of Control 25 km Red Zone (Dras / Kargil / Batalik Sector)", "lat": 34.5800, "lon": 75.8000, "radius_km": 25.0, "sector": "LADAKH_LOC", "desc": "DGCA 25 km high-altitude Line of Control defense envelope across Kargil and Dras."},
     {"id": "DS-BORDER-LADAKH-DBO", "name": "Ladakh LAC 25 km Red Zone (Daulat Beg Oldie / Siachen Sector)", "lat": 35.2500, "lon": 77.9000, "radius_km": 25.0, "sector": "LADAKH_LAC", "desc": "DGCA 25 km northern LAC and Karakoram high-altitude prohibited airspace."},
-    {"id": "DS-BORDER-UK-LIPULEKH", "name": "Uttarakhand Border 25 km Red Zone (Pithoragarh / Lipulekh / Mana Sector)", "lat": 30.5000, "lon": 80.5000, "radius_km": 25.0, "sector": "UTTARAKHAND_BORDER", "desc": "DGCA 25 km International Border buffer across Indo-Tibet frontier."},
+    {"id": "DS-BORDER-LADAKH-EAST", "name": "Ladakh LAC 25 km Red Zone (Pangong Tso / Chushul / Galwan Sector)", "lat": 33.7500, "lon": 78.7000, "radius_km": 25.0, "sector": "LADAKH_LAC", "desc": "DGCA 25 km Line of Actual Control (LAC) high-security border corridor."},
+    {"id": "DS-BORDER-LADAKH-DEMCHOK", "name": "Ladakh LAC 25 km Red Zone (Demchok / Indus Valley Sector)", "lat": 32.7000, "lon": 79.4500, "radius_km": 25.0, "sector": "LADAKH_LAC", "desc": "DGCA 25 km southern Ladakh Line of Actual Control prohibited airspace."},
+
+    # --- INDIA - CHINA LAC (MIDDLE SECTOR) ---
+    {"id": "DS-BORDER-HP-SHIPKILA", "name": "Himachal LAC 25 km Red Zone (Kinnaur / Spiti / Shipki La Sector)", "lat": 31.8500, "lon": 78.7500, "radius_km": 25.0, "sector": "HIMACHAL_LAC", "desc": "DGCA 25 km Line of Actual Control buffer along Tibet border in Kinnaur & Spiti."},
+    {"id": "DS-BORDER-UK-MANAPASS", "name": "Uttarakhand LAC 25 km Red Zone (Chamoli / Mana Pass / Niti Sector)", "lat": 31.0500, "lon": 79.4500, "radius_km": 25.0, "sector": "UTTARAKHAND_LAC", "desc": "DGCA 25 km Himalayan Line of Actual Control defense corridor."},
+    {"id": "DS-BORDER-UK-LIPULEKH", "name": "Uttarakhand Border 25 km Red Zone (Pithoragarh / Lipulekh / Kalapani)", "lat": 30.2500, "lon": 80.5000, "radius_km": 25.0, "sector": "UTTARAKHAND_BORDER", "desc": "DGCA 25 km International Border buffer across Indo-Tibet-Nepal tri-junction."},
+
+    # --- INDIA - NEPAL BORDER ---
+    {"id": "DS-BORDER-UK-BANBASA", "name": "Uttarakhand Nepal Border 25 km Red Zone (Champawat / Tanakpur / Banbasa)", "lat": 29.0500, "lon": 80.1000, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border buffer along Sharda Barrage and Nepal border."},
+    {"id": "DS-BORDER-UP-PILIBHIT", "name": "UP Nepal Border 25 km Red Zone (Pilibhit / Sharda River Sector)", "lat": 28.6500, "lon": 80.2000, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border corridor along Pilibhit tiger reserve frontier."},
+    {"id": "DS-BORDER-UP-DUDHWA", "name": "UP Nepal Border 25 km Red Zone (Lakhimpur Kheri / Gauriphanta Sector)", "lat": 28.3500, "lon": 80.6500, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border buffer near Dhangadhi / Gauriphanta crossing."},
+    {"id": "DS-BORDER-UP-RUPAIDIHA", "name": "UP Nepal Border 25 km Red Zone (Bahraich / Rupaidiha Sector)", "lat": 27.8000, "lon": 81.6000, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border buffer along Nepalgunj / Rupaidiha trade corridor."},
+    {"id": "DS-BORDER-UP-BADHNI", "name": "UP Nepal Border 25 km Red Zone (Siddharthnagar / Badhni Sector)", "lat": 27.5000, "lon": 82.8000, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border envelope along Kapilvastu frontier."},
+    {"id": "DS-BORDER-UP-SONAULI", "name": "UP Nepal Border 25 km Red Zone (Maharajganj / Sonauli Sector)", "lat": 27.4500, "lon": 83.5000, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border corridor along Sonauli / Bhairahawa integrated check post."},
+    {"id": "DS-BORDER-BIHAR-VALMIKI", "name": "Bihar Nepal Border 25 km Red Zone (West Champaran / Valmiki Nagar)", "lat": 27.4000, "lon": 83.9500, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border buffer along Gandak Barrage and Nepal frontier."},
+    {"id": "DS-BORDER-BIHAR-RAXAUL", "name": "Bihar Nepal Border 25 km Red Zone (East Champaran / Raxaul Sector)", "lat": 26.9800, "lon": 84.8500, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border buffer along major Raxaul / Birgunj gateway."},
+    {"id": "DS-BORDER-BIHAR-SITAMARHI", "name": "Bihar Nepal Border 25 km Red Zone (Sitamarhi / Bairgania / Sonbarsa)", "lat": 26.7500, "lon": 85.5000, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border buffer across Sitamarhi frontier."},
+    {"id": "DS-BORDER-BIHAR-JAYANAGAR", "name": "Bihar Nepal Border 25 km Red Zone (Madhubani / Jayanagar Sector)", "lat": 26.6000, "lon": 86.1500, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border buffer near Janakpur railway corridor."},
+    {"id": "DS-BORDER-BIHAR-JOGBANI", "name": "Bihar Nepal Border 25 km Red Zone (Araria / Jogbani / Biratnagar Sector)", "lat": 26.4000, "lon": 87.3000, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border buffer along Jogbani Integrated Check Post."},
+    {"id": "DS-BORDER-BIHAR-GALGALIA", "name": "Bihar Nepal Border 25 km Red Zone (Kishanganj / Galgalia Sector)", "lat": 26.3500, "lon": 88.0500, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border corridor along Mechi River."},
+    {"id": "DS-BORDER-WB-PANITANKI", "name": "Bengal Nepal Border 25 km Red Zone (Darjeeling / Panitanki / Naxalbari)", "lat": 26.7000, "lon": 88.1500, "radius_km": 25.0, "sector": "NEPAL_IB", "desc": "DGCA 25 km International Border buffer near Kakarbhitta bridge and Siliguri corridor."},
+
+    # --- INDIA - BHUTAN BORDER ---
+    {"id": "DS-BORDER-WB-JAIGAON", "name": "Bengal Bhutan Border 25 km Red Zone (Alipurduar / Jaigaon / Phuentsholing)", "lat": 26.8500, "lon": 89.4000, "radius_km": 25.0, "sector": "BHUTAN_IB", "desc": "DGCA 25 km International Border corridor along Jaigaon / Phuentsholing main gateway."},
+    {"id": "DS-BORDER-ASSAM-KOKRAJHAR", "name": "Assam Bhutan Border 25 km Red Zone (Kokrajhar / Sarpang Sector)", "lat": 26.8500, "lon": 90.2500, "radius_km": 25.0, "sector": "BHUTAN_IB", "desc": "DGCA 25 km International Border buffer in Western Assam."},
+    {"id": "DS-BORDER-ASSAM-GELEPHU", "name": "Assam Bhutan Border 25 km Red Zone (Chirang / Gelephu Sector)", "lat": 26.8800, "lon": 90.5500, "radius_km": 25.0, "sector": "BHUTAN_IB", "desc": "DGCA 25 km International Border buffer near Gelephu border check post."},
+    {"id": "DS-BORDER-ASSAM-DARRANGA", "name": "Assam Bhutan Border 25 km Red Zone (Baksa / Udalguri / Samdrup Jongkhar)", "lat": 26.8500, "lon": 91.5000, "radius_km": 25.0, "sector": "BHUTAN_IB", "desc": "DGCA 25 km International Border buffer along Darranga / Samdrup gateway."},
+
+    # --- INDIA - CHINA LAC (EASTERN SECTOR) ---
     {"id": "DS-BORDER-SIKKIM-NATHULA", "name": "Sikkim Border 25 km Red Zone (Nathu La / Doklam Sector)", "lat": 27.3800, "lon": 88.8300, "radius_km": 25.0, "sector": "SIKKIM_BORDER", "desc": "DGCA 25 km International Land Border buffer in East/North Sikkim."},
+    {"id": "DS-BORDER-SIKKIM-NORTH", "name": "Sikkim Border 25 km Red Zone (Cho Lhamo / Gurudongmar / LAC)", "lat": 27.9500, "lon": 88.6500, "radius_km": 25.0, "sector": "SIKKIM_BORDER", "desc": "DGCA 25 km high-altitude Line of Actual Control frontier in North Sikkim."},
     {"id": "DS-BORDER-AP-TAWANG", "name": "Arunachal LAC 25 km Red Zone (Tawang / Bum La Sector)", "lat": 27.6000, "lon": 91.8700, "radius_km": 25.0, "sector": "ARUNACHAL_LAC", "desc": "DGCA 25 km Line of Actual Control frontier in Western Arunachal Pradesh."},
-    {"id": "DS-BORDER-AP-WALONG", "name": "Arunachal LAC 25 km Red Zone (Walong / Kibithu Eastern Sector)", "lat": 28.2500, "lon": 97.0500, "radius_km": 25.0, "sector": "ARUNACHAL_LAC", "desc": "DGCA 25 km easternmost LAC border corridor."},
+    {"id": "DS-BORDER-AP-MECHUKA", "name": "Arunachal LAC 25 km Red Zone (Shi Yomi / Mechuka Sector)", "lat": 28.3500, "lon": 94.2000, "radius_km": 25.0, "sector": "ARUNACHAL_LAC", "desc": "DGCA 25 km McMahon Line defense frontier in central Arunachal."},
+    {"id": "DS-BORDER-AP-TUTING", "name": "Arunachal LAC 25 km Red Zone (Upper Siang / Tuting / Gelling)", "lat": 28.9500, "lon": 95.0000, "radius_km": 25.0, "sector": "ARUNACHAL_LAC", "desc": "DGCA 25 km LAC corridor where Yarlung Tsangpo enters India as Siang/Brahmaputra."},
+    {"id": "DS-BORDER-AP-ANINI", "name": "Arunachal LAC 25 km Red Zone (Dibang Valley / Anini Sector)", "lat": 28.8500, "lon": 95.8000, "radius_km": 25.0, "sector": "ARUNACHAL_LAC", "desc": "DGCA 25 km high-altitude Line of Actual Control security zone."},
+    {"id": "DS-BORDER-AP-WALONG", "name": "Arunachal LAC 25 km Red Zone (Walong / Kibithu Eastern Sector)", "lat": 28.2500, "lon": 97.0500, "radius_km": 25.0, "sector": "ARUNACHAL_LAC", "desc": "DGCA 25 km easternmost LAC border corridor and historic battleground."},
+
+    # --- INDIA - BANGLADESH BORDER ---
+    {"id": "DS-BORDER-WB-SUNDARBANS", "name": "Bengal Border 25 km Red Zone (Sundarbans / Harinbhanga Sector)", "lat": 21.8000, "lon": 89.0500, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Maritime & Estuarine Border corridor."},
     {"id": "DS-BORDER-WB-PETRAPOLE", "name": "West Bengal Border 25 km Red Zone (Petrapole / Benapole Sector)", "lat": 23.0500, "lon": 88.8800, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Land Border corridor across South Bengal frontier."},
-    {"id": "DS-BORDER-MANIPUR-MOREH", "name": "Manipur Border 25 km Red Zone (Moreh / Indo-Myanmar Sector)", "lat": 24.2500, "lon": 94.3000, "radius_km": 25.0, "sector": "MYANMAR_IB", "desc": "DGCA 25 km International Land Border buffer along Indo-Myanmar frontier."}
+    {"id": "DS-BORDER-WB-GEDE", "name": "West Bengal Border 25 km Red Zone (Nadia / Gede / Darshana Sector)", "lat": 23.4000, "lon": 88.6500, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border buffer near Maitree Express railway crossing."},
+    {"id": "DS-BORDER-WB-MURSHIDABAD", "name": "West Bengal Border 25 km Red Zone (Murshidabad / Lalgola / Padma Sector)", "lat": 24.4500, "lon": 88.3500, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border corridor along Padma River."},
+    {"id": "DS-BORDER-WB-MALDA", "name": "West Bengal Border 25 km Red Zone (Malda / Mahadipur Sector)", "lat": 25.1000, "lon": 88.2500, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border buffer near Mahadipur Land Port."},
+    {"id": "DS-BORDER-WB-HILI", "name": "West Bengal Border 25 km Red Zone (Dakshin Dinajpur / Hili Sector)", "lat": 25.2800, "lon": 88.9800, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border security zone along historic Hili frontier."},
+    {"id": "DS-BORDER-WB-CHANGRABANDHA", "name": "West Bengal Border 25 km Red Zone (Cooch Behar / Changrabandha / Teen Bigha)", "lat": 26.3500, "lon": 88.9000, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border corridor along Teen Bigha corridor."},
+    {"id": "DS-BORDER-ASSAM-DHUBRI", "name": "Assam Border 25 km Red Zone (Dhubri / Golakganj / Brahmaputra)", "lat": 26.0000, "lon": 89.9500, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border buffer along Western Assam riverine frontier."},
+    {"id": "DS-BORDER-MEGHALAYA-GARO", "name": "Meghalaya Border 25 km Red Zone (Garo Hills / Mahendraganj / Dalu)", "lat": 25.2500, "lon": 90.2500, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border security envelope in West/South Garo Hills."},
+    {"id": "DS-BORDER-MEGHALAYA-DAWKI", "name": "Meghalaya Border 25 km Red Zone (East Khasi Hills / Dawki / Tamabil)", "lat": 25.1800, "lon": 92.0500, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border corridor along Umngot river and Tamabil ICP."},
+    {"id": "DS-BORDER-ASSAM-KARIMGANJ", "name": "Assam Border 25 km Red Zone (Barak Valley / Karimganj / Sutarkandi)", "lat": 24.8500, "lon": 92.3500, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border buffer along Kushiara river frontier."},
+    {"id": "DS-BORDER-TRIPURA-AGARTALA", "name": "Tripura Border 25 km Red Zone (Agartala / Akhaura Integrated Check Post)", "lat": 23.8500, "lon": 91.2700, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border security envelope surrounding state capital Agartala."},
+    {"id": "DS-BORDER-TRIPURA-BELONIA", "name": "Tripura Border 25 km Red Zone (South Tripura / Belonia / Sabroom)", "lat": 23.1500, "lon": 91.5500, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border buffer near Feni river and Maitri Setu."},
+    {"id": "DS-BORDER-MIZORAM-TLABUNG", "name": "Mizoram Border 25 km Red Zone (Lunglei / Tlabung / Demagiri Sector)", "lat": 22.9000, "lon": 92.5000, "radius_km": 25.0, "sector": "BANGLADESH_IB", "desc": "DGCA 25 km International Border corridor along Western Mizoram frontier."},
+
+    # --- INDIA - MYANMAR BORDER ---
+    {"id": "DS-BORDER-AP-PANGSAU", "name": "Arunachal Border 25 km Red Zone (Changlang / Pangsau Pass / Stillwell)", "lat": 27.2500, "lon": 96.1500, "radius_km": 25.0, "sector": "MYANMAR_IB", "desc": "DGCA 25 km International Border security corridor near Patkai range."},
+    {"id": "DS-BORDER-NAGALAND-MON", "name": "Nagaland Border 25 km Red Zone (Mon / Longwa Border Village)", "lat": 26.5000, "lon": 95.1000, "radius_km": 25.0, "sector": "MYANMAR_IB", "desc": "DGCA 25 km International Border buffer across Longwa and Konyak frontier."},
+    {"id": "DS-BORDER-NAGALAND-SARAMATI", "name": "Nagaland Border 25 km Red Zone (Kiphire / Phek / Mount Saramati)", "lat": 25.7500, "lon": 94.8500, "radius_km": 25.0, "sector": "MYANMAR_IB", "desc": "DGCA 25 km high-altitude international border corridor."},
+    {"id": "DS-BORDER-MANIPUR-MOREH", "name": "Manipur Border 25 km Red Zone (Moreh / Indo-Myanmar ICP Sector)", "lat": 24.2500, "lon": 94.3000, "radius_km": 25.0, "sector": "MYANMAR_IB", "desc": "DGCA 25 km International Land Border buffer along Indo-Myanmar Asian Highway frontier."},
+    {"id": "DS-BORDER-MANIPUR-BEHIANG", "name": "Manipur Border 25 km Red Zone (Churachandpur / Behiang Sector)", "lat": 23.9000, "lon": 93.9000, "radius_km": 25.0, "sector": "MYANMAR_IB", "desc": "DGCA 25 km International Border buffer in Southern Manipur."},
+    {"id": "DS-BORDER-MIZORAM-ZOKHAWTHAR", "name": "Mizoram Border 25 km Red Zone (Champhai / Zokhawthar / Tiau Sector)", "lat": 23.3500, "lon": 93.3500, "radius_km": 25.0, "sector": "MYANMAR_IB", "desc": "DGCA 25 km International Border trade corridor along Tiau river."},
+    {"id": "DS-BORDER-MIZORAM-SAIHA", "name": "Mizoram Border 25 km Red Zone (Saiha / Lawngtlai / Parva Tri-Junction)", "lat": 22.2000, "lon": 92.9500, "radius_km": 25.0, "sector": "MYANMAR_IB", "desc": "DGCA 25 km southern international border buffer near Bangladesh-Myanmar-India tri-point."}
 ]
 
 # ==============================================================================
-# 3. MILITARY DEFENSE BASES, AIR FORCE STATIONS & NAVAL HUBS
+# 4. MILITARY DEFENSE BASES, AIR FORCE STATIONS & NAVAL HUBS
 # ==============================================================================
 MILITARY_DEFENSE_RED_ZONES = [
     {"id": "DS-MIL-IAF-AMBALA", "name": "Ambala Air Force Station (Rafale Fighter Base)", "city": "Ambala", "state": "Haryana", "lat": 30.3686, "lon": 76.8172, "radius_km": 6.5, "service": "IAF", "desc": "No. 17 Golden Arrows Rafale Squadron Air Base. High-Security Military Airspace."},
@@ -205,7 +454,7 @@ MILITARY_DEFENSE_RED_ZONES = [
 ]
 
 # ==============================================================================
-# 4. ORDNANCE FACTORIES & DEFENSE PRODUCTION UNITS (MILITARY FACTORIES)
+# 5. ORDNANCE FACTORIES & DEFENSE PRODUCTION UNITS
 # ==============================================================================
 ORDNANCE_DEFENSE_FACTORIES = [
     {"id": "DS-FACT-OF-AVADI", "name": "Heavy Vehicles Factory (HVF Avadi - Tank Production)", "city": "Chennai", "state": "Tamil Nadu", "lat": 13.1250, "lon": 80.1000, "radius_km": 4.5, "desc": "Manufactures Main Battle Tanks (Arjun Mk-1A, T-90 Bhishma). Defense Production Red Zone."},
@@ -221,7 +470,7 @@ ORDNANCE_DEFENSE_FACTORIES = [
 ]
 
 # ==============================================================================
-# 5. HAZARDOUS PETROCHEMICAL REFINERIES & INDUSTRIAL MEGA-FACTORIES
+# 6. HAZARDOUS PETROCHEMICAL REFINERIES & INDUSTRIAL MEGA-FACTORIES
 # ==============================================================================
 STRATEGIC_PETROCHEM_FACTORIES = [
     {"id": "DS-IND-JAMNAGAR-REF", "name": "Jamnagar Energy Mega-Complex & Reliance Refinery", "city": "Jamnagar", "state": "Gujarat", "lat": 22.4707, "lon": 70.0667, "radius_km": 6.5, "desc": "World's largest petroleum refinery cluster (1.24M bpd capacity). Critical Energy Infrastructure."},
@@ -235,7 +484,7 @@ STRATEGIC_PETROCHEM_FACTORIES = [
 ]
 
 # ==============================================================================
-# 6. STRATEGIC MEGA-DAMS, RESERVOIRS & SENSITIVE WATER BODIES
+# 7. STRATEGIC MEGA-DAMS, RESERVOIRS & SENSITIVE WATER BODIES
 # ==============================================================================
 MAJOR_DAMS_WATER_BODIES = [
     {"id": "DS-WATER-TEHRI-DAM", "name": "Tehri Hydroelectric Mega-Dam & Reservoir", "city": "Tehri Garhwal", "state": "Uttarakhand", "lat": 30.3780, "lon": 78.4800, "radius_km": 5.5, "desc": "India's highest dam (260.5m) and primary Himalayan water reservoir. Critical hydrological security."},
@@ -251,7 +500,7 @@ MAJOR_DAMS_WATER_BODIES = [
 ]
 
 # ==============================================================================
-# 7. STRATEGIC NUCLEAR POWER & RESEARCH RED ZONES
+# 8. STRATEGIC NUCLEAR POWER & RESEARCH RED ZONES
 # ==============================================================================
 STRATEGIC_NUCLEAR_RED_ZONES = [
     {"id": "DS-RED-MUM-BARC", "name": "Bhabha Atomic Research Centre (BARC Trombay)", "city": "Mumbai", "state": "Maharashtra", "lat": 19.0067, "lon": 72.9192, "radius_km": 5.0, "category": "NUCLEAR_RESEARCH", "desc": "BARC Trombay Nuclear Complex & reactor containment. Strictly Prohibited."},
@@ -264,7 +513,7 @@ STRATEGIC_NUCLEAR_RED_ZONES = [
 ]
 
 # ==============================================================================
-# 8. TEMPORARY RED ZONES (TFR - TEMPORARY FLIGHT RESTRICTIONS)
+# 9. TEMPORARY RED ZONES (TFR - TEMPORARY FLIGHT RESTRICTIONS)
 # ==============================================================================
 TEMPORARY_RED_ZONES = [
     {"id": "DS-TFR-DEL-CENTRAL-VISTA", "name": "Central Vista VIP Security Zone (Parliament, Rashtrapati Bhavan, PM Residence)", "city": "New Delhi", "state": "Delhi", "lat": 28.6143, "lon": 77.2008, "radius_km": 4.5, "category": "TFR_VIP_SECURITY", "validity": "PERMANENT_RESTRICTED (NOTAM A-01)", "desc": "Kartavya Path, Rashtrapati Bhavan, PM Residence & Parliament House. Zero tolerance drone ban."},
@@ -273,41 +522,6 @@ TEMPORARY_RED_ZONES = [
     {"id": "DS-TFR-UP-AYODHYA", "name": "Ayodhya Shri Ram Janmabhoomi High-Security Complex (TFR)", "city": "Ayodhya", "state": "Uttar Pradesh", "lat": 26.7950, "lon": 82.1940, "radius_km": 4.0, "category": "TFR_SPECIAL_SECURITY", "validity": "ACTIVE_TFR", "desc": "Special Security Force (SSF) & NSG designated anti-drone protective red zone."},
     {"id": "DS-TFR-GJ-KEVADIA", "name": "Statue of Unity National Security Envelope (TFR)", "city": "Kevadia", "state": "Gujarat", "lat": 21.8380, "lon": 73.7190, "radius_km": 4.0, "category": "TFR_NATIONAL_MONUMENT", "validity": "ACTIVE_TFR", "desc": "National security VIP perimeter surrounding Sardar Patel memorial and Narmada reservoir."},
     {"id": "DS-TFR-UP-KASHI", "name": "Kashi Vishwanath Corridor & Ganga Ghats Security Envelope", "city": "Varanasi", "state": "Uttar Pradesh", "lat": 25.3100, "lon": 83.0100, "radius_km": 3.5, "category": "TFR_HERITAGE_SECURITY", "validity": "ACTIVE_TFR", "desc": "Ganga Aarti Ghats, Kashi Vishwanath temple corridor and riverfront high-security zone."}
-]
-
-# Continuous 25 km International Land Border Ribbon Corridors
-INTERNATIONAL_BORDER_POLYGONS = [
-    {
-        "id": "DS-CORRIDOR-WEST-IB",
-        "name": "Western International Border 25 km Red Zone Ribbon (Gujarat - Rajasthan - Punjab)",
-        "category": "25 km International Border Corridor",
-        "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km DGCA Red Zone security ribbon along the International Border from Sir Creek/Rann of Kutch to Pathankot.",
-        "coordinates": [
-            [68.30, 23.65], [68.75, 24.35], [70.15, 25.10], [70.05, 26.50],
-            [69.95, 27.25], [71.20, 27.95], [72.30, 28.60], [73.50, 29.80],
-            [73.95, 30.40], [74.55, 31.60], [75.05, 32.15], [75.45, 32.40],
-            [75.72, 32.22], [75.32, 31.98], [74.82, 31.42], [74.28, 30.22],
-            [73.80, 29.55], [72.58, 28.38], [71.48, 27.75], [70.32, 27.05],
-            [70.42, 26.35], [70.45, 24.95], [69.05, 24.20], [68.60, 23.55],
-            [68.30, 23.65]
-        ]
-    },
-    {
-        "id": "DS-CORRIDOR-NORTH-LOC-LAC",
-        "name": "Northern Frontier 25 km Red Zone Ribbon (J&K LOC - Ladakh LAC)",
-        "category": "25 km International Border Corridor",
-        "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km defense buffer ribbon along the Line of Control (LOC) and Line of Actual Control (LAC).",
-        "coordinates": [
-            [74.75, 32.65], [74.15, 33.15], [74.05, 33.80], [74.15, 34.25],
-            [74.35, 34.65], [75.15, 34.78], [76.50, 34.85], [77.30, 35.40],
-            [78.50, 35.20], [78.95, 34.10], [79.25, 33.00],
-            [78.95, 33.10], [78.68, 34.00], [78.22, 35.00], [77.10, 35.15],
-            [76.35, 34.60], [75.08, 34.55], [74.52, 34.40], [74.32, 33.95],
-            [74.38, 33.30], [74.92, 32.80], [74.75, 32.65]
-        ]
-    }
 ]
 
 # Pan-India boundary
@@ -415,7 +629,7 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
                 "geometry": {"type": "Polygon", "coordinates": [coords]}
             })
 
-    # 3. 25 km International Border Zones (Continuous Ribbons & Strategic Border Sectors)
+    # 3. Continuous 25 km International Land Border Ribbon Corridors & Defense Polygons
     for poly_item in INTERNATIONAL_BORDER_POLYGONS:
         features.append({
             "type": "Feature",
@@ -428,7 +642,7 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
                 "radius_km": 25.0,
                 "max_altitude_agl_ft": 0,
                 "max_altitude_agl_m": 0,
-                "permission_required": "STRICTLY PROHIBITED (25 km International Border Corridor)",
+                "permission_required": "STRICTLY PROHIBITED (25 km International Land Border Buffer)",
                 "authority": "MoD / MHA / DGCA India",
                 "rule_ref": poly_item["rule_ref"],
                 "description": poly_item["desc"],
@@ -444,27 +658,28 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
             }
         })
 
+    # 4. 25 km International Border Sector Checkpoint Circles
     add_red_features(INTERNATIONAL_BORDER_RED_ZONES, "25 km International Border Corridor", "#991b1b", "#dc2626", 0.38, 2.2)
 
-    # 4. Military Defense Areas
+    # 5. Military Defense Areas
     add_red_features(MILITARY_DEFENSE_RED_ZONES, "Military Defense Airspace", "#7f1d1d", "#b91c1c", 0.44, 2.2)
 
-    # 5. Ordnance Factories & Defense Production
+    # 6. Ordnance Factories & Defense Production
     add_red_features(ORDNANCE_DEFENSE_FACTORIES, "Defense Ordnance Factory", "#831843", "#be185d", 0.45, 2.2)
 
-    # 6. Petrochemical Refineries & Hazardous Factories
+    # 7. Petrochemical Refineries & Hazardous Factories
     add_red_features(STRATEGIC_PETROCHEM_FACTORIES, "Industrial Petrochemical Refinery", "#9a3412", "#ea580c", 0.42, 2.2)
 
-    # 7. Major Dams & Sensitive Water Bodies
+    # 8. Major Dams & Sensitive Water Bodies
     add_red_features(MAJOR_DAMS_WATER_BODIES, "Strategic Water Body / Dam", "#1e3a8a", "#2563eb", 0.40, 2.2)
 
-    # 8. Strategic Nuclear Facilities
+    # 9. Strategic Nuclear Facilities
     add_red_features(STRATEGIC_NUCLEAR_RED_ZONES, "Strategic Nuclear Installation", "#881337", "#e11d48", 0.48, 2.2)
 
-    # 9. Temporary Red Zones (TFR)
+    # 10. Temporary Red Zones (TFR)
     add_red_features(TEMPORARY_RED_ZONES, "Temporary Flight Restriction (TFR)", "#4c0519", "#be123c", 0.52, 2.5, "6, 3")
 
-    # 10. Civil Aerodrome 0-5 km Runways
+    # 11. Civil Aerodrome 0-5 km Runways
     for aero in INDIAN_AERODROMES:
         lat, lon, r = aero["lat"], aero["lon"], aero["red_radius_km"]
         coords = generate_circle_polygon(lat, lon, r)
@@ -500,13 +715,14 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
         "type": "FeatureCollection",
         "metadata": {
             "provider": "DGCA India DigitalSky Platform",
-            "version": "Drone Rules 2021 Comprehensive Airspace Map (v4.5)",
-            "updated_at": "2026-10-10T05:30:00Z",
+            "version": "Drone Rules 2021 Comprehensive Airspace Map (v5.0)",
+            "updated_at": "2026-10-29T06:00:00Z",
             "total_features": len(features),
             "zones_breakdown": {
                 "green": 1,
                 "yellow_atc_controlled": len(INDIAN_AERODROMES),
-                "red_international_borders_25km": len(INTERNATIONAL_BORDER_RED_ZONES),
+                "red_international_border_ribbons": len(INTERNATIONAL_BORDER_POLYGONS),
+                "red_international_border_sectors": len(INTERNATIONAL_BORDER_RED_ZONES),
                 "red_military_defense_bases": len(MILITARY_DEFENSE_RED_ZONES),
                 "red_ordnance_defense_factories": len(ORDNANCE_DEFENSE_FACTORIES),
                 "red_petrochemical_refineries": len(STRATEGIC_PETROCHEM_FACTORIES),
@@ -524,6 +740,26 @@ def classify_coordinate_zone(lat: float, lon: float, altitude_m: Optional[float]
     closest_distance = 99999.0
     closest_zone_info = None
 
+    # 1. First evaluate against continuous 25 km International Land Border Ribbon Corridors & Defense Polygons
+    for poly in INTERNATIONAL_BORDER_POLYGONS:
+        if is_point_in_polygon(lat, lon, poly["coordinates"]):
+            return {
+                "zone": "RED",
+                "zone_type": "RED",
+                "zone_color": "#ef4444",
+                "zone_name": poly["name"],
+                "category": poly.get("category", "25 km International Border Corridor"),
+                "status_badge": "🔴 RED ZONE (25 KM INTERNATIONAL BORDER)",
+                "max_altitude_ft": 0,
+                "max_altitude_m": 0,
+                "is_flight_permitted": False,
+                "permission_required": "STRICTLY PROHIBITED (25 km International Land Border Buffer)",
+                "nearest_zone": poly["name"],
+                "distance_to_boundary_km": 0.0,
+                "rule_ref": poly.get("rule_ref", "Drone Rules 2021, Rule 22(3)")
+            }
+
+    # 2. Check circular zone lists
     def check_zone_list(zone_list: List[Dict[str, Any]], zone_type: str, category_name: str, perm_text: str, rule: str):
         nonlocal closest_distance, closest_zone_info
         for z in zone_list:
@@ -533,7 +769,9 @@ def classify_coordinate_zone(lat: float, lon: float, altitude_m: Optional[float]
                 closest_zone_info = {"name": z["name"], "type": zone_type, "radius_km": z["radius_km"]}
             if dist <= z["radius_km"]:
                 return {
+                    "zone": zone_type,
                     "zone_type": zone_type,
+                    "zone_color": "#ef4444" if zone_type == "RED" else ("#f59e0b" if zone_type == "YELLOW" else "#10b981"),
                     "zone_name": z["name"],
                     "category": category_name,
                     "status_badge": f"🔴 RED ZONE ({category_name.upper()})",
@@ -561,7 +799,7 @@ def classify_coordinate_zone(lat: float, lon: float, altitude_m: Optional[float]
         if res:
             return res
 
-    # Aerodromes
+    # 3. Aerodrome 0-5 km Runway Red Zones
     for aero in INDIAN_AERODROMES:
         dist = haversine_distance_km(lat, lon, aero["lat"], aero["lon"])
         if dist < closest_distance:
@@ -569,7 +807,9 @@ def classify_coordinate_zone(lat: float, lon: float, altitude_m: Optional[float]
             closest_zone_info = {"name": aero["name"], "type": "RED" if dist <= aero["red_radius_km"] else "YELLOW", "radius_km": aero["red_radius_km"]}
         if dist <= aero["red_radius_km"]:
             return {
+                "zone": "RED",
                 "zone_type": "RED",
+                "zone_color": "#ef4444",
                 "zone_name": f"{aero['name']} (0-5 km Runway Perimeter)",
                 "category": "Airport Runway Perimeter",
                 "status_badge": "🔴 RED ZONE (AIRPORT NO-FLY)",
@@ -579,11 +819,14 @@ def classify_coordinate_zone(lat: float, lon: float, altitude_m: Optional[float]
                 "rule_ref": "Drone Rules 2021, Rule 22(3)"
             }
 
+    # 4. Aerodrome 5-12 km Controlled Yellow Zones
     for aero in INDIAN_AERODROMES:
         dist = haversine_distance_km(lat, lon, aero["lat"], aero["lon"])
         if dist <= aero["yellow_radius_km"]:
             return {
+                "zone": "YELLOW",
                 "zone_type": "YELLOW",
+                "zone_color": "#f59e0b",
                 "zone_name": f"{aero['name']} (5-12 km Controlled Airspace)",
                 "category": "ATC Controlled Airspace",
                 "status_badge": "🟡 YELLOW ZONE (ATC AUTHORIZATION REQ)",
@@ -594,9 +837,11 @@ def classify_coordinate_zone(lat: float, lon: float, altitude_m: Optional[float]
                 "rule_ref": "Drone Rules 2021, Rule 22(2)"
             }
 
-    # Green Zone fallback
+    # 5. Green Zone fallback
     return {
+        "zone": "GREEN",
         "zone_type": "GREEN",
+        "zone_color": "#10b981",
         "zone_name": "Standard Unrestricted Airspace (Green Zone)",
         "category": "Open Airspace",
         "status_badge": "🟢 GREEN ZONE (CLEAR FOR FLIGHT)",
