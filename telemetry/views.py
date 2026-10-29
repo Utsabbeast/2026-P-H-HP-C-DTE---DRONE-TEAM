@@ -704,18 +704,18 @@ class RequestsView(TemplateView):
         context['user_role'] = 'ATC' if is_atc else self.request.session.get('user_role', 'GUEST')
         context['user_role_label'] = 'ATC Controller (All Access)' if is_atc else self.request.session.get('user_role_label', 'Guest Observer (Read-Only)')
 
-        # Phase 1: User Registrations for Profile Acceptance
-        context['phase1_requests'] = PilotProfile.objects.all().order_by('-created_at')
+        # Phase 1: User Registrations for Profile Acceptance (chronological: Jalandhar #1, Ambala #2)
+        context['phase1_requests'] = PilotProfile.objects.all().order_by('created_at')
 
         # Phase 2: Completed Profiles submitted for final verification
-        context['phase2_requests'] = PilotProfile.objects.exclude(phase2_status='NOT_SUBMITTED').order_by('-phase2_submitted_at')
+        context['phase2_requests'] = PilotProfile.objects.exclude(phase2_status='NOT_SUBMITTED').order_by('created_at')
 
         # For backwards compatibility in template
-        context['profile_requests'] = PilotProfile.objects.all().order_by('-created_at')
+        context['profile_requests'] = PilotProfile.objects.all().order_by('created_at')
 
         # Flight permission requests & Drone registrations
-        context['flight_requests'] = FlightPermissionRequest.objects.all().order_by('-created_at')
-        context['drone_registrations'] = DroneRegistration.objects.all().order_by('-created_at')
+        context['flight_requests'] = FlightPermissionRequest.objects.all().order_by('created_at')
+        context['drone_registrations'] = DroneRegistration.objects.all().order_by('created_at')
         return context
 
 
