@@ -895,28 +895,6 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
     # 11. Aerodrome 3-Tier Official DigitalSky Envelopes
     for aero in INDIAN_AERODROMES:
         lat, lon = aero["lat"], aero["lon"]
-        # Tier 0: Aerodrome Center Marker with Plane Icon & Name Label
-        features.append({
-            "type": "Feature",
-            "id": f"DS-AIRPORT-PIN-{aero['id']}",
-            "properties": {
-                "id": f"DS-AIRPORT-PIN-{aero['id']}",
-                "name": f"{aero['name']}",
-                "zone_type": "AIRPORT_PIN",
-                "layer_group": "airport_red",
-                "category": "Aerodrome Facility",
-                "aerodrome_id": aero["id"],
-                "city": aero["city"],
-                "state": aero["state"],
-                "lat": lat,
-                "lon": lon,
-                "color": "#0284c7"
-            },
-            "geometry": {
-                "type": "Point",
-                "coordinates": [lon, lat]
-            }
-        })
         # Tier 1: Airport Red (0 - 5 km)
         coords_5k = generate_circle_polygon(lat, lon, 5.0)
         f_id_red = f"DS-AIRPORT-RED-{aero['id']}"

@@ -490,65 +490,7 @@
             const props = feat.properties || {};
             const zoneType = (props.zone_type || 'GREEN').toUpperCase();
             const geom = feat.geometry;
-            if (!geom) return;
-
-            if (geom.type === 'Point') {
-                const airportName = props.name || 'Aerodrome';
-                const lat = geom.coordinates[1];
-                const lon = geom.coordinates[0];
-                const markerIcon = L.divIcon({
-                    className: 'ds-airport-marker-pin',
-                    html: `
-                        <div style="display: flex; flex-direction: column; align-items: center; pointer-events: auto; cursor: pointer; transform: translate(-50%, -50%);">
-                            <div style="width: 22px; height: 22px; border-radius: 50%; background: #0284c7; border: 2px solid #ffffff; box-shadow: 0 1px 4px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 11px; font-weight: bold;">✈</div>
-                            <span style="font-size: 10px; font-weight: 700; color: #0f172a; background: rgba(255,255,255,0.92); border: 1px solid rgba(0,0,0,0.15); box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 1px 5px; border-radius: 3px; white-space: nowrap; margin-top: 2px; text-shadow: 0 0 1px #fff;">${airportName}</span>
-                        </div>
-                    `,
-                    iconSize: [0, 0],
-                    iconAnchor: [0, 0]
-                });
-
-                const marker = L.marker([lat, lon], {
-                    icon: markerIcon,
-                    interactive: true,
-                    zIndexOffset: 1000
-                });
-
-                const popupHtml = `
-                    <div class="ds-popup-card">
-                        <div class="ds-popup-badge red">
-                            <span>✈️</span>
-                            <span>AERODROME</span>
-                            <span style="opacity: 0.85; font-size: 0.62rem; margin-left: 4px;">• ${props.category || 'Civil / Military'}</span>
-                        </div>
-                        <div class="ds-popup-title">${airportName}</div>
-                        <div class="ds-popup-desc">Operational civil & defense aerodrome reference point. Protected by 0–5 km Red Zone and 5–12 km Yellow Controlled Airspace envelope.</div>
-                        <div class="ds-popup-meta">
-                            <div class="ds-popup-row">
-                                <span class="ds-popup-label">Location:</span>
-                                <span class="ds-popup-val">${props.city || ''}, ${props.state || ''}</span>
-                            </div>
-                            <div class="ds-popup-row">
-                                <span class="ds-popup-label">Coordinates:</span>
-                                <span class="ds-popup-val">${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E</span>
-                            </div>
-                            <div class="ds-popup-row">
-                                <span class="ds-popup-label">Regulation:</span>
-                                <span class="ds-popup-val">Drone Rules 2021, Rule 22</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                marker.bindPopup(popupHtml, { className: 'digitalsky-popup' });
-                const layerGroupKey = props.layer_group || 'airport_red';
-                marker._dsLayerGroup = layerGroupKey;
-                if (!digitalSkyLayerMap[layerGroupKey]) digitalSkyLayerMap[layerGroupKey] = [];
-                digitalSkyLayerMap[layerGroupKey].push(marker);
-                digitalSkyAirspaceGroup.addLayer(marker);
-                return;
-            }
-
-            if (geom.type !== 'Polygon' && geom.type !== 'MultiPolygon') return;
+            if (!geom || (geom.type !== 'Polygon' && geom.type !== 'MultiPolygon')) return;
 
             // Coordinates in GeoJSON are [lon, lat], Leaflet expects [lat, lon]
             let latlngs;
