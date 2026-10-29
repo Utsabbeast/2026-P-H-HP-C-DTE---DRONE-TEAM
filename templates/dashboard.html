@@ -309,14 +309,14 @@
                         <span id="trailButtonText">Hide Trail</span>
                     </button>
 
-                    <!-- Toggle DigitalSky Airspace & Layers Button -->
-                    <button class="btn btn-secondary btn-sm" id="btnToggleDigitalSkyLayers" title="Toggle DigitalSky Airspace Layers & Legend (AAI Drone Rules 2021)">
+                    <!-- Toggle DigitalSky Airspace Rules Button -->
+                    <button class="btn btn-secondary btn-sm" id="btnToggleDigitalSkyLayers" title="Toggle DigitalSky Airspace Rules (AAI Drone Rules 2021)">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                             <polygon points="12 2 2 7 12 12 22 7 12 2"/>
                             <polyline points="2 17 12 22 22 17"/>
                             <polyline points="2 12 12 17 22 12"/>
                         </svg>
-                        <span>Airspace Layers</span>
+                        <span>Airspace Rules</span>
                     </button>
 
                     <!-- Reset View Button -->
@@ -393,12 +393,11 @@
                     </div>
                 </div>
 
-                <!-- Digital Sky Airspace Zone Legend & Layer Control Overlay (Official AAI Mirror) -->
+                <!-- Digital Sky Airspace Zone Legend Overlay (Official AAI Mirror) -->
                 <div id="digitalSkyLegend" class="digital-sky-legend" style="display: none;">
                     <div class="legend-header">
                         <div class="legend-title-badge">
-                            <span>🇮🇳</span>
-                            <strong>Digital Sky Airspace</strong>
+                            <strong>Digital Sky Airspace Rules</strong>
                         </div>
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <a href="https://digitalsky.aai.aero/digital-sky-map" target="_blank" rel="noopener noreferrer" title="Open Official AAI DigitalSky Map" style="color: #38bdf8; font-size: 0.68rem; text-decoration: none; padding: 2px 6px; border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.1); font-weight: 600;">
@@ -408,88 +407,36 @@
                         </div>
                     </div>
 
-                    <!-- Mode Tab Switcher: Data Layers vs Zone Legend -->
-                    <div class="ds-tab-bar" style="display: flex; background: #001A4A; border-bottom: 1px solid rgba(255,255,255,0.12);">
-                        <button type="button" id="dsTabLayers" class="ds-tab-btn active" style="flex: 1; padding: 7px 10px; font-size: 0.72rem; font-weight: 700; color: #38bdf8; background: transparent; border: none; border-bottom: 2px solid #38bdf8; cursor: pointer;">
-                            📑 Data Layers
-                        </button>
-                        <button type="button" id="dsTabLegend" class="ds-tab-btn" style="flex: 1; padding: 7px 10px; font-size: 0.72rem; font-weight: 700; color: #94a3b8; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer;">
-                            ℹ️ Airspace Rules
-                        </button>
-                    </div>
-
-                    <!-- Panel 1: Data Layers (Matches https://digitalsky.aai.aero/digital-sky-map) -->
-                    <div id="dsPanelLayers" class="ds-panel-content" style="padding: 10px 14px; max-height: 270px; overflow-y: auto; background: #002D74;">
-                        <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 6px;">Boundary Layers</div>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #ffffff; margin-bottom: 8px; cursor: pointer;">
-                            <input type="checkbox" id="chk_boundary_25km" class="ds-layer-chk" data-group="boundary_25km" checked style="accent-color: #dc2626;">
-                            <span style="display: inline-block; width: 10px; height: 10px; background: #dc2626; border: 1px solid #991b1b;"></span>
-                            <span>International Boundary - 25km</span>
-                        </label>
-
-                        <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-top: 10px; margin-bottom: 6px;">Zone Layers</div>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #ffffff; margin-bottom: 6px; cursor: pointer;">
-                            <input type="checkbox" id="chk_airport_red" class="ds-layer-chk" data-group="airport_red" checked style="accent-color: #dc2626;">
-                            <span style="display: inline-block; width: 10px; height: 10px; background: #dc2626; border: 1px solid #7f1d1d;"></span>
-                            <span>Airport Red (0-5 km)</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #ffffff; margin-bottom: 6px; cursor: pointer;">
-                            <input type="checkbox" id="chk_airport_yellow_5_8" class="ds-layer-chk" data-group="airport_yellow_5_8" checked style="accent-color: #f59e0b;">
-                            <span style="display: inline-block; width: 10px; height: 10px; background: #f59e0b; border: 1px solid #d97706;"></span>
-                            <span>Airport Yellow [5-8]km</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #ffffff; margin-bottom: 6px; cursor: pointer;">
-                            <input type="checkbox" id="chk_airport_yellow_8_12" class="ds-layer-chk" data-group="airport_yellow_8_12" checked style="accent-color: #facc15;">
-                            <span style="display: inline-block; width: 10px; height: 10px; background: #facc15; border: 1px solid #ca8a04;"></span>
-                            <span>Airport Yellow [8-12]km</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #ffffff; margin-bottom: 6px; cursor: pointer;">
-                            <input type="checkbox" id="chk_red_zone" class="ds-layer-chk" data-group="red_zone" checked style="accent-color: #dc2626;">
-                            <span style="display: inline-block; width: 10px; height: 10px; background: #dc2626; border: 1px solid #7f1d1d;"></span>
-                            <span>Red Zone (Defense & Offshore)</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #ffffff; margin-bottom: 6px; cursor: pointer;">
-                            <input type="checkbox" id="chk_temporary_red_zone" class="ds-layer-chk" data-group="temporary_red_zone" checked style="accent-color: #be123c;">
-                            <span style="display: inline-block; width: 10px; height: 10px; background: #be123c; border: 1px dashed #ffffff;"></span>
-                            <span>Temporary Red Zone (TFR)</span>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: #ffffff; margin-bottom: 4px; cursor: pointer;">
-                            <input type="checkbox" id="chk_green_zone" class="ds-layer-chk" data-group="green_zone" checked style="accent-color: #10b981;">
-                            <span style="display: inline-block; width: 10px; height: 10px; background: #10b981; border: 1px solid #059669;"></span>
-                            <span>Green Zone (Free Flight 400ft)</span>
-                        </label>
-                    </div>
-
-                    <!-- Panel 2: Airspace Rules & Classification -->
-                    <div id="dsPanelLegend" class="ds-panel-content" style="display: none; padding: 10px 14px; max-height: 270px; overflow-y: auto; background: #002D74;">
-                        <div class="legend-items" style="padding: 0 !important; gap: 8px;">
-                            <div class="legend-item">
-                                <span class="legend-color-box red"></span>
-                                <div class="legend-desc">
-                                    <strong>Red Zone (Prohibited Airspace)</strong>
-                                    <span>25 km International Land Border Corridor, Northern Kashmir & LOC Defense, Offshore Bombay High, Chandipur DRDO Range, 0-5 km Runways, Nuclear Plants & Military Airbases. Strictly prohibited.</span>
+                    <!-- Panel: Airspace Rules & Classification -->
+                    <div id="dsPanelLegend" class="ds-panel-content" style="display: block; padding: 12px 14px; max-height: 280px; overflow-y: auto; background: #002D74;">
+                        <div class="legend-items" style="padding: 0 !important; gap: 10px; display: flex; flex-direction: column;">
+                            <div class="legend-item" style="display: flex; gap: 10px; align-items: flex-start;">
+                                <span class="legend-color-box red" style="display: inline-block; width: 12px; height: 12px; min-width: 12px; background: #dc2626; border: 1px solid #7f1d1d; margin-top: 3px; border-radius: 2px;"></span>
+                                <div class="legend-desc" style="display: flex; flex-direction: column; gap: 2px;">
+                                    <strong style="color: #f87171; font-size: 0.76rem;">Red Zone (Prohibited Airspace)</strong>
+                                    <span style="font-size: 0.70rem; color: #e2e8f0; line-height: 1.35;">25 km International Land Border Corridor, Northern Kashmir & LOC Defense, Offshore Bombay High, Chandipur DRDO Range, 0-5 km Runways, Nuclear Plants & Military Airbases. Strictly prohibited.</span>
                                 </div>
                             </div>
-                            <div class="legend-item">
-                                <span class="legend-color-box yellow"></span>
-                                <div class="legend-desc">
-                                    <strong>Yellow Zone (Controlled Airspace)</strong>
-                                    <span>5-8 km (max 200 ft / 60 m) and 8-12 km (max 400 ft / 120 m) aerodrome perimeter. Prior ATC authorization required.</span>
+                            <div class="legend-item" style="display: flex; gap: 10px; align-items: flex-start;">
+                                <span class="legend-color-box yellow" style="display: inline-block; width: 12px; height: 12px; min-width: 12px; background: #f59e0b; border: 1px solid #d97706; margin-top: 3px; border-radius: 2px;"></span>
+                                <div class="legend-desc" style="display: flex; flex-direction: column; gap: 2px;">
+                                    <strong style="color: #fbbf24; font-size: 0.76rem;">Yellow Zone (Controlled Airspace)</strong>
+                                    <span style="font-size: 0.70rem; color: #e2e8f0; line-height: 1.35;">5-8 km (max 200 ft / 60 m) and 8-12 km (max 400 ft / 120 m) aerodrome perimeter. Prior ATC authorization required.</span>
                                 </div>
                             </div>
-                            <div class="legend-item">
-                                <span class="legend-color-box green"></span>
-                                <div class="legend-desc">
-                                    <strong>Green Zone (Free Flight Envelope)</strong>
-                                    <span>Pan-India airspace up to 400 ft (120 m) AGL outside designated red and yellow zones. No prior permission required.</span>
+                            <div class="legend-item" style="display: flex; gap: 10px; align-items: flex-start;">
+                                <span class="legend-color-box green" style="display: inline-block; width: 12px; height: 12px; min-width: 12px; background: #10b981; border: 1px solid #059669; margin-top: 3px; border-radius: 2px;"></span>
+                                <div class="legend-desc" style="display: flex; flex-direction: column; gap: 2px;">
+                                    <strong style="color: #34d399; font-size: 0.76rem;">Green Zone (Free Flight Envelope)</strong>
+                                    <span style="font-size: 0.70rem; color: #e2e8f0; line-height: 1.35;">Pan-India airspace up to 400 ft (120 m) AGL outside designated red and yellow zones. No prior permission required.</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="legend-footer">
+                    <div class="legend-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; background: #001A4A; border-top: 1px solid rgba(255,255,255,0.1);">
                         <span style="font-size: 0.68rem; color: #94a3b8;">DGCA Drone Rules 2021 • AAI Mirror</span>
-                        <span id="legendZoneCount" style="color: #38bdf8; font-weight: 700; font-size: 0.72rem;">328 Zones Active</span>
+                        <span id="legendZoneCount" style="color: #38bdf8; font-weight: 700; font-size: 0.72rem;">666 Zones Active</span>
                     </div>
                 </div>
 
@@ -937,7 +884,7 @@
     <script src="{% static 'vendor/leaflet/leaflet.js' %}"></script>
     
     <!-- UTM Dashboard Core JavaScript (v4.8 - Connected-Only Map Visibility, PHHP&C Drone Names) -->
-    <script src="{% static 'js/dashboard.js' %}?v=6.1"></script>
+    <script src="{% static 'js/dashboard.js' %}?v=6.2"></script>
 
 <script>
     // State Tracking for Modes to allow Back/Forth navigation
