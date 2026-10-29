@@ -300,16 +300,17 @@ INTERNATIONAL_BORDER_POLYGONS = [
         "name": "Northern Frontier 25 km International Boundary Ribbon (J&K LOC - Ladakh LAC)",
         "category": "25 km International Border Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Continuous 25 km statutory defense buffer ribbon along the Line of Control (LOC) and Line of Actual Control (LAC) covering Northern J&K, Kargil, and Eastern Ladakh.",
+        "desc": "Continuous 25 km statutory defense buffer ribbon along the Line of Control (LOC) and Line of Actual Control (LAC) covering Northern J&K, Gilgit, Hunza, Baltistan, Siachen, and Eastern Ladakh.",
         "coordinates": [
-            [73.95, 34.15], [73.70, 34.60], [73.75, 35.00], [74.20, 35.35],
-            [74.70, 35.65], [75.40, 35.95], [76.20, 36.25], [76.90, 36.15],
-            [77.70, 35.95], [78.20, 35.75], [78.90, 35.55], [79.50, 35.05],
-            [79.75, 34.20], [79.60, 33.60], [79.35, 33.10], [79.15, 32.65],
-            [78.85, 32.75], [79.15, 33.15], [79.35, 33.70], [79.50, 34.25],
-            [79.25, 34.90], [78.70, 35.35], [78.05, 35.55], [77.55, 35.75],
-            [76.75, 35.95], [76.05, 36.05], [75.25, 35.75], [74.55, 35.45],
-            [74.10, 35.15], [73.95, 34.75], [73.90, 34.30], [73.95, 34.15]
+            [73.80, 34.20], [73.40, 34.80], [73.10, 35.50], [73.00, 36.30], [73.50, 36.80],
+            [74.20, 37.05], [74.80, 37.12], [75.60, 36.95], [76.50, 36.50],
+            [77.20, 36.10], [77.80, 35.70], [78.50, 35.60], [79.20, 35.30],
+            [79.80, 34.80], [80.30, 34.20], [79.80, 33.70], [79.30, 33.00], [78.90, 32.60],
+            [78.65, 32.75], [79.05, 33.15], [79.50, 33.70], [79.95, 34.25],
+            [79.50, 34.85], [78.95, 35.35], [78.30, 35.40], [77.65, 35.50],
+            [77.05, 35.85], [76.35, 36.25], [75.50, 36.70], [74.70, 36.85],
+            [74.15, 36.80], [73.70, 36.50], [73.25, 36.10], [73.35, 35.40],
+            [73.65, 34.75], [73.80, 34.20]
         ]
     },
     {
@@ -317,19 +318,18 @@ INTERNATIONAL_BORDER_POLYGONS = [
         "name": "Northern Kashmir & Ladakh Strategic Defense Red Zone",
         "category": "High-Security Defense Frontier",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Solid high-altitude strategic defense frontier covering Kashmir LOC, Kupwara, Gurez, Kargil, Dras, Siachen, Nubra Valley, Galwan, Aksai Chin, and Pangong Tso. Civilian drone operations strictly prohibited.",
+        "desc": "Solid high-altitude strategic defense frontier covering entire Northern Kashmir LOC, Gilgit, Hunza, Nagar, Skardu, Siachen, Nubra Valley, Galwan, Aksai Chin, and Pangong Tso up to international boundary. Civilian drone operations strictly prohibited.",
         "coordinates": [
-            [73.95, 34.15],
-            [73.75, 34.50], [73.80, 34.90], [74.20, 35.20],
-            [74.70, 35.50], [75.40, 35.80], [76.20, 36.10], [76.90, 36.00],
-            [77.70, 35.80], [78.20, 35.60],
-            [78.85, 35.40], [79.40, 34.90], [79.60, 34.10], [79.45, 33.60],
-            [79.25, 33.10], [79.05, 32.70],
-            [78.50, 32.85], [78.65, 33.35], [78.20, 33.70],
+            [73.80, 34.20],
+            [73.40, 34.80], [73.10, 35.50], [73.00, 36.30], [73.50, 36.80],
+            [74.20, 37.05], [74.80, 37.12], [75.60, 36.95], [76.50, 36.50],
+            [77.20, 36.10], [77.80, 35.70], [78.50, 35.60], [79.20, 35.30],
+            [79.80, 34.80], [80.30, 34.20], [79.80, 33.70], [79.30, 33.00], [78.90, 32.60],
+            [78.40, 32.80], [78.60, 33.40], [78.20, 33.70],
             [77.65, 34.30], [77.10, 34.35],
             [76.30, 34.40], [75.60, 34.35], [75.10, 34.30],
             [74.70, 34.30], [74.25, 34.20],
-            [73.95, 34.15]
+            [73.80, 34.20]
         ]
     },
     {
@@ -456,19 +456,83 @@ INTERNATIONAL_BORDER_POLYGONS = [
 STRATEGIC_DEFENSE_POLYGONS = [
     {
         "id": "DS-POLY-OFFSHORE-BOMBAY-HIGH",
-        "name": "Bombay High Offshore Oil & Naval Exclusion Red Zone (Arabian Sea)",
+        "name": "Bombay High Offshore Oil & Western Naval Exclusion Red Zone (Arabian Sea)",
         "category": "Offshore Strategic Installation",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Critical national energy offshore platform and Western Naval Command maritime defense exclusion zone in the Arabian Sea.",
-        "coordinates": [[71.1, 18.75], [71.1, 19.95], [72.15, 19.95], [72.15, 18.75], [71.1, 18.75]]
+        "coordinates": [[70.80, 18.70], [70.80, 19.80], [72.30, 20.00], [72.60, 18.70], [70.80, 18.70]]
+    },
+    {
+        "id": "DS-POLY-OFFSHORE-MUMBAI-COAST",
+        "name": "Mumbai Coastal Naval Air Arm & Harbor Security Exclusion Zone",
+        "category": "Naval Strategic Maritime Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Western Naval Command coastal and harbor defense zone off Mumbai/Palghar.",
+        "coordinates": [[71.60, 19.05], [71.60, 19.50], [72.45, 19.50], [72.45, 19.05], [71.60, 19.05]]
     },
     {
         "id": "DS-POLY-OFFSHORE-CHANDIPUR",
-        "name": "Chandipur & APJ Abdul Kalam Island DRDO Missile Test Range (Bay of Bengal)",
+        "name": "Chandipur & APJ Abdul Kalam Island DRDO Missile Launch Corridor (Bay of Bengal)",
         "category": "Strategic Missile Test Range",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Integrated Test Range (ITR) Chandipur and Wheeler Island (Dr. APJ Abdul Kalam Island) high-security missile launch envelope.",
-        "coordinates": [[86.85, 20.65], [86.85, 21.65], [87.65, 21.45], [87.45, 20.55], [86.85, 20.65]]
+        "desc": "Integrated Test Range (ITR) Chandipur and Wheeler Island high-security missile launch envelope in the Bay of Bengal.",
+        "coordinates": [[87.35, 20.35], [87.35, 21.15], [88.50, 21.15], [88.50, 20.35], [87.35, 20.35]]
+    },
+    {
+        "id": "DS-POLY-MAHAJAN-FIRING-RANGE",
+        "name": "Mahajan Field Firing Range (MFFR Bikaner / Suratgarh / Lunkaransar)",
+        "category": "Military Field Firing Range",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Asia's largest army field firing and combat maneuver range complex in Thar Desert.",
+        "coordinates": [[73.40, 28.25], [73.60, 28.95], [74.05, 28.85], [74.00, 28.45], [73.70, 28.10], [73.40, 28.25]]
+    },
+    {
+        "id": "DS-POLY-GARHWAL-CORBETT-DEFENSE",
+        "name": "Garhwal Strategic Defense & Corbett Range (Pauri - Almora - Lansdowne)",
+        "category": "Military Strategic Area",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Strategic high-altitude mountain warfare training and defense enclave in Garhwal Himalayas.",
+        "coordinates": [[78.55, 29.55], [78.95, 30.20], [79.60, 29.90], [79.25, 29.25], [78.55, 29.55]]
+    },
+    {
+        "id": "DS-POLY-SAHARANPUR-MUZAFFARNAGAR",
+        "name": "Saharanpur - Sarsawa AFS - Muzaffarnagar Defense Corridor",
+        "category": "Military Armament & Air Defense Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Sarsawa Air Force Station combat helicopter wing and Western UP military cantonment defense envelope.",
+        "coordinates": [[77.05, 29.40], [77.20, 30.15], [77.85, 30.10], [77.90, 29.50], [77.60, 29.30], [77.05, 29.40]]
+    },
+    {
+        "id": "DS-DEFENSE-DUDHWA-BUFFER",
+        "name": "Dudhwa - Palia - Nighasan Border Strategic Defense Area",
+        "category": "Border Strategic Defense Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Indo-Nepal border strategic security envelope across Dudhwa, Palia, and Lakhimpur Kheri.",
+        "coordinates": [[80.40, 28.00], [80.20, 28.35], [80.50, 28.75], [81.10, 28.55], [81.20, 28.10], [80.70, 27.90], [80.40, 28.00]]
+    },
+    {
+        "id": "DS-POLY-MH-DEFENSE-CORRIDOR",
+        "name": "Pune - Ahmednagar - Baramati - Solapur Military Defense Corridor",
+        "category": "Military Armament & Training Complex",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Southern Command armored combat training center (ACC&S Ahmednagar), Pune military garrison, and Solapur defense envelope.",
+        "coordinates": [[73.65, 18.60], [74.15, 19.30], [75.10, 19.25], [75.65, 18.75], [76.15, 17.65], [75.60, 17.40], [74.65, 18.05], [73.65, 18.60]]
+    },
+    {
+        "id": "DS-POLY-MH-SHIRPUR-DEFENSE",
+        "name": "North Maharashtra Shirpur - Sendhwa Strategic Defense Polygon",
+        "category": "Military Strategic Area",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Satpura mountain pass military strategic transit and defense training enclave.",
+        "coordinates": [[74.65, 21.15], [74.95, 21.65], [75.40, 21.50], [74.65, 21.15]]
+    },
+    {
+        "id": "DS-POLY-MH-JALGAON-DEFENSE",
+        "name": "North Maharashtra Chopda - Jalgaon - Burhanpur Defense Polygon",
+        "category": "Military Strategic Area",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Khandesh corridor strategic defense and armament security enclave.",
+        "coordinates": [[75.40, 21.50], [75.80, 21.65], [75.85, 20.90], [75.40, 21.50]]
     },
     {
         "id": "DS-POLY-BABINA-JHANSI-FIRING-RANGE",
@@ -476,15 +540,7 @@ STRATEGIC_DEFENSE_POLYGONS = [
         "category": "Military Field Firing Range",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "White Tiger Division armored artillery and combat vehicle live-firing maneuvers zone spanning UP and MP.",
-        "coordinates": [[78.05, 24.95], [78.2, 25.75], [78.75, 25.8], [78.9, 25.2], [78.45, 24.85], [78.05, 24.95]]
-    },
-    {
-        "id": "DS-POLY-MH-DEFENSE-CORRIDOR",
-        "name": "Pune - Ahmednagar - Dehu Road Military Armament & Firing Enclave",
-        "category": "Military Armament & Training Complex",
-        "rule_ref": "Drone Rules 2021, Rule 22(3)",
-        "desc": "Armoured Corps Centre & School (ACC&S), Vehicle Research & Development Establishment (VRDE), and Southern Command cantonment envelope.",
-        "coordinates": [[73.7, 18.55], [73.85, 19.3], [74.85, 19.2], [74.7, 18.45], [73.7, 18.55]]
+        "coordinates": [[78.05, 24.95], [78.20, 25.75], [78.75, 25.80], [78.90, 25.20], [78.45, 24.85], [78.05, 24.95]]
     },
     {
         "id": "DS-POLY-JH-DEFENSE-CORRIDOR",
@@ -492,7 +548,7 @@ STRATEGIC_DEFENSE_POLYGONS = [
         "category": "Critical Defense Metallurgy Corridor",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Strategic heavy industrial and defense metal manufacturing facilities across Chota Nagpur plateau.",
-        "coordinates": [[85.8, 23.35], [86.35, 23.85], [86.55, 23.15], [86.1, 22.75], [85.8, 23.35]]
+        "coordinates": [[85.80, 23.35], [86.35, 23.85], [86.55, 23.15], [86.10, 22.75], [85.80, 23.35]]
     },
     {
         "id": "DS-POLY-POKHRAN-FIRING-RANGE",
@@ -500,7 +556,7 @@ STRATEGIC_DEFENSE_POLYGONS = [
         "category": "Strategic Weapon Test Facility",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Desert corps combined arms strike weapon testing grounds and historical nuclear test site in Jaisalmer district.",
-        "coordinates": [[71.6, 26.75], [71.6, 27.45], [72.25, 27.45], [72.25, 26.75], [71.6, 26.75]]
+        "coordinates": [[71.60, 26.75], [71.60, 27.45], [72.25, 27.45], [72.25, 26.75], [71.60, 26.75]]
     },
     {
         "id": "DS-POLY-DELHI-NCT-VVIP",
@@ -508,7 +564,7 @@ STRATEGIC_DEFENSE_POLYGONS = [
         "category": "National Capital Security Perimeter",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "VVIP Security envelope covering Rashtrapati Bhavan, Prime Minister Residence, Central Vista, Parliament House, and diplomatic enclave.",
-        "coordinates": [[77.1, 28.52], [77.1, 28.66], [77.26, 28.66], [77.26, 28.52], [77.1, 28.52]]
+        "coordinates": [[77.10, 28.52], [77.10, 28.66], [77.26, 28.66], [77.26, 28.52], [77.10, 28.52]]
     },
     {
         "id": "DS-POLY-SRIHARIKOTA-ISRO",
@@ -516,7 +572,7 @@ STRATEGIC_DEFENSE_POLYGONS = [
         "category": "Space Launch Center",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "ISRO spaceport barrier envelope covering Sriharikota island, rocket launch pads, and Pulicat Lake security zone.",
-        "coordinates": [[80.15, 13.6], [80.15, 13.95], [80.35, 13.95], [80.35, 13.6], [80.15, 13.6]]
+        "coordinates": [[80.15, 13.60], [80.15, 13.95], [80.35, 13.95], [80.35, 13.60], [80.15, 13.60]]
     },
     {
         "id": "DS-POLY-JAMNAGAR-PORBANDAR",
@@ -524,7 +580,7 @@ STRATEGIC_DEFENSE_POLYGONS = [
         "category": "Military Strategic Coastal Base",
         "rule_ref": "Drone Rules 2021, Rule 22(3)",
         "desc": "Jaguar fighter base, INS Sardar Patel, and Indian Coast Guard western air command security envelope.",
-        "coordinates": [[69.45, 21.6], [69.45, 22.5], [70.15, 22.5], [70.15, 21.6], [69.45, 21.6]]
+        "coordinates": [[69.45, 21.60], [69.45, 22.50], [70.15, 22.50], [70.15, 21.60], [69.45, 21.60]]
     }
 ]
 
