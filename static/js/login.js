@@ -92,4 +92,20 @@ function showRoles() {
 // Ensure the page resets to Role Selection on refresh
 document.addEventListener('DOMContentLoaded', function() {
     showRoles();
+
+    // Image Shift Slideshow (Shift 1.jpeg to Shift 9.jpeg)
+    const images = document.querySelectorAll('.shuffle-container .shuffle-img');
+    if (images && images.length > 0) {
+        let currentIndex = 0;
+        images.forEach((img, idx) => {
+            if (idx === 0) img.classList.add('active');
+            else img.classList.remove('active');
+        });
+
+        setInterval(() => {
+            images[currentIndex].classList.remove('active');
+            currentIndex = (currentIndex + 1) % images.length;
+            images[currentIndex].classList.add('active');
+        }, 3500); // cycle every 3.5 seconds
+    }
 });
