@@ -89,23 +89,53 @@ function showRoles() {
     }
 }
 
-// Ensure the page resets to Role Selection on refresh
-document.addEventListener('DOMContentLoaded', function() {
-    showRoles();
-
-    // Image Shift Slideshow (Shift 1.jpeg to Shift 9.jpeg)
+// Shift Images Slideshow (Shift 1 to Shift 9, exactly 3.0s cycle)
+function initShiftSlideshow() {
     const images = document.querySelectorAll('.shuffle-container .shuffle-img');
-    if (images && images.length > 0) {
-        let currentIndex = 0;
-        images.forEach((img, idx) => {
-            if (idx === 0) img.classList.add('active');
-            else img.classList.remove('active');
-        });
+    if (!images || images.length === 0) return;
 
-        setInterval(() => {
-            images[currentIndex].classList.remove('active');
-            currentIndex = (currentIndex + 1) % images.length;
-            images[currentIndex].classList.add('active');
-        }, 3500); // cycle every 3.5 seconds
+    if (window._shiftInterval) {
+        clearInterval(window._shiftInterval);
+        window._shiftInterval = null;
     }
-});
+
+    let currentIndex = 0;
+    images.forEach((img, idx) => {
+        if (idx === 0) {
+            img.classList.add('active');
+            img.style.opacity = '1';
+            img.style.zIndex = '2';
+        } else {
+            img.classList.remove('active');
+            img.style.opacity = '0';
+            img.style.zIndex = '1';
+        }
+    });
+
+    window._shiftInterval = setInterval(() => {
+        const prevIndex = currentIndex;
+        currentIndex = (currentIndex + 1) % images.length;
+
+        images[prevIndex].style.zIndex = '1';
+        images[prevIndex].classList.remove('active');
+        images[prevIndex].style.opacity = '0';
+
+        images[currentIndex].style.zIndex = '2';
+        images[currentIndex].classList.add('active');
+        images[currentIndex].style.opacity = '1';
+    }, 3000);
+}
+window.initShiftSlideshow = initShiftSlideshow;
+
+function initLogin() {
+    showRoles();
+    initShiftSlideshow();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLogin);
+} else {
+    initLogin();
+}
+
+

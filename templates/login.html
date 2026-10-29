@@ -15,11 +15,13 @@
             width: 100%; height: 100%;
             object-fit: cover;
             opacity: 0;
-            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            transition: opacity 0.8s ease-in-out;
             pointer-events: none;
         }
         .shuffle-img.active {
             opacity: 1;
+            z-index: 2;
             pointer-events: auto;
         }
     </style>
@@ -139,6 +141,35 @@
                     <img class="shuffle-img" src="{% static 'img/Shift 8.jpeg' %}" alt="Shift image 8">
                     <img class="shuffle-img" src="{% static 'img/Shift 9.jpeg' %}" alt="Shift image 9">
                 </div>
+                <script>
+                    (function() {
+                        function startShuffle() {
+                            var imgs = document.querySelectorAll('.shuffle-container .shuffle-img');
+                            if (!imgs || imgs.length === 0) return;
+                            var cur = 0;
+                            imgs.forEach(function(el, i) {
+                                if (i === 0) { el.classList.add('active'); el.style.opacity = '1'; el.style.zIndex = '2'; }
+                                else { el.classList.remove('active'); el.style.opacity = '0'; el.style.zIndex = '1'; }
+                            });
+                            if (window._shiftInterval) clearInterval(window._shiftInterval);
+                            window._shiftInterval = setInterval(function() {
+                                var prev = cur;
+                                cur = (cur + 1) % imgs.length;
+                                imgs[prev].style.zIndex = '1';
+                                imgs[prev].classList.remove('active');
+                                imgs[prev].style.opacity = '0';
+                                imgs[cur].style.zIndex = '2';
+                                imgs[cur].classList.add('active');
+                                imgs[cur].style.opacity = '1';
+                            }, 3000);
+                        }
+                        if (document.readyState === 'loading') {
+                            document.addEventListener('DOMContentLoaded', startShuffle);
+                        } else {
+                            startShuffle();
+                        }
+                    })();
+                </script>
             </div>
         
           <!-- Review Icon Button -->
@@ -157,7 +188,7 @@
         </a>
     </section>
 
-    <script src="{% static 'js/login.js' %}?v=2.0"></script>
+    <script src="{% static 'js/login.js' %}?v=3.5"></script>
     <script>
       var tag = document.createElement('script');
       tag.src = "https://www.youtube.com/iframe_api";
