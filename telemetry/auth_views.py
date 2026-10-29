@@ -72,7 +72,23 @@ class UTMLoginView(View):
                     matched_user = prof.user
 
             if matched_user:
-                user = authenticate(request, username=matched_user.username, password=password)
+                if matched_user.is_active:
+                    user = authenticate(request, username=matched_user.username, password=password)
+                elif matched_user.check_password(password):
+                    from telemetry.models import PilotProfile
+                    profile = PilotProfile.objects.filter(user=matched_user).first()
+                    if profile and profile.phase1_status == 'PENDING':
+                        messages.warning(
+                            request,
+                            'Your Unit registration is currently PENDING authorization by DGNCC Admin under Profile Acceptance. Once approved by Admin, your assigned credentials will be activated.'
+                        )
+                        return render(request, self.template_name, {'mode': 'pilot', 'username': username})
+                    elif profile and profile.phase1_status == 'REJECTED':
+                        messages.error(
+                            request,
+                            'Your Unit registration request was REJECTED by DGNCC Admin. Please contact system administration.'
+                        )
+                        return render(request, self.template_name, {'mode': 'pilot', 'username': username})
 
         if user is not None:
             login(request, user)
@@ -267,7 +283,8 @@ class UTMRegisterView(View):
                 username=username,
                 email=email,
                 password=password,
-                first_name=unit_name
+                first_name=unit_name,
+                is_active=False
             )
             PilotProfile.objects.create(
                 user=user,

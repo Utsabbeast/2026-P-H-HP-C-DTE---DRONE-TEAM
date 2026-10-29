@@ -49,7 +49,12 @@
                 <a href="{% url 'telemetry:profile' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">Unit Profile</a>
                 <a href="{% url 'telemetry:status' %}" class="btn-outline" style="padding: 0.5rem 1rem; text-decoration: none; border-radius: 0; color: #002D74; border-color: #002D74; font-weight: 700;">Status</a>
                 {% else %}
-                <a href="{% url 'telemetry:requests' %}" class="btn-underline" style="text-decoration: none; font-size: 0.9rem; color: #002D74; font-weight: 700;">Requests</a>
+                <a href="{% url 'telemetry:requests' %}" class="btn-underline" style="text-decoration: none; font-size: 0.9rem; color: #002D74; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                    Requests
+                    {% if pending_total_requests > 0 %}
+                    <span style="background: #dc2626; color: white; border-radius: 9999px; padding: 1px 7px; font-size: 0.72rem; font-weight: 800; line-height: 1.2;">{{ pending_total_requests }}</span>
+                    {% endif %}
+                </a>
                 <!-- Mods Dropdown (Hamburger) -->
                 <div class="dropdown" style="position: relative; display: flex; align-items: center;">
                     <style>
@@ -149,6 +154,46 @@
                 </div>
             </div>
             <a href="{% url 'telemetry:profile' %}" style="background: #002D74; color: white; padding: 0.4rem 0.9rem; text-decoration: none; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Complete Unit Profile &rarr;</a>
+        </div>
+        {% endif %}
+
+        {% if request.session.user_role == 'ATC' and pending_phase1_requests %}
+        <div style="background: #eff6ff; border: 2px solid #3b82f6; border-left: 6px solid #1d4ed8; padding: 12px 18px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.4rem;">📋</span>
+                <div>
+                    <div style="font-weight: 700; color: #1e40af; font-size: 0.92rem;">
+                        New Unit Profile Registration Awaiting Admin Approval ({{ pending_phase1_requests|length }} Pending)
+                    </div>
+                    <div style="font-size: 0.8rem; color: #1e3a8a; margin-top: 2px;">
+                        {% for prof in pending_phase1_requests|slice:":3" %}
+                        <strong style="color: #002D74;">{{ prof.unit_name|default:prof.user.username }}</strong> ({{ prof.user.email }}){% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                        {% if pending_phase1_requests|length > 3 %} and {{ pending_phase1_requests|length|add:"-3" }} more{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                {% if pending_phase1_requests|length == 1 %}
+                {% with single_prof=pending_phase1_requests.0 %}
+                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline; margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="phase1">
+                    <input type="hidden" name="item_id" value="{{ single_prof.id }}">
+                    <input type="hidden" name="decision" value="approve">
+                    <button type="submit" style="background: #15803d; color: white; border: none; padding: 6px 14px; font-weight: 700; font-size: 0.82rem; cursor: pointer; border-radius: 2px;" title="Accept Unit Profile">Accept</button>
+                </form>
+                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline; margin: 0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_type" value="phase1">
+                    <input type="hidden" name="item_id" value="{{ single_prof.id }}">
+                    <input type="hidden" name="decision" value="reject">
+                    <button type="submit" style="background: #b91c1c; color: white; border: none; padding: 6px 14px; font-weight: 700; font-size: 0.82rem; cursor: pointer; border-radius: 2px;" title="Deny Unit Profile">Deny</button>
+                </form>
+                {% endwith %}
+                {% endif %}
+                <a href="{% url 'telemetry:requests' %}" style="background: #002D74; color: white; padding: 6px 14px; text-decoration: none; font-weight: 700; font-size: 0.82rem; text-transform: uppercase;">Review in Requests &rarr;</a>
+            </div>
         </div>
         {% endif %}
         

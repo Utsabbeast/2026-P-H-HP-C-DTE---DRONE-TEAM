@@ -48,7 +48,13 @@
                         <td class="px-4 py-3 whitespace-nowrap text-xs font-medium">{{ u.pilot_profile.unit_name|default:u.first_name|default:"--" }}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-xs">{{ u.email|default:"--" }}</td>
                         <td class="px-4 py-3 whitespace-nowrap">
-                            <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-800 rounded border border-blue-300">Unit</span>
+                            {% if u.pilot_profile.phase1_status == 'APPROVED' %}
+                            <span class="px-2 py-0.5 text-[10px] font-bold bg-green-100 text-green-800 rounded border border-green-300">Accepted</span>
+                            {% elif u.pilot_profile.phase1_status == 'REJECTED' %}
+                            <span class="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-800 rounded border border-red-300">Denied</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded border border-amber-300">Pending Review</span>
+                            {% endif %}
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-500">{{ u.date_joined|date:"Y-m-d H:i:s" }}</td>
                     </tr>

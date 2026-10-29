@@ -48,17 +48,24 @@ class DashboardView(TemplateView):
         context = super().get_context_data(**kwargs)
         host = self.request.get_host()
         
-        # Add requested counters (units count)
-        context['total_registered_drones'] = User.objects.filter(is_superuser=False, is_staff=False).count()
+        # Add requested counters (units count - only approved active units)
+        from .models import PilotProfile
+        context['total_registered_drones'] = PilotProfile.objects.filter(phase1_status='APPROVED').count()
         recent_time = timezone.now() - timedelta(seconds=15)
         # Note: In a real system, you might count unique drone_ids from recent DroneTelemetry
-        # We can pass 0 or a query if there are records
         from .models import DroneTelemetry
         context['total_flying_drones'] = DroneTelemetry.objects.filter(received_at__gte=recent_time).values('drone_id').distinct().count()
         
+        # Pending requests for Admin notification banner
+        pending_phase1 = PilotProfile.objects.filter(phase1_status='PENDING').order_by('-created_at')
+        pending_phase2 = PilotProfile.objects.filter(phase2_status='PENDING').order_by('-phase2_submitted_at')
+        context['pending_phase1_requests'] = pending_phase1
+        context['pending_phase1_count'] = pending_phase1.count()
+        context['pending_phase2_count'] = pending_phase2.count()
+        context['pending_total_requests'] = pending_phase1.count() + pending_phase2.count()
+
         # Check registration status for pilots
         if self.request.session.get('user_role') == 'PILOT' and self.request.user.is_authenticated:
-            from .models import PilotProfile
             p_prof = PilotProfile.objects.filter(user=self.request.user).first()
             context['pilot_profile'] = p_prof
             context['is_fully_registered'] = (p_prof is not None and p_prof.phase2_status == 'APPROVED')

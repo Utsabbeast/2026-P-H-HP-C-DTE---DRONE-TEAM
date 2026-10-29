@@ -77,84 +77,17 @@
     </header>
 
     <main class="requests-container">
+        <!-- Phase 1: Unit Registration Profile Acceptance (FIRST SECTION) -->
         <div class="requests-header" style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002D74; padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
-            <h2 class="requests-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">Flight Permission Requests</h2>
+            <div>
+                <h2 class="requests-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">Phase 1: Unit Profile Registration Acceptance (New Unit Requests)</h2>
+                <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: #64748b;">Review newly registered NCC Unit accounts. Click <strong>Accept</strong> to approve credentials and activate account access.</p>
+            </div>
             {% if request.user.is_superuser or user_role == 'ATC' or request.session.user_role == 'ATC' %}
             <a href="{% url 'telemetry:user-database' %}" style="background: #002D74; color: white; padding: 0.6rem 1.2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem; text-decoration: none; transition: background 0.3s;">
                 User Database
             </a>
             {% endif %}
-        </div>
-
-        <div class="requests-table-container">
-            <table class="requests-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Pilot</th>
-                        <th>Location</th>
-                        <th>Drone ID</th>
-                        <th>Max Alt.</th>
-                        <th>Purpose</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        {% if is_atc %}
-                        <th>Actions</th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for req in flight_requests %}
-                    <tr>
-                        <td style="font-family: var(--font-mono);">#{{ req.id }}</td>
-                        <td style="font-weight: 600;">{{ req.pilot.username }}</td>
-                        <td>{{ req.location_name }}</td>
-                        <td style="font-family: var(--font-mono);">{{ req.drone_identifier }}</td>
-                        <td>{{ req.max_altitude }}m</td>
-                        <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
-                            title="{{ req.purpose }}">{{ req.purpose }}</td>
-                        <td><span class="status-badge status-{{ req.status }}">{{ req.get_status_display }}</span></td>
-                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ req.created_at|date:"M d, H:i"
-                            }}</td>
-
-                        {% if is_atc %}
-                        <td>
-                            {% if req.status == 'PENDING' %}
-                            <div class="action-buttons">
-                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action_type" value="flight">
-                                    <input type="hidden" name="item_id" value="{{ req.id }}">
-                                    <input type="hidden" name="decision" value="approve">
-                                    <button type="submit" class="btn-approve">Approve</button>
-                                </form>
-                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action_type" value="flight">
-                                    <input type="hidden" name="item_id" value="{{ req.id }}">
-                                    <input type="hidden" name="decision" value="reject">
-                                    <button type="submit" class="btn-reject">Reject</button>
-                                </form>
-                            </div>
-                            {% else %}
-                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed</span>
-                            {% endif %}
-                        </td>
-                        {% endif %}
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="{% if is_atc %}9{% else %}8{% endif %}"
-                            style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                            No flight requests found.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>        <!-- Phase 1: Unit Registration Profile Acceptance -->
-        <div class="requests-header" style="margin-top: 3rem;">
-            <h2 class="requests-title">Phase 1: Profile Acceptance (NCC Unit Registrations)</h2>
         </div>
 
         <div class="requests-table-container">
@@ -301,14 +234,14 @@
                                     <input type="hidden" name="action_type" value="phase2">
                                     <input type="hidden" name="item_id" value="{{ profile.id }}">
                                     <input type="hidden" name="decision" value="approve">
-                                    <button type="submit" class="btn-approve" title="Authorize Flight Operations">Authorize Ops</button>
+                                    <button type="submit" class="btn-approve" title="Accept unit profile completion">Accept</button>
                                 </form>
                                 <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action_type" value="phase2">
                                     <input type="hidden" name="item_id" value="{{ profile.id }}">
                                     <input type="hidden" name="decision" value="reject">
-                                    <button type="submit" class="btn-reject">Reject</button>
+                                    <button type="submit" class="btn-reject" title="Reject unit profile completion">Reject</button>
                                 </form>
                             </div>
                             {% else %}
@@ -328,7 +261,79 @@
             </table>
         </div>
 
-        <!-- Section 3: Drone Registrations (UIN) -->
+        <!-- Section 3: Flight Permission Requests -->
+        <div class="requests-header" style="margin-top: 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #002D74; padding-bottom: 0.5rem; margin-bottom: 1.5rem;">
+            <h2 class="requests-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">Flight Permission Requests</h2>
+        </div>
+
+        <div class="requests-table-container">
+            <table class="requests-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Pilot</th>
+                        <th>Location</th>
+                        <th>Drone ID</th>
+                        <th>Max Alt.</th>
+                        <th>Purpose</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        {% if is_atc %}
+                        <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in flight_requests %}
+                    <tr>
+                        <td style="font-family: var(--font-mono);">#{{ req.id }}</td>
+                        <td style="font-weight: 600;">{{ req.pilot.username }}</td>
+                        <td>{{ req.location_name }}</td>
+                        <td style="font-family: var(--font-mono);">{{ req.drone_identifier }}</td>
+                        <td>{{ req.max_altitude }}m</td>
+                        <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                            title="{{ req.purpose }}">{{ req.purpose }}</td>
+                        <td><span class="status-badge status-{{ req.status }}">{{ req.get_status_display }}</span></td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary);">{{ req.created_at|date:"M d, H:i" }}</td>
+
+                        {% if is_atc %}
+                        <td>
+                            {% if req.status == 'PENDING' %}
+                            <div class="action-buttons">
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="flight">
+                                    <input type="hidden" name="item_id" value="{{ req.id }}">
+                                    <input type="hidden" name="decision" value="approve">
+                                    <button type="submit" class="btn-approve">Approve</button>
+                                </form>
+                                <form method="POST" action="{% url 'telemetry:request-action' %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="flight">
+                                    <input type="hidden" name="item_id" value="{{ req.id }}">
+                                    <input type="hidden" name="decision" value="reject">
+                                    <button type="submit" class="btn-reject">Reject</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <span style="font-size: 0.75rem; color: var(--text-secondary);">Processed</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if is_atc %}9{% else %}8{% endif %}"
+                            style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            No flight requests found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 4: Drone Registrations (UIN) -->
         <div class="requests-header" style="margin-top: 3rem;">
             <h2 class="requests-title">Drone Fleet Registrations (UIN)</h2>
         </div>
