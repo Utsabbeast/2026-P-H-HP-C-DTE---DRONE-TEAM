@@ -99,176 +99,9 @@ def is_point_in_polygon(lat: float, lon: float, polygon_coords: List[List[float]
 # ==============================================================================
 # 1. MAJOR CIVIL & DUAL-USE AIRPORTS (0-5 km RED, 5-12 km YELLOW)
 # ==============================================================================
-INDIAN_AERODROMES = [
-    {
-        "id": "VIDP", "name": "Indira Gandhi International Airport (IGI)", "city": "New Delhi", "state": "Delhi",
-        "lat": 28.5562, "lon": 77.1000, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VABB", "name": "Chhatrapati Shivaji Maharaj International Airport", "city": "Mumbai", "state": "Maharashtra",
-        "lat": 19.0896, "lon": 72.8656, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOBL", "name": "Kempegowda International Airport", "city": "Bengaluru", "state": "Karnataka",
-        "lat": 13.1986, "lon": 77.7066, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOMM", "name": "Chennai International Airport", "city": "Chennai", "state": "Tamil Nadu",
-        "lat": 12.9941, "lon": 80.1709, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VECC", "name": "Netaji Subhash Chandra Bose International Airport", "city": "Kolkata", "state": "West Bengal",
-        "lat": 22.6547, "lon": 88.4467, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOHS", "name": "Rajiv Gandhi International Airport", "city": "Hyderabad", "state": "Telangana",
-        "lat": 17.2403, "lon": 78.4294, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VAAH", "name": "Sardar Vallabhbhai Patel International Airport", "city": "Ahmedabad", "state": "Gujarat",
-        "lat": 23.0772, "lon": 72.6347, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VIJP", "name": "Jaipur International Airport", "city": "Jaipur", "state": "Rajasthan",
-        "lat": 26.8242, "lon": 75.8122, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOCI", "name": "Cochin International Airport", "city": "Kochi", "state": "Kerala",
-        "lat": 10.1518, "lon": 76.3930, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VILK", "name": "Chaudhary Charan Singh International Airport", "city": "Lucknow", "state": "Uttar Pradesh",
-        "lat": 26.7606, "lon": 80.8893, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VIPL", "name": "Sahnewal Airport (Ludhiana Civil)", "city": "Ludhiana", "state": "Punjab",
-        "lat": 30.8549, "lon": 75.9525, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VICG", "name": "Shaheed Bhagat Singh International Airport", "city": "Chandigarh", "state": "Chandigarh",
-        "lat": 30.6735, "lon": 76.7885, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VIAR", "name": "Sri Guru Ram Dass Jee International Airport", "city": "Amritsar", "state": "Punjab",
-        "lat": 31.7096, "lon": 74.7973, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VEGT", "name": "Lokpriya Gopinath Bordoloi International Airport", "city": "Guwahati", "state": "Assam",
-        "lat": 26.1061, "lon": 91.5859, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOTV", "name": "Thiruvananthapuram International Airport", "city": "Thiruvananthapuram", "state": "Kerala",
-        "lat": 8.4821, "lon": 76.9200, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VABO", "name": "Vadodara Airport", "city": "Vadodara", "state": "Gujarat",
-        "lat": 22.3362, "lon": 73.2263, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOBZ", "name": "Vijayawada International Airport", "city": "Vijayawada", "state": "Andhra Pradesh",
-        "lat": 16.5304, "lon": 80.7968, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VEBN", "name": "Lal Bahadur Shastri International Airport", "city": "Varanasi", "state": "Uttar Pradesh",
-        "lat": 25.4524, "lon": 82.8593, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VEPT", "name": "Jay Prakash Narayan Airport", "city": "Patna", "state": "Bihar",
-        "lat": 25.5913, "lon": 85.0880, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VEBS", "name": "Biju Patnaik International Airport", "city": "Bhubaneswar", "state": "Odisha",
-        "lat": 20.2444, "lon": 85.8178, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VAPO", "name": "Pune International Airport (Lohegaon AFS)", "city": "Pune", "state": "Maharashtra",
-        "lat": 18.5822, "lon": 73.9197, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOGO", "name": "Dabolim International Airport", "city": "Dabolim", "state": "Goa",
-        "lat": 15.3808, "lon": 73.8313, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VISR", "name": "Sheikh ul-Alam International Airport", "city": "Srinagar", "state": "Jammu & Kashmir",
-        "lat": 33.9871, "lon": 74.7744, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VIJU", "name": "Jammu Civil Enclave", "city": "Jammu", "state": "Jammu & Kashmir",
-        "lat": 32.6891, "lon": 74.8375, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VILH", "name": "Kushok Bakula Rimpochee Airport", "city": "Leh", "state": "Ladakh",
-        "lat": 34.1359, "lon": 77.5465, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VABP", "name": "Raja Bhoj International Airport", "city": "Bhopal", "state": "Madhya Pradesh",
-        "lat": 23.2875, "lon": 77.3377, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VAID", "name": "Devi Ahilyabai Holkar International Airport", "city": "Indore", "state": "Madhya Pradesh",
-        "lat": 22.7217, "lon": 75.8011, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VANP", "name": "Dr. Babasaheb Ambedkar International Airport", "city": "Nagpur", "state": "Maharashtra",
-        "lat": 21.0922, "lon": 79.0472, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VERC", "name": "Birsa Munda Airport", "city": "Ranchi", "state": "Jharkhand",
-        "lat": 23.3143, "lon": 85.3217, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VARP", "name": "Swami Vivekananda Airport", "city": "Raipur", "state": "Chhattisgarh",
-        "lat": 21.1804, "lon": 81.7388, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOVZ", "name": "Visakhapatnam International Airport (INS Dega)", "city": "Visakhapatnam", "state": "Andhra Pradesh",
-        "lat": 17.7212, "lon": 83.2245, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOCB", "name": "Coimbatore International Airport", "city": "Coimbatore", "state": "Tamil Nadu",
-        "lat": 11.03, "lon": 77.0434, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOMD", "name": "Madurai International Airport", "city": "Madurai", "state": "Tamil Nadu",
-        "lat": 9.8345, "lon": 78.0934, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOML", "name": "Mangalore International Airport", "city": "Mangaluru", "state": "Karnataka",
-        "lat": 12.9613, "lon": 74.89, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VASU", "name": "Surat International Airport", "city": "Surat", "state": "Gujarat",
-        "lat": 21.1139, "lon": 72.7419, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VIJO", "name": "Jodhpur Airport (IAF Station)", "city": "Jodhpur", "state": "Rajasthan",
-        "lat": 26.2511, "lon": 73.0489, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VAUD", "name": "Maharana Pratap Airport", "city": "Udaipur", "state": "Rajasthan",
-        "lat": 24.6177, "lon": 73.8961, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VIDN", "name": "Dehradun Jolly Grant Airport", "city": "Dehradun", "state": "Uttarakhand",
-        "lat": 30.1897, "lon": 78.1803, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VEAT", "name": "Maharaja Bir Bikram Airport", "city": "Agartala", "state": "Tripura",
-        "lat": 23.887, "lon": 91.2405, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VEIM", "name": "Bir Tikendrajit International Airport", "city": "Imphal", "state": "Manipur",
-        "lat": 24.76, "lon": 93.8967, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VEBI", "name": "Shillong Airport (Umroi)", "city": "Shillong", "state": "Meghalaya",
-        "lat": 25.7036, "lon": 91.9786, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    },
-    {
-        "id": "VOPB", "name": "Veer Savarkar International Airport (INS Utkrosh)", "city": "Port Blair", "state": "Andaman & Nicobar",
-        "lat": 11.641, "lon": 92.7297, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
-    }
-]
+from telemetry.data.aerodromes_master import ALL_INDIAN_AERODROMES
+
+INDIAN_AERODROMES = ALL_INDIAN_AERODROMES
 
 # ==============================================================================
 # 2. CONTINUOUS 25 KM INTERNATIONAL LAND BORDER RIBBON CORRIDORS & DEFENSE ZONES
@@ -443,6 +276,39 @@ INTERNATIONAL_BORDER_POLYGONS = [
 # 2B. STRATEGIC INLAND & OFFSHORE DEFENSE ENCLAVE RED ZONES (AAI DIGITAL SKY)
 # ==============================================================================
 STRATEGIC_DEFENSE_POLYGONS = [
+    {
+        "id": "DS-POLY-ONDA-BANKURA-PURULIA-DEFENSE",
+        "name": "Onda - Bankura - Purulia - Dhanbad Strategic Defense & Armament Corridor",
+        "category": "Military Strategic Area",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Eastern military transit corridor, defense ammunition depots, and heavy tactical logistical staging area across Dhanbad, Purulia, Bankura, and Onda.",
+        "coordinates": [[86.20, 23.95], [87.35, 23.10], [87.45, 22.95], [87.45, 22.65], [86.95, 22.65], [86.95, 23.00], [86.20, 23.00], [86.20, 23.95]]
+    },
+    {
+        "id": "DS-POLY-MP-SIDHI-DEFENSE",
+        "name": "Sidhi - Singrauli Strategic Energy & Defense Zone",
+        "category": "Strategic Defense Red Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Critical national energy grid infrastructure and strategic defense security envelope across Sidhi and Singrauli.",
+        "coordinates": [[81.80, 24.25], [82.00, 24.60], [82.25, 24.45], [82.05, 24.10], [81.80, 24.25]]
+    },
+    {
+        "id": "DS-POLY-RAJ-SAWAI-MADHOPUR",
+        "name": "Sawai Madhopur - Ranthambore Strategic Buffer Zone",
+        "category": "Border Strategic Defense Zone",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Central Rajasthan military strategic corridor and tactical observation security zone.",
+        "coordinates": [[76.35, 25.95], [76.55, 26.20], [76.70, 26.05], [76.45, 25.85], [76.35, 25.95]]
+    },
+    {
+        "id": "DS-POLY-RAJ-KOTA-RAWATBHATA",
+        "name": "Kota - Rawatbhata Nuclear & Heavy Water Strategic Envelope",
+        "category": "Nuclear Installation & Coastal Defense",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Rajasthan Atomic Power Station (RAPS) and heavy water production security corridor along Chambal river.",
+        "coordinates": [[75.50, 24.95], [75.65, 25.10], [76.00, 24.85], [75.85, 24.70], [75.50, 24.95]]
+    },
+
     {
         "id": "DS-POLY-OFFSHORE-BOMBAY-HIGH",
         "name": "Bombay High Offshore Oil & Western Naval Exclusion Red Zone (Arabian Sea)",
@@ -735,6 +601,8 @@ INTERNATIONAL_BORDER_RED_ZONES = [
 # 4. MILITARY DEFENSE BASES, AIR FORCE STATIONS & NAVAL HUBS
 # ==============================================================================
 MILITARY_DEFENSE_RED_ZONES = [
+    {"id": "DS-DEFENSE-CHITRADURGA-DRDO-ATR", "name": "Chitradurga DRDO Aeronautical Test Range (ATR Challakere)", "lat": 14.2800, "lon": 76.5800, "radius_km": 18.0, "state": "Karnataka", "desc": "DRDO premier unmanned aerial vehicles (UAV) and stealth combat drone test range."},
+
     {"id": "DS-MIL-IAF-AMBALA", "name": "Ambala Air Force Station (Rafale Fighter Base)", "city": "Ambala", "state": "Haryana", "lat": 30.3686, "lon": 76.8172, "radius_km": 6.5, "service": "IAF", "desc": "No. 17 Golden Arrows Rafale Squadron Air Base. High-Security Military Airspace."},
     {"id": "DS-MIL-IAF-HALWARA", "name": "Halwara Air Force Station (Ludhiana AFS - Su-30MKI)", "city": "Halwara", "state": "Punjab", "lat": 30.7494, "lon": 75.6339, "radius_km": 6.0, "service": "IAF", "desc": "Frontline IAF Sukhoi Su-30MKI Fighter Station."},
     {"id": "DS-MIL-IAF-PATHANKOT", "name": "Pathankot Air Force Station (MiG-21 / Apache Wing)", "city": "Pathankot", "state": "Punjab", "lat": 32.2336, "lon": 75.6341, "radius_km": 6.0, "service": "IAF", "desc": "IAF Forward Fighter Air Base & Attack Helicopter Wing."},
@@ -910,40 +778,7 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
                 }
             })
 
-    # 2. YELLOW ZONES (5-12 km around aerodromes)
-    for aero in INDIAN_AERODROMES:
-        lat, lon, r = aero["lat"], aero["lon"], aero["yellow_radius_km"]
-        coords = generate_circle_polygon(lat, lon, r)
-        f_id = f"DS-YEL-{aero['id']}"
-        features.append({
-            "type": "Feature",
-            "id": f_id,
-            "properties": {
-                "id": f_id,
-                "name": f"{aero['name']} — Controlled Airspace (Yellow Zone)",
-                "zone_type": "YELLOW",
-                "category": "ATC Controlled Airspace",
-                "aerodrome_id": aero["id"],
-                "city": aero["city"],
-                "state": aero["state"],
-                "radius_km": r,
-                "max_altitude_agl_ft": 200,
-                "max_altitude_agl_m": 60,
-                "permission_required": "ATC / AAI Clearance Required (Above 200 ft between 8-12 km, all flights 5-8 km)",
-                "authority": f"Air Traffic Control ({aero['city']} ATC / AAI)",
-                "rule_ref": "Drone Rules 2021, Rule 22(2)",
-                "description": f"Controlled airspace within {r} km radius of {aero['name']}. Prior flight plan clearance required via DigitalSky.",
-                "color": "#d97706",
-                "fillColor": "#f59e0b",
-                "fillOpacity": 0.22,
-                "strokeWeight": 1.5,
-                "strokeDashArray": "4, 4",
-                "zIndex": 500
-            },
-            "geometry": {"type": "Polygon", "coordinates": [coords]}
-        })
-
-    # Helper for adding Red Zone lists
+# Helper for adding Red Zone lists
     def add_red_features(items, category_tag, color, fill_color, opacity, stroke_weight, dash="", layer_group="red_zone"):
         for item in items:
             lat, lon, r = item["lat"], item["lon"], item["radius_km"]
@@ -1060,6 +895,28 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
     # 11. Aerodrome 3-Tier Official DigitalSky Envelopes
     for aero in INDIAN_AERODROMES:
         lat, lon = aero["lat"], aero["lon"]
+        # Tier 0: Aerodrome Center Marker with Plane Icon & Name Label
+        features.append({
+            "type": "Feature",
+            "id": f"DS-AIRPORT-PIN-{aero['id']}",
+            "properties": {
+                "id": f"DS-AIRPORT-PIN-{aero['id']}",
+                "name": f"{aero['name']}",
+                "zone_type": "AIRPORT_PIN",
+                "layer_group": "airport_red",
+                "category": "Aerodrome Facility",
+                "aerodrome_id": aero["id"],
+                "city": aero["city"],
+                "state": aero["state"],
+                "lat": lat,
+                "lon": lon,
+                "color": "#0284c7"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [lon, lat]
+            }
+        })
         # Tier 1: Airport Red (0 - 5 km)
         coords_5k = generate_circle_polygon(lat, lon, 5.0)
         f_id_red = f"DS-AIRPORT-RED-{aero['id']}"
