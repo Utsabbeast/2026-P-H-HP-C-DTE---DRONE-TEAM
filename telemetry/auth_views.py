@@ -47,17 +47,30 @@ class UTMLoginView(View):
             messages.error(request, 'Please provide both Username and Password.')
             return render(request, self.template_name, {'mode': login_type, 'username': username})
 
-        # 2. Authenticate directly by username (and fallback to email/unit_name for resilience)
+        # 2. Authenticate directly by username (and fallback to case-insensitive, space/underscore variants, email, unit_name, group_name)
         user = authenticate(request, username=username, password=password)
         if user is None:
-            # Fallback check by email
-            matched_user = User.objects.filter(email__iexact=username).first()
+            # Fallback search for matched user account
+            clean_u = username.strip()
+            clean_spaced = clean_u.replace('_', ' ')
+            clean_underscored = clean_u.replace(' ', '_')
+            matched_user = (
+                User.objects.filter(username__iexact=clean_u).first()
+                or User.objects.filter(username__iexact=clean_spaced).first()
+                or User.objects.filter(username__iexact=clean_underscored).first()
+                or User.objects.filter(email__iexact=clean_u).first()
+            )
             if not matched_user:
-                # Fallback check by unit_name
                 from telemetry.models import PilotProfile
-                prof = PilotProfile.objects.filter(unit_name__iexact=username).first()
+                prof = (
+                    PilotProfile.objects.filter(unit_name__iexact=clean_u).first()
+                    or PilotProfile.objects.filter(unit_name__iexact=clean_spaced).first()
+                    or PilotProfile.objects.filter(group_name__iexact=clean_u).first()
+                    or PilotProfile.objects.filter(group_name__iexact=clean_spaced).first()
+                )
                 if prof:
                     matched_user = prof.user
+
             if matched_user:
                 user = authenticate(request, username=matched_user.username, password=password)
 
