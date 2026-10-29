@@ -471,9 +471,20 @@
         }
     }
 
+    let digitalSkyLayerMap = {
+        'boundary_25km': [],
+        'airport_red': [],
+        'airport_yellow_5_8': [],
+        'airport_yellow_8_12': [],
+        'red_zone': [],
+        'temporary_red_zone': [],
+        'green_zone': []
+    };
+
     function renderDigitalSkyZones(features) {
         if (!digitalSkyAirspaceGroup) return;
         digitalSkyAirspaceGroup.clearLayers();
+        Object.keys(digitalSkyLayerMap).forEach(k => digitalSkyLayerMap[k] = []);
 
         features.forEach(feat => {
             const props = feat.properties || {};
@@ -499,12 +510,12 @@
                 strokeColor = props.color || '#b91c1c';
                 fillColor = props.fillColor || '#ef4444';
                 fillOpacity = props.fillOpacity !== undefined ? props.fillOpacity : 0.45;
-                weight = props.strokeWeight || 2.5;
+                weight = props.strokeWeight || 2.2;
             } else if (zoneType === 'YELLOW') {
                 strokeColor = props.color || '#d97706';
                 fillColor = props.fillColor || '#f59e0b';
                 fillOpacity = props.fillOpacity !== undefined ? props.fillOpacity : 0.26;
-                weight = props.strokeWeight || 2.0;
+                weight = props.strokeWeight || 1.8;
                 dashArray = props.strokeDashArray || '5, 5';
             }
 
@@ -519,6 +530,11 @@
                 dashArray: dashArray,
                 interactive: true
             });
+
+            const layerGroupKey = props.layer_group || (zoneType === 'RED' ? 'red_zone' : (zoneType === 'YELLOW' ? 'airport_yellow_5_8' : 'green_zone'));
+            polygon._dsLayerGroup = layerGroupKey;
+            if (!digitalSkyLayerMap[layerGroupKey]) digitalSkyLayerMap[layerGroupKey] = [];
+            digitalSkyLayerMap[layerGroupKey].push(polygon);
 
             // Interactive popup
             const badgeClass = zoneType === 'RED' ? 'red' : (zoneType === 'YELLOW' ? 'yellow' : 'green');
@@ -578,6 +594,45 @@
             countEl.textContent = `${features.length} Zones Active`;
         }
     }
+
+    window.switchDsTab = function(tabName) {
+        const btnLayers = document.getElementById('dsTabLayers');
+        const btnLegend = document.getElementById('dsTabLegend');
+        const pnlLayers = document.getElementById('dsPanelLayers');
+        const pnlLegend = document.getElementById('dsPanelLegend');
+        if (!btnLayers || !btnLegend || !pnlLayers || !pnlLegend) return;
+
+        if (tabName === 'layers') {
+            btnLayers.classList.add('active');
+            btnLayers.style.color = '#38bdf8';
+            btnLayers.style.borderBottom = '2px solid #38bdf8';
+            btnLegend.classList.remove('active');
+            btnLegend.style.color = '#94a3b8';
+            btnLegend.style.borderBottom = '2px solid transparent';
+            pnlLayers.style.display = 'block';
+            pnlLegend.style.display = 'none';
+        } else {
+            btnLegend.classList.add('active');
+            btnLegend.style.color = '#38bdf8';
+            btnLegend.style.borderBottom = '2px solid #38bdf8';
+            btnLayers.classList.remove('active');
+            btnLayers.style.color = '#94a3b8';
+            btnLayers.style.borderBottom = '2px solid transparent';
+            pnlLayers.style.display = 'none';
+            pnlLegend.style.display = 'block';
+        }
+    };
+
+    window.toggleDigitalSkyLayer = function(layerKey, isChecked) {
+        if (!digitalSkyAirspaceGroup || !digitalSkyLayerMap[layerKey]) return;
+        digitalSkyLayerMap[layerKey].forEach(poly => {
+            if (isChecked) {
+                if (!digitalSkyAirspaceGroup.hasLayer(poly)) digitalSkyAirspaceGroup.addLayer(poly);
+            } else {
+                if (digitalSkyAirspaceGroup.hasLayer(poly)) digitalSkyAirspaceGroup.removeLayer(poly);
+            }
+        });
+    };
 
     function showDigitalSkyLegend(show) {
         if (!elements.digitalSkyLegend) return;
@@ -2628,6 +2683,27 @@
         if (elements.btnResetView) elements.btnResetView.addEventListener('click', resetMapView);
         if (elements.btnToggleDigitalSky) elements.btnToggleDigitalSky.addEventListener('click', toggleDigitalSkyMap);
         if (elements.btnCloseLegend) elements.btnCloseLegend.addEventListener('click', () => showDigitalSkyLegend(false));
+        const btnToggleLayers = document.getElementById('btnToggleDigitalSkyLayers');
+        if (btnToggleLayers) {
+            btnToggleLayers.addEventListener('click', () => {
+                if (!elements.digitalSkyLegend) return;
+                const isHidden = (elements.digitalSkyLegend.style.display === 'none' || !elements.digitalSkyLegend.style.display);
+                showDigitalSkyLegend(isHidden);
+            });
+        }
+        const tabLayersBtn = document.getElementById('dsTabLayers');
+        if (tabLayersBtn) {
+            tabLayersBtn.addEventListener('click', () => window.switchDsTab('layers'));
+        }
+        const tabLegendBtn = document.getElementById('dsTabLegend');
+        if (tabLegendBtn) {
+            tabLegendBtn.addEventListener('click', () => window.switchDsTab('legend'));
+        }
+        document.querySelectorAll('.ds-layer-chk').forEach(chk => {
+            chk.addEventListener('change', function () {
+                window.toggleDigitalSkyLayer(this.dataset.group, this.checked);
+            });
+        });
         if (elements.btnFitFleet) elements.btnFitFleet.addEventListener('click', fitAllDrones);
 
         // Tester Panel

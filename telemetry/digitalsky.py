@@ -157,6 +157,94 @@ INDIAN_AERODROMES = [
     {
         "id": "VEBS", "name": "Biju Patnaik International Airport", "city": "Bhubaneswar", "state": "Odisha",
         "lat": 20.2444, "lon": 85.8178, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VAPO", "name": "Pune International Airport (Lohegaon AFS)", "city": "Pune", "state": "Maharashtra",
+        "lat": 18.5822, "lon": 73.9197, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VOGO", "name": "Dabolim International Airport", "city": "Dabolim", "state": "Goa",
+        "lat": 15.3808, "lon": 73.8313, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VISR", "name": "Sheikh ul-Alam International Airport", "city": "Srinagar", "state": "Jammu & Kashmir",
+        "lat": 33.9871, "lon": 74.7744, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VIJU", "name": "Jammu Civil Enclave", "city": "Jammu", "state": "Jammu & Kashmir",
+        "lat": 32.6891, "lon": 74.8375, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VILH", "name": "Kushok Bakula Rimpochee Airport", "city": "Leh", "state": "Ladakh",
+        "lat": 34.1359, "lon": 77.5465, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VABP", "name": "Raja Bhoj International Airport", "city": "Bhopal", "state": "Madhya Pradesh",
+        "lat": 23.2875, "lon": 77.3377, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VAID", "name": "Devi Ahilyabai Holkar International Airport", "city": "Indore", "state": "Madhya Pradesh",
+        "lat": 22.7217, "lon": 75.8011, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VANP", "name": "Dr. Babasaheb Ambedkar International Airport", "city": "Nagpur", "state": "Maharashtra",
+        "lat": 21.0922, "lon": 79.0472, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VERC", "name": "Birsa Munda Airport", "city": "Ranchi", "state": "Jharkhand",
+        "lat": 23.3143, "lon": 85.3217, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VARP", "name": "Swami Vivekananda Airport", "city": "Raipur", "state": "Chhattisgarh",
+        "lat": 21.1804, "lon": 81.7388, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VOVZ", "name": "Visakhapatnam International Airport (INS Dega)", "city": "Visakhapatnam", "state": "Andhra Pradesh",
+        "lat": 17.7212, "lon": 83.2245, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VOCB", "name": "Coimbatore International Airport", "city": "Coimbatore", "state": "Tamil Nadu",
+        "lat": 11.03, "lon": 77.0434, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VOMD", "name": "Madurai International Airport", "city": "Madurai", "state": "Tamil Nadu",
+        "lat": 9.8345, "lon": 78.0934, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VOML", "name": "Mangalore International Airport", "city": "Mangaluru", "state": "Karnataka",
+        "lat": 12.9613, "lon": 74.89, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VASU", "name": "Surat International Airport", "city": "Surat", "state": "Gujarat",
+        "lat": 21.1139, "lon": 72.7419, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VIJO", "name": "Jodhpur Airport (IAF Station)", "city": "Jodhpur", "state": "Rajasthan",
+        "lat": 26.2511, "lon": 73.0489, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VAUD", "name": "Maharana Pratap Airport", "city": "Udaipur", "state": "Rajasthan",
+        "lat": 24.6177, "lon": 73.8961, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VIDN", "name": "Dehradun Jolly Grant Airport", "city": "Dehradun", "state": "Uttarakhand",
+        "lat": 30.1897, "lon": 78.1803, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VEAT", "name": "Maharaja Bir Bikram Airport", "city": "Agartala", "state": "Tripura",
+        "lat": 23.887, "lon": 91.2405, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VEIM", "name": "Bir Tikendrajit International Airport", "city": "Imphal", "state": "Manipur",
+        "lat": 24.76, "lon": 93.8967, "type": "INTERNATIONAL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VEBI", "name": "Shillong Airport (Umroi)", "city": "Shillong", "state": "Meghalaya",
+        "lat": 25.7036, "lon": 91.9786, "type": "CIVIL_AIRPORT", "red_radius_km": 5.0, "yellow_radius_km": 12.0
+    },
+    {
+        "id": "VOPB", "name": "Veer Savarkar International Airport (INS Utkrosh)", "city": "Port Blair", "state": "Andaman & Nicobar",
+        "lat": 11.641, "lon": 92.7297, "type": "DUAL_USE", "red_radius_km": 5.0, "yellow_radius_km": 12.0
     }
 ]
 
@@ -327,6 +415,84 @@ INTERNATIONAL_BORDER_POLYGONS = [
             [94.05, 24.45], [94.20, 25.00], [94.50, 25.60], [94.85, 26.30],
             [95.30, 27.00], [95.90, 27.35], [96.95, 27.85], [97.20, 28.00]
         ]
+    }
+]
+
+# ==============================================================================
+# 2B. STRATEGIC INLAND & OFFSHORE DEFENSE ENCLAVE RED ZONES (AAI DIGITAL SKY)
+# ==============================================================================
+STRATEGIC_DEFENSE_POLYGONS = [
+    {
+        "id": "DS-POLY-OFFSHORE-BOMBAY-HIGH",
+        "name": "Bombay High Offshore Oil & Naval Exclusion Red Zone (Arabian Sea)",
+        "category": "Offshore Strategic Installation",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Critical national energy offshore platform and Western Naval Command maritime defense exclusion zone in the Arabian Sea.",
+        "coordinates": [[71.1, 18.75], [71.1, 19.95], [72.15, 19.95], [72.15, 18.75], [71.1, 18.75]]
+    },
+    {
+        "id": "DS-POLY-OFFSHORE-CHANDIPUR",
+        "name": "Chandipur & APJ Abdul Kalam Island DRDO Missile Test Range (Bay of Bengal)",
+        "category": "Strategic Missile Test Range",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Integrated Test Range (ITR) Chandipur and Wheeler Island (Dr. APJ Abdul Kalam Island) high-security missile launch envelope.",
+        "coordinates": [[86.85, 20.65], [86.85, 21.65], [87.65, 21.45], [87.45, 20.55], [86.85, 20.65]]
+    },
+    {
+        "id": "DS-POLY-BABINA-JHANSI-FIRING-RANGE",
+        "name": "Babina - Jhansi - Shivpuri Army Field Firing Range Complex",
+        "category": "Military Field Firing Range",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "White Tiger Division armored artillery and combat vehicle live-firing maneuvers zone spanning UP and MP.",
+        "coordinates": [[78.05, 24.95], [78.2, 25.75], [78.75, 25.8], [78.9, 25.2], [78.45, 24.85], [78.05, 24.95]]
+    },
+    {
+        "id": "DS-POLY-MH-DEFENSE-CORRIDOR",
+        "name": "Pune - Ahmednagar - Dehu Road Military Armament & Firing Enclave",
+        "category": "Military Armament & Training Complex",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Armoured Corps Centre & School (ACC&S), Vehicle Research & Development Establishment (VRDE), and Southern Command cantonment envelope.",
+        "coordinates": [[73.7, 18.55], [73.85, 19.3], [74.85, 19.2], [74.7, 18.45], [73.7, 18.55]]
+    },
+    {
+        "id": "DS-POLY-JH-DEFENSE-CORRIDOR",
+        "name": "Jharkhand Jamshedpur - Bokaro - Ramgarh Strategic Industrial Defense Area",
+        "category": "Critical Defense Metallurgy Corridor",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Strategic heavy industrial and defense metal manufacturing facilities across Chota Nagpur plateau.",
+        "coordinates": [[85.8, 23.35], [86.35, 23.85], [86.55, 23.15], [86.1, 22.75], [85.8, 23.35]]
+    },
+    {
+        "id": "DS-POLY-POKHRAN-FIRING-RANGE",
+        "name": "Pokhran Desert Army Field Firing Range & Nuclear Test Grounds",
+        "category": "Strategic Weapon Test Facility",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Desert corps combined arms strike weapon testing grounds and historical nuclear test site in Jaisalmer district.",
+        "coordinates": [[71.6, 26.75], [71.6, 27.45], [72.25, 27.45], [72.25, 26.75], [71.6, 26.75]]
+    },
+    {
+        "id": "DS-POLY-DELHI-NCT-VVIP",
+        "name": "National Capital Territory (Delhi VVIP & Parliament Red Zone)",
+        "category": "National Capital Security Perimeter",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "VVIP Security envelope covering Rashtrapati Bhavan, Prime Minister Residence, Central Vista, Parliament House, and diplomatic enclave.",
+        "coordinates": [[77.1, 28.52], [77.1, 28.66], [77.26, 28.66], [77.26, 28.52], [77.1, 28.52]]
+    },
+    {
+        "id": "DS-POLY-SRIHARIKOTA-ISRO",
+        "name": "Satish Dhawan Space Centre (SDSC SHAR) Launch Facility",
+        "category": "Space Launch Center",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "ISRO spaceport barrier envelope covering Sriharikota island, rocket launch pads, and Pulicat Lake security zone.",
+        "coordinates": [[80.15, 13.6], [80.15, 13.95], [80.35, 13.95], [80.35, 13.6], [80.15, 13.6]]
+    },
+    {
+        "id": "DS-POLY-JAMNAGAR-PORBANDAR",
+        "name": "Jamnagar - Porbandar IAF Fighter Base & Naval Air Station",
+        "category": "Military Strategic Coastal Base",
+        "rule_ref": "Drone Rules 2021, Rule 22(3)",
+        "desc": "Jaguar fighter base, INS Sardar Patel, and Indian Coast Guard western air command security envelope.",
+        "coordinates": [[69.45, 21.6], [69.45, 22.5], [70.15, 22.5], [70.15, 21.6], [69.45, 21.6]]
     }
 ]
 
@@ -598,7 +764,7 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
         })
 
     # Helper for adding Red Zone lists
-    def add_red_features(items, category_tag, color, fill_color, opacity, stroke_weight, dash=""):
+    def add_red_features(items, category_tag, color, fill_color, opacity, stroke_weight, dash="", layer_group="red_zone"):
         for item in items:
             lat, lon, r = item["lat"], item["lon"], item["radius_km"]
             coords = generate_circle_polygon(lat, lon, r)
@@ -607,6 +773,7 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
                 "name": item["name"],
                 "zone_type": "RED",
                 "category": category_tag,
+                "layer_group": layer_group,
                 "radius_km": r,
                 "max_altitude_agl_ft": 0,
                 "max_altitude_agl_m": 0,
@@ -629,7 +796,37 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
                 "geometry": {"type": "Polygon", "coordinates": [coords]}
             })
 
-    # 3. Continuous 25 km International Land Border Ribbon Corridors & Defense Polygons
+    # 2. Strategic Inland & Offshore Defense Polygons (Red Zone)
+    for poly_item in STRATEGIC_DEFENSE_POLYGONS:
+        features.append({
+            "type": "Feature",
+            "id": poly_item["id"],
+            "properties": {
+                "id": poly_item["id"],
+                "name": f"🛡️ {poly_item['name']}",
+                "zone_type": "RED",
+                "layer_group": "red_zone",
+                "category": poly_item["category"],
+                "radius_km": 20.0,
+                "max_altitude_agl_ft": 0,
+                "max_altitude_agl_m": 0,
+                "permission_required": "STRICTLY PROHIBITED (Strategic Defense / Exclusion Zone)",
+                "authority": "MoD / Armed Forces / DGCA India",
+                "rule_ref": poly_item["rule_ref"],
+                "description": poly_item["desc"],
+                "color": "#991b1b",
+                "fillColor": "#dc2626",
+                "fillOpacity": 0.45,
+                "strokeWeight": 2.5,
+                "zIndex": 1260
+            },
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [poly_item["coordinates"]]
+            }
+        })
+
+    # 3. Continuous 25 km International Land Border Ribbon Corridors
     for poly_item in INTERNATIONAL_BORDER_POLYGONS:
         features.append({
             "type": "Feature",
@@ -638,6 +835,7 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
                 "id": poly_item["id"],
                 "name": f"🛡️ {poly_item['name']}",
                 "zone_type": "RED",
+                "layer_group": "boundary_25km",
                 "category": poly_item["category"],
                 "radius_km": 25.0,
                 "max_altitude_agl_ft": 0,
@@ -659,77 +857,146 @@ def build_digitalsky_geojson() -> Dict[str, Any]:
         })
 
     # 4. 25 km International Border Sector Checkpoint Circles
-    add_red_features(INTERNATIONAL_BORDER_RED_ZONES, "25 km International Border Corridor", "#991b1b", "#dc2626", 0.38, 2.2)
+    add_red_features(INTERNATIONAL_BORDER_RED_ZONES, "25 km International Border Corridor", "#991b1b", "#dc2626", 0.38, 2.2, layer_group="boundary_25km")
 
     # 5. Military Defense Areas
-    add_red_features(MILITARY_DEFENSE_RED_ZONES, "Military Defense Airspace", "#7f1d1d", "#b91c1c", 0.44, 2.2)
+    add_red_features(MILITARY_DEFENSE_RED_ZONES, "Military Defense Airspace", "#7f1d1d", "#b91c1c", 0.44, 2.2, layer_group="red_zone")
 
     # 6. Ordnance Factories & Defense Production
-    add_red_features(ORDNANCE_DEFENSE_FACTORIES, "Defense Ordnance Factory", "#831843", "#be185d", 0.45, 2.2)
+    add_red_features(ORDNANCE_DEFENSE_FACTORIES, "Defense Ordnance Factory", "#831843", "#be185d", 0.45, 2.2, layer_group="red_zone")
 
     # 7. Petrochemical Refineries & Hazardous Factories
-    add_red_features(STRATEGIC_PETROCHEM_FACTORIES, "Industrial Petrochemical Refinery", "#9a3412", "#ea580c", 0.42, 2.2)
+    add_red_features(STRATEGIC_PETROCHEM_FACTORIES, "Industrial Petrochemical Refinery", "#9a3412", "#ea580c", 0.42, 2.2, layer_group="red_zone")
 
     # 8. Major Dams & Sensitive Water Bodies
-    add_red_features(MAJOR_DAMS_WATER_BODIES, "Strategic Water Body / Dam", "#1e3a8a", "#2563eb", 0.40, 2.2)
+    add_red_features(MAJOR_DAMS_WATER_BODIES, "Strategic Water Body / Dam", "#1e3a8a", "#2563eb", 0.40, 2.2, layer_group="red_zone")
 
     # 9. Strategic Nuclear Facilities
-    add_red_features(STRATEGIC_NUCLEAR_RED_ZONES, "Strategic Nuclear Installation", "#881337", "#e11d48", 0.48, 2.2)
+    add_red_features(STRATEGIC_NUCLEAR_RED_ZONES, "Strategic Nuclear Installation", "#881337", "#e11d48", 0.48, 2.2, layer_group="red_zone")
 
     # 10. Temporary Red Zones (TFR)
-    add_red_features(TEMPORARY_RED_ZONES, "Temporary Flight Restriction (TFR)", "#4c0519", "#be123c", 0.52, 2.5, "6, 3")
+    add_red_features(TEMPORARY_RED_ZONES, "Temporary Flight Restriction (TFR)", "#4c0519", "#be123c", 0.52, 2.5, "6, 3", layer_group="temporary_red_zone")
 
-    # 11. Civil Aerodrome 0-5 km Runways
+    # 11. Aerodrome 3-Tier Official DigitalSky Envelopes
     for aero in INDIAN_AERODROMES:
-        lat, lon, r = aero["lat"], aero["lon"], aero["red_radius_km"]
-        coords = generate_circle_polygon(lat, lon, r)
-        f_id = f"DS-RED-{aero['id']}"
+        lat, lon = aero["lat"], aero["lon"]
+        # Tier 1: Airport Red (0 - 5 km)
+        coords_5k = generate_circle_polygon(lat, lon, 5.0)
+        f_id_red = f"DS-AIRPORT-RED-{aero['id']}"
         features.append({
             "type": "Feature",
-            "id": f_id,
+            "id": f_id_red,
             "properties": {
-                "id": f_id,
-                "name": f"✈️ {aero['name']} — No-Fly Zone (Red Zone)",
+                "id": f_id_red,
+                "name": f"✈️ {aero['name']} (Airport Red Zone)",
                 "zone_type": "RED",
-                "category": "Airport Runway Perimeter",
+                "layer_group": "airport_red",
+                "category": "Airport Red",
                 "aerodrome_id": aero["id"],
                 "city": aero["city"],
                 "state": aero["state"],
-                "radius_km": r,
+                "radius_km": 5.0,
                 "max_altitude_agl_ft": 0,
                 "max_altitude_agl_m": 0,
-                "permission_required": "STRICTLY PROHIBITED (0-5 km Runway Safety Perimeter)",
+                "permission_required": "STRICTLY PROHIBITED (0-5 km Aerodrome Runway Perimeter)",
                 "authority": "AAI & Directorate General of Civil Aviation",
                 "rule_ref": "Drone Rules 2021, Rule 22(3)",
                 "description": f"Mandatory 5 km runway perimeter around {aero['name']}. Drone flights strictly banned.",
                 "color": "#b91c1c",
                 "fillColor": "#ef4444",
-                "fillOpacity": 0.42,
+                "fillOpacity": 0.45,
                 "strokeWeight": 2.2,
                 "zIndex": 1100
             },
-            "geometry": {"type": "Polygon", "coordinates": [coords]}
+            "geometry": {"type": "Polygon", "coordinates": [coords_5k]}
+        })
+
+        # Tier 2: Airport Yellow [5-8]km
+        coords_8k = generate_circle_polygon(lat, lon, 8.0)
+        f_id_y58 = f"DS-AIRPORT-YEL-5-8-{aero['id']}"
+        features.append({
+            "type": "Feature",
+            "id": f_id_y58,
+            "properties": {
+                "id": f_id_y58,
+                "name": f"✈️ {aero['name']} (Airport Yellow [5-8]km)",
+                "zone_type": "YELLOW",
+                "layer_group": "airport_yellow_5_8",
+                "category": "Airport Yellow [5-8]km",
+                "aerodrome_id": aero["id"],
+                "city": aero["city"],
+                "state": aero["state"],
+                "radius_km": 8.0,
+                "max_altitude_agl_ft": 200,
+                "max_altitude_agl_m": 60,
+                "permission_required": "ATC / AAI Clearance required for flights above 200 ft (60 m) AGL",
+                "authority": "Airports Authority of India (AAI)",
+                "rule_ref": "Drone Rules 2021, Rule 22(2)",
+                "description": f"5 to 8 km controlled airspace perimeter around {aero['name']}. Max altitude 200 ft AGL.",
+                "color": "#d97706",
+                "fillColor": "#f59e0b",
+                "fillOpacity": 0.28,
+                "strokeWeight": 1.8,
+                "strokeDashArray": "4, 4",
+                "zIndex": 950
+            },
+            "geometry": {"type": "Polygon", "coordinates": [coords_8k]}
+        })
+
+        # Tier 3: Airport Yellow [8-12]km
+        coords_12k = generate_circle_polygon(lat, lon, 12.0)
+        f_id_y812 = f"DS-AIRPORT-YEL-8-12-{aero['id']}"
+        features.append({
+            "type": "Feature",
+            "id": f_id_y812,
+            "properties": {
+                "id": f_id_y812,
+                "name": f"✈️ {aero['name']} (Airport Yellow [8-12]km)",
+                "zone_type": "YELLOW",
+                "layer_group": "airport_yellow_8_12",
+                "category": "Airport Yellow [8-12]km",
+                "aerodrome_id": aero["id"],
+                "city": aero["city"],
+                "state": aero["state"],
+                "radius_km": 12.0,
+                "max_altitude_agl_ft": 400,
+                "max_altitude_agl_m": 120,
+                "permission_required": "ATC / AAI Clearance required for flights above 400 ft (120 m) AGL",
+                "authority": "Airports Authority of India (AAI)",
+                "rule_ref": "Drone Rules 2021, Rule 22(2)",
+                "description": f"8 to 12 km controlled airspace perimeter around {aero['name']}. Max altitude 400 ft AGL.",
+                "color": "#ca8a04",
+                "fillColor": "#facc15",
+                "fillOpacity": 0.16,
+                "strokeWeight": 1.5,
+                "strokeDashArray": "6, 6",
+                "zIndex": 900
+            },
+            "geometry": {"type": "Polygon", "coordinates": [coords_12k]}
         })
 
     return {
         "type": "FeatureCollection",
         "metadata": {
-            "provider": "DGCA India DigitalSky Platform",
-            "version": "Drone Rules 2021 Comprehensive Airspace Map (v5.0)",
-            "updated_at": "2026-10-29T06:00:00Z",
+            "provider": "DGCA India DigitalSky Platform (AAI)",
+            "version": "Drone Rules 2021 Comprehensive Airspace Map (v6.0 Official Mirror)",
+            "official_source": "https://digitalsky.aai.aero/digital-sky-map",
+            "updated_at": "2026-10-29T07:00:00Z",
             "total_features": len(features),
             "zones_breakdown": {
                 "green": 1,
-                "yellow_atc_controlled": len(INDIAN_AERODROMES),
+                "airport_yellow_8_12km": len(INDIAN_AERODROMES),
+                "airport_yellow_5_8km": len(INDIAN_AERODROMES),
+                "airport_red_0_5km": len(INDIAN_AERODROMES),
                 "red_international_border_ribbons": len(INTERNATIONAL_BORDER_POLYGONS),
+                "red_strategic_defense_polygons": len(STRATEGIC_DEFENSE_POLYGONS),
                 "red_international_border_sectors": len(INTERNATIONAL_BORDER_RED_ZONES),
                 "red_military_defense_bases": len(MILITARY_DEFENSE_RED_ZONES),
                 "red_ordnance_defense_factories": len(ORDNANCE_DEFENSE_FACTORIES),
                 "red_petrochemical_refineries": len(STRATEGIC_PETROCHEM_FACTORIES),
                 "red_dams_water_bodies": len(MAJOR_DAMS_WATER_BODIES),
                 "red_strategic_nuclear": len(STRATEGIC_NUCLEAR_RED_ZONES),
-                "red_temporary_flight_restrictions": len(TEMPORARY_RED_ZONES),
-                "red_airport_perimeters": len(INDIAN_AERODROMES)
+                "red_temporary_flight_restrictions": len(TEMPORARY_RED_ZONES)
             }
         },
         "features": features
@@ -740,7 +1007,7 @@ def classify_coordinate_zone(lat: float, lon: float, altitude_m: Optional[float]
     closest_distance = 99999.0
     closest_zone_info = None
 
-    # 1. First evaluate against continuous 25 km International Land Border Ribbon Corridors & Defense Polygons
+    # 1. First evaluate against continuous 25 km International Land Border Ribbon Corridors
     for poly in INTERNATIONAL_BORDER_POLYGONS:
         if is_point_in_polygon(lat, lon, poly["coordinates"]):
             return {
@@ -754,6 +1021,25 @@ def classify_coordinate_zone(lat: float, lon: float, altitude_m: Optional[float]
                 "max_altitude_m": 0,
                 "is_flight_permitted": False,
                 "permission_required": "STRICTLY PROHIBITED (25 km International Land Border Buffer)",
+                "nearest_zone": poly["name"],
+                "distance_to_boundary_km": 0.0,
+                "rule_ref": poly.get("rule_ref", "Drone Rules 2021, Rule 22(3)")
+            }
+
+    # 1B. Strategic Inland & Offshore Defense Polygons
+    for poly in STRATEGIC_DEFENSE_POLYGONS:
+        if is_point_in_polygon(lat, lon, poly["coordinates"]):
+            return {
+                "zone": "RED",
+                "zone_type": "RED",
+                "zone_color": "#ef4444",
+                "zone_name": poly["name"],
+                "category": poly.get("category", "Strategic Defense Red Zone"),
+                "status_badge": f"🔴 RED ZONE ({poly.get('category', 'DEFENSE').upper()})",
+                "max_altitude_ft": 0,
+                "max_altitude_m": 0,
+                "is_flight_permitted": False,
+                "permission_required": "STRICTLY PROHIBITED (Armed Forces / Strategic Exclusion Zone)",
                 "nearest_zone": poly["name"],
                 "distance_to_boundary_km": 0.0,
                 "rule_ref": poly.get("rule_ref", "Drone Rules 2021, Rule 22(3)")
@@ -799,45 +1085,56 @@ def classify_coordinate_zone(lat: float, lon: float, altitude_m: Optional[float]
         if res:
             return res
 
-    # 3. Aerodrome 0-5 km Runway Red Zones
+    # 3. Aerodromes 3-Tier Evaluation (Airport Red 0-5 km, Airport Yellow [5-8]km, Airport Yellow [8-12]km)
     for aero in INDIAN_AERODROMES:
         dist = haversine_distance_km(lat, lon, aero["lat"], aero["lon"])
         if dist < closest_distance:
             closest_distance = dist
-            closest_zone_info = {"name": aero["name"], "type": "RED" if dist <= aero["red_radius_km"] else "YELLOW", "radius_km": aero["red_radius_km"]}
-        if dist <= aero["red_radius_km"]:
+            closest_zone_info = {"name": aero["name"], "type": "RED" if dist <= 5.0 else "YELLOW", "radius_km": 5.0}
+
+        if dist <= 5.0:
             return {
                 "zone": "RED",
                 "zone_type": "RED",
                 "zone_color": "#ef4444",
-                "zone_name": f"{aero['name']} (0-5 km Runway Perimeter)",
-                "category": "Airport Runway Perimeter",
+                "zone_name": f"{aero['name']} (Airport Red Zone)",
+                "category": "Airport Red",
                 "status_badge": "🔴 RED ZONE (AIRPORT NO-FLY)",
                 "max_altitude_ft": 0, "max_altitude_m": 0, "is_flight_permitted": False,
-                "permission_required": "STRICTLY PROHIBITED — Operational Aerodrome Perimeter",
-                "nearest_zone": aero["name"], "distance_to_boundary_km": round(aero["red_radius_km"] - dist, 2),
+                "permission_required": "STRICTLY PROHIBITED — 0-5 km Runway Safety Perimeter",
+                "nearest_zone": aero["name"], "distance_to_boundary_km": round(5.0 - dist, 2),
                 "rule_ref": "Drone Rules 2021, Rule 22(3)"
             }
-
-    # 4. Aerodrome 5-12 km Controlled Yellow Zones
-    for aero in INDIAN_AERODROMES:
-        dist = haversine_distance_km(lat, lon, aero["lat"], aero["lon"])
-        if dist <= aero["yellow_radius_km"]:
+        elif dist <= 8.0:
             return {
                 "zone": "YELLOW",
                 "zone_type": "YELLOW",
                 "zone_color": "#f59e0b",
-                "zone_name": f"{aero['name']} (5-12 km Controlled Airspace)",
-                "category": "ATC Controlled Airspace",
+                "zone_name": f"{aero['name']} (Airport Yellow [5-8]km)",
+                "category": "Airport Yellow [5-8]km",
                 "status_badge": "🟡 YELLOW ZONE (ATC AUTHORIZATION REQ)",
                 "max_altitude_ft": 200, "max_altitude_m": 60,
                 "is_flight_permitted": True if (altitude_m or 0) <= 60 else False,
-                "permission_required": "ATC / AAI Clearance Required for flights above 200 ft AGL",
+                "permission_required": "ATC / AAI Clearance Required for flights above 200 ft (60 m) AGL",
+                "nearest_zone": aero["name"], "distance_to_boundary_km": round(dist, 2),
+                "rule_ref": "Drone Rules 2021, Rule 22(2)"
+            }
+        elif dist <= 12.0:
+            return {
+                "zone": "YELLOW",
+                "zone_type": "YELLOW",
+                "zone_color": "#eab308",
+                "zone_name": f"{aero['name']} (Airport Yellow [8-12]km)",
+                "category": "Airport Yellow [8-12]km",
+                "status_badge": "🟡 YELLOW ZONE (ATC AUTHORIZATION REQ)",
+                "max_altitude_ft": 400, "max_altitude_m": 120,
+                "is_flight_permitted": True if (altitude_m or 0) <= 120 else False,
+                "permission_required": "ATC / AAI Clearance Required for flights above 400 ft (120 m) AGL",
                 "nearest_zone": aero["name"], "distance_to_boundary_km": round(dist, 2),
                 "rule_ref": "Drone Rules 2021, Rule 22(2)"
             }
 
-    # 5. Green Zone fallback
+    # 4. Green Zone fallback
     return {
         "zone": "GREEN",
         "zone_type": "GREEN",
